@@ -475,7 +475,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
           <button class="btn primary" data-home="open"><svg class="i"><use href="#i-open"/></svg>Choose a file</button>
           <button class="btn" data-home="sample">Try a sample agreement</button>
         </div>
-        <p class="privacy"><svg class="i"><use href="#i-shield"/></svg>Everything runs on this computer. Your files are never uploaded.</p>
+        <p class="privacy"><svg class="i"><use href="#i-shield"/></svg><span id="privacyNote">Everything runs on this computer. Your files are never uploaded.</span></p>
       </div>
       <button class="sheet" id="dropSheet" data-home="open" aria-label="Choose or drop a file">
         <p class="drop-t">Drop a file here</p>
@@ -909,6 +909,7 @@ async function openPdf(bytes, name) {
     refreshAll();
     setDirty(false);
     detectScanned();
+    track('Open PDF', { pages: bucket(S.pages.length) });
   } catch (e) { console.error(e); toast(e.message || 'Could not open that file.', true); }
   finally { done(); }
 }
@@ -1582,6 +1583,7 @@ async function refineFont(o, p, pel, b, c) {
   const el = objEl(o.id);
   if (el) { const fresh = makeEl(o, p); const keep = el.className; el.style.cssText = fresh.style.cssText; el.className = keep; }
   drawSel(); if (S.sel === o.id) renderProps();
+  track('Edit text', { source: key ? 'PDF font' : 'Detected font' });
   if (!key && o.detected && !refineFont.hinted) { refineFont.hinted = true; toast('Font detected: ' + o.detected + '. You can change it in the panel on the right.', false, 4000); }
 }
 
@@ -1703,7 +1705,7 @@ async function makeEditable(fromMenu) {
     busy('Finishing…'); const bytes = await doc.save(); const name = S.name; done();
     await openPdf(bytes, name); setDirty(true);
     $('#scanBar').hidden = true; $('.work').classList.remove('has-scan');
-    setTool('edittext');
+    setTool('edittext'); track('Make scan editable', { pages: bucket(todo.length) });
     const conf = Object.values(results).flat(); const avg = conf.reduce((a, b) => a + b.conf, 0) / conf.length;
     toast(`Recognised ${total} lines on ${todo.length} page${todo.length > 1 ? 's' : ''}. Click any line to edit it.${avg < 70 ? ' The scan is blurry, so check edited text carefully.' : ''}`, false, 6000);
   } catch (e) { console.error(e); done(); toast('Could not build the editable PDF: ' + (e.message || e), true, 6000); }
@@ -2173,7 +2175,7 @@ $('#sigInsert').onclick = async () => {
   try {
     const a = await buildSignature();
     if ($('#sigRemember').checked) { const list = ls.get('inkwell.sigs', []); list.unshift(a); if (!ls.set('inkwell.sigs', list.slice(0, 5))) ls.set('inkwell.sigs', list.slice(0, 2)); }
-    sigDlg.close(); sigStrokes = []; drawPad(); sigUpload = null; showUpload(); placeImage(a, { width: 150, kind: 'sign' });
+    sigDlg.close(); sigStrokes = []; drawPad(); sigUpload = null; showUpload(); placeImage(a, { width: 150, kind: 'sign' }); track('Signature', { method: sigTab });
   } catch (e) { toast(e.message, true); }
 };
 window.addEventListener('resize', () => { if (sigDlg.open && sigTab === 'draw') sizePad(); });
@@ -2298,7 +2300,7 @@ async function savePdf() {
         const w = await h.createWritable(); await w.write(bytes); await w.close(); S.name = h.name; $('#docName').value = h.name;
       } catch (e) { if (e && e.name === 'AbortError') return; ok = await download(bytes, name, 'application/pdf'); }
     } else ok = await download(bytes, name, 'application/pdf');
-    if (ok) { setDirty(false); toast('Saved ' + S.name); }
+    if (ok) { setDirty(false); toast('Saved ' + S.name); track('Save PDF', { pages: bucket(S.pages.length) }); }
   } catch (e) { console.error(e); toast('Could not save: ' + (e.message || e), true, 6000); }
   finally { done(); }
 }
@@ -2415,7 +2417,8 @@ async function makeDocx(mode) {
     media.forEach((m, i) => zip.file(`word/media/page${i + 1}.png`, m.bytes));
     busy('Packaging Word file…');
     const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', compression: 'DEFLATE' });
-    if (await download(blob, baseName() + '.docx')) toast(mode === 'image' ? 'Word file created (exact look).' : imgPages ? `Word file created. ${imgPages} scanned page${imgPages > 1 ? 's were' : ' was'} kept as pictures.` : 'Word file created with editable text.', false, 4500);
+    if (await download(blob, baseName() + '.docx')) track('Convert', { to: mode === 'image' ? 'Word (exact look)' : 'Word (editable)' });
+    toast(mode === 'image' ? 'Word file created (exact look).' : imgPages ? `Word file created. ${imgPages} scanned page${imgPages > 1 ? 's were' : ' was'} kept as pictures.` : 'Word file created with editable text.', false, 4500);
   } catch (e) { console.error(e); toast('Conversion failed: ' + (e.message || e), true, 6000); }
   finally { done(); }
 }
@@ -2425,7 +2428,7 @@ async function makePngs() {
     const js = await builtProxy('Preparing');
     if (js.numPages === 1) { const png = await renderPagePng(await js.getPage(1), 150 / 72); if (!(await download(png.bytes, baseName() + '.png', 'image/png'))) return; }
     else { const zip = new JSZip(); for (let i = 1; i <= js.numPages; i++) { busy(`Rendering page ${i} of ${js.numPages}…`); const png = await renderPagePng(await js.getPage(i), 150 / 72); zip.file(`${baseName()}-page-${String(i).padStart(3, '0')}.png`, png.bytes); } busy('Packaging…'); if (!(await download(await zip.generateAsync({ type: 'blob' }), baseName() + '-images.zip'))) return; }
-    js.destroy(); toast('Images saved at 150 dpi.');
+    js.destroy(); toast('Images saved at 150 dpi.'); track('Convert', { to: 'Images' });
   } catch (e) { toast('Could not export images: ' + e.message, true); } finally { done(); }
 }
 async function makeTxt() {
@@ -2433,7 +2436,7 @@ async function makeTxt() {
   try {
     const parts = [];
     for (const p of S.pages) { const r = await extractParas(p); parts.push(r.paras.map(q => q.text).join('\n\n')); }
-    if (await download(parts.join('\n\n\f\n\n'), baseName() + '.txt', 'text/plain;charset=utf-8')) toast('Text saved.');
+    if (await download(parts.join('\n\n\f\n\n'), baseName() + '.txt', 'text/plain;charset=utf-8')) { toast('Text saved.'); track('Convert', { to: 'Text' }); }
   } catch (e) { toast('Could not extract text: ' + e.message, true); } finally { done(); }
 }
 function parseRange(s, N) {
@@ -2611,7 +2614,7 @@ $('#rvOpen').onclick = async () => {
   try { b = await reviewToPdf(); } catch (e) { done(); console.error(e); return toast('Could not create the PDF: ' + e.message, true); }
   done();
   if (S.open && S.dirty) { const a = await ask('Replace the open document?', 'The current document has unsaved changes.', [{ label: 'Cancel', value: null, cls: 'ghost' }, { label: 'Add as pages', value: 'add' }, { label: 'Replace', value: 'replace', cls: 'danger' }]); if (!a) return; $('#dlgReview').close(); if (a === 'add') return insertPdfPages(b, S.pages.length); }
-  $('#dlgReview').close(); await openPdf(b, reviewName + '.pdf'); setDirty(true); toast('Converted. Add your signature with the signature tool or press S.', false, 4500);
+  $('#dlgReview').close(); await openPdf(b, reviewName + '.pdf'); setDirty(true); track('Convert', { to: 'Word to PDF' }); toast('Converted. Add your signature with the signature tool or press S.', false, 4500);
 };
 
 /* ================= images -> PDF ================= */
@@ -2628,7 +2631,7 @@ async function imagesToPdf(files) {
       d.addPage([PW, PH]).drawImage(img, { x: (PW - w) / 2, y: (PH - h) / 2, width: w, height: h });
     }
     const bytes = await d.save(); done();
-    await openPdf(bytes, files.length === 1 ? files[0].name.replace(/\.[^.]+$/, '') + '.pdf' : 'Images.pdf'); setDirty(true);
+    await openPdf(bytes, files.length === 1 ? files[0].name.replace(/\.[^.]+$/, '') + '.pdf' : 'Images.pdf'); setDirty(true); track('Convert', { to: 'Images to PDF' });
   } catch (e) { done(); toast(e.message || 'Could not read those images.', true); }
 }
 
@@ -2742,6 +2745,19 @@ window.addEventListener('drop', e => {
   const fs = [...(e.dataTransfer?.files || [])]; if (fs.length) routeFiles(fs, true);
 });
 window.addEventListener('resize', () => { if (window.innerWidth > 1180) P.classList.remove('open'); });
+
+/* ================= anonymous usage statistics (website only) =================
+   Counts visits and which features are used, through Vercel Web Analytics: no cookies, no
+   personal data, and never any file names or file contents. Off for the downloaded file,
+   localhost and the Claude preview. */
+const STATS_ON = /^https?:$/.test(location.protocol) && !/^(localhost|127\.|\[::1\]|0\.0\.0\.0)/.test(location.hostname) && !inViewer;
+function track(name, data) { try { if (STATS_ON && window.va) window.va('event', data ? { name, data } : { name }); } catch {} }
+const bucket = n => (n <= 1 ? '1' : n <= 5 ? '2-5' : n <= 20 ? '6-20' : '21+');
+if (STATS_ON) {
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  const sc = document.createElement('script'); sc.defer = true; sc.src = '/_vercel/insights/script.js'; document.head.append(sc);
+  $('#privacyNote').textContent = 'Everything runs on this computer. Your files are never uploaded. Visits are counted anonymously, without cookies.';
+}
 
 // test hook
 window.__inkwell = { S, openPdf, makeSample, buildBytes, makeDocx, htmlToPdf, setTool, savePdf, refreshAll, select, renderOverlay, rotatePage, extractParas };

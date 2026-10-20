@@ -39,6 +39,19 @@ Any static host works — there is nothing to build.
 - **GitHub Pages:** Settings → Pages → deploy from branch `main`, folder `/ (root)`.
 - **Netlify / Cloudflare Pages:** connect the repo, leave the build command empty, publish directory `/`.
 
+## Usage statistics
+
+The hosted site counts visitors anonymously with [Vercel Web Analytics](https://vercel.com/docs/analytics): no cookies, no personal data, and never any file names or file contents. It stays off when `index.html` is opened as a local file, on localhost and in the Claude preview.
+
+**Turn it on (one time):** in the Vercel dashboard open this project → **Analytics** → **Enable**, then redeploy (or push any commit). After that, the Analytics tab shows:
+
+- **Visitors and page views** per day, week or month
+- **Countries and cities** visitors come from
+- **Devices, operating systems and browsers**
+- **Referrers** (which sites sent people here)
+
+The app also sends anonymous feature events (`Open PDF`, `Save PDF`, `Convert`, `Signature`, `Edit text`, `Make scan editable`) with at most a page-count range or method, never file details. Vercel only records these custom events on the Pro plan; on the free Hobby plan they're ignored and only visits are counted (50,000 events a month, 1-month reporting window).
+
 ## Built with
 
 - [pdf.js](https://mozilla.github.io/pdf.js/) — rendering and text extraction
