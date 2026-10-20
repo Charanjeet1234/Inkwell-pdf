@@ -5,6 +5,8 @@ Edit, sign and convert PDFs in the browser. Everything runs on the user's own de
 ## Features
 
 - **Edit existing text** — click any line in a PDF and retype it; size, colour and background are matched.
+- **Text controls** — move added text with arrow buttons (0.5, 1 or 5 mm steps), type exact X/Y positions in mm, snap to page margins or centre, align text left/centre/right, and fade it from 0 to 100% opacity.
+- **Match the document** — one click copies the font, size, weight and colour of the nearest PDF text; a colour picker samples any colour from the page.
 - **Annotate** — text boxes, freehand drawing, highlights, whiteout, rectangles, ellipses, lines, arrows, images and dates. Everything can be moved, resized, restyled, duplicated or copied to all pages, with full undo/redo.
 - **Sign** — draw, type or upload a signature and drag it into place. Signatures can be remembered on the device.
 - **Pages** — rotate, delete, duplicate, reorder by drag and drop, add blank pages, merge other PDFs, extract or split pages.
