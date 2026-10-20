@@ -605,6 +605,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
 <script>
 (() => {
 'use strict';
@@ -630,6 +631,85 @@ const FAMILY_CSS = {
 };
 const INKS = ['#141821', '#2a3fd1', '#c3323d', '#1c8656', '#e07a12', '#ffffff'];
 const HLS = ['#ffe14d', '#9ef0a7', '#8fd3ff', '#ffa8d0', '#ffc285'];
+
+/* ---------- original PDF fonts ----------
+   pdf.js hands us each embedded font as OpenType, but with its characters moved to private
+   codes. We rebuild a normal Unicode character map so the same font can be typed with, shown
+   on screen and embedded again in the saved PDF. */
+const fontStore = {};
+function rebuildCmap(src, pairs) {
+  const u8 = src instanceof Uint8Array ? src : new Uint8Array(src);
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  const numTables = dv.getUint16(4); const tables = [];
+  for (let i = 0; i < numTables; i++) {
+    const o = 12 + i * 16; const tag = String.fromCharCode(u8[o], u8[o + 1], u8[o + 2], u8[o + 3]);
+    if (tag === 'cmap') continue; const off = dv.getUint32(o + 8), len = dv.getUint32(o + 12);
+    tables.push({ tag, data: u8.subarray(off, off + len) });
+  }
+  const codes = [...pairs.keys()].sort((a, b) => a - b);
+  const seg = codes.length + 1, len4 = 16 + seg * 8;
+  const cm = new Uint8Array(12 + len4); const cv = new DataView(cm.buffer);
+  cv.setUint16(0, 0); cv.setUint16(2, 1); cv.setUint16(4, 3); cv.setUint16(6, 1); cv.setUint32(8, 12);
+  const o = 12; cv.setUint16(o, 4); cv.setUint16(o + 2, len4); cv.setUint16(o + 4, 0);
+  const sr = 2 * Math.pow(2, Math.floor(Math.log2(seg)));
+  cv.setUint16(o + 6, seg * 2); cv.setUint16(o + 8, sr); cv.setUint16(o + 10, Math.log2(sr / 2)); cv.setUint16(o + 12, seg * 2 - sr);
+  const endO = o + 14, startO = endO + seg * 2 + 2, deltaO = startO + seg * 2, rangeO = deltaO + seg * 2;
+  codes.forEach((c, i) => { cv.setUint16(endO + i * 2, c); cv.setUint16(startO + i * 2, c); cv.setUint16(deltaO + i * 2, (pairs.get(c) - c + 65536) % 65536); cv.setUint16(rangeO + i * 2, 0); });
+  const L = seg - 1; cv.setUint16(endO + L * 2, 0xFFFF); cv.setUint16(startO + L * 2, 0xFFFF); cv.setUint16(deltaO + L * 2, 1); cv.setUint16(rangeO + L * 2, 0);
+  tables.push({ tag: 'cmap', data: cm });
+  tables.sort((a, b) => (a.tag < b.tag ? -1 : a.tag > b.tag ? 1 : 0));
+  const n = tables.length; let off = 12 + n * 16;
+  const total = off + tables.reduce((t, x) => t + ((x.data.length + 3) & ~3), 0);
+  const out = new Uint8Array(total); const ov = new DataView(out.buffer);
+  out.set(u8.subarray(0, 4), 0); ov.setUint16(4, n);
+  const es = Math.floor(Math.log2(n)), sr2 = 16 * Math.pow(2, es); ov.setUint16(6, sr2); ov.setUint16(8, es); ov.setUint16(10, n * 16 - sr2);
+  const sum = arr => { let p = arr; if (arr.length & 3) { p = new Uint8Array((arr.length + 3) & ~3); p.set(arr); } const d = new DataView(p.buffer, p.byteOffset, p.byteLength); let t = 0; for (let i = 0; i < p.length; i += 4) t = (t + d.getUint32(i)) >>> 0; return t; };
+  let headOff = -1;
+  tables.forEach((t, i) => {
+    const r = 12 + i * 16; for (let k = 0; k < 4; k++) out[r + k] = t.tag.charCodeAt(k);
+    let data = t.data; if (t.tag === 'head') { data = data.slice(); new DataView(data.buffer).setUint32(8, 0); headOff = off; }
+    ov.setUint32(r + 4, sum(data)); ov.setUint32(r + 8, off); ov.setUint32(r + 12, t.data.length); out.set(data, off); off += (t.data.length + 3) & ~3;
+  });
+  if (headOff >= 0) ov.setUint32(headOff + 8, (0xB1B0AFBA - sum(out)) >>> 0);
+  return out;
+}
+async function captureFont(p, fontName) {
+  if (p.src < 0 || !fontName) return null;
+  const key = p.src + ':' + fontName;
+  if (key in fontStore) return fontStore[key] ? key : null;
+  fontStore[key] = null;
+  try {
+    if (typeof fontkit === 'undefined') return null;
+    const pg = await jsPage(p); if (!pg.commonObjs.has(fontName)) { delete fontStore[key]; return null; }
+    const f = pg.commonObjs.get(fontName);
+    if (!f || !f.data || f.missingFile || f.isType3Font) return null;
+    const data = f.data instanceof Uint8Array ? f.data : new Uint8Array(f.data);
+    const fk = fontkit.create(data); const tu = f.toUnicode, tfc = f.toFontChar || [];
+    const pairs = new Map();
+    const add = (code, u) => { if (typeof u !== 'string' || [...u].length !== 1) return; const cp = u.codePointAt(0); if (cp < 32 || cp > 0xFFFF || pairs.has(cp)) return; const fc = tfc[code]; if (fc == null) return; const g = fk.glyphForCodePoint(fc); if (g && g.id) pairs.set(cp, g.id); };
+    if (tu && tu._map) { for (const k in tu._map) add(+k, tu._map[k]); }
+    else if (tu && 'firstChar' in tu) { for (let c = tu.firstChar; c <= tu.lastChar; c++) add(c, String.fromCharCode(c)); }
+    if (!pairs.size) return null;
+    const buf = rebuildCmap(data, pairs);
+    const fam = 'ink-pdf-font-' + Object.keys(fontStore).length;
+    const face = new FontFace(fam, buf); await face.load(); document.fonts.add(face);
+    const name = (f.name || '').replace(/^[A-Z]{6}\+/, '').replace(/-\d+$/, '');
+    fontStore[key] = { fam, buf, chars: new Set([...pairs.keys()].map(c => String.fromCharCode(c))), name };
+    return key;
+  } catch (e) { console.warn('Could not reuse PDF font', e); return null; }
+}
+const pdfFontOf = o => (o.t === 'text' && o.family === 'pdf' && o.pdfFont && fontStore[o.pdfFont]) || null;
+const cssFamily = o => { const pf = pdfFontOf(o); return pf ? `"${pf.fam}", ${FAMILY_CSS[o.fb] || FAMILY_CSS.sans}` : (FAMILY_CSS[o.family] || FAMILY_CSS[o.fb] || FAMILY_CSS.sans); };
+const baseCache = new Map();
+function baseK(o) {
+  const fam = cssFamily(o), w = o.bold ? 700 : 400, st = o.italic && !pdfFontOf(o) ? 'italic' : 'normal';
+  const k = fam + '|' + w + '|' + st; if (baseCache.has(k)) return baseCache.get(k);
+  const d = document.createElement('div');
+  d.style.cssText = `position:absolute;visibility:hidden;left:-9999px;top:0;font-family:${fam};font-weight:${w};font-style:${st};font-size:100px;line-height:1.2;white-space:pre;font-synthesis:none`;
+  d.textContent = 'Hg'; const m = document.createElement('span'); m.style.cssText = 'display:inline-block;width:1px;height:0;vertical-align:baseline'; d.append(m);
+  document.body.append(d); const v = m.offsetTop / 100; d.remove();
+  const r = v > 0.5 && v < 1.3 ? v : 0.95; baseCache.set(k, r); return r;
+}
 
 /* ================= state ================= */
 const S = {
@@ -717,7 +797,7 @@ $('#btnTheme').onclick = () => { theme = theme === 'system' ? 'light' : theme ==
 async function addSource(bytes) {
   const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let js;
-  try { js = await pdfjsLib.getDocument({ data: u8.slice() }).promise; }
+  try { js = await pdfjsLib.getDocument({ data: u8.slice(), fontExtraProperties: true }).promise; }
   catch (e) {
     if (e && e.name === 'PasswordException') throw new Error('This PDF is password-protected. Remove the password, then open it again.');
     throw new Error('This file could not be read as a PDF.');
@@ -932,8 +1012,8 @@ function renderOverlay(p, el = pageEl(p.id)) {
 function makeEl(o, p) {
   let el;
   if (o.t === 'text') {
-    el = div('obj text'); el.textContent = o.text;
-    Object.assign(el.style, { left: px(o.x), top: px(o.y), fontSize: px(o.size), fontFamily: FAMILY_CSS[o.family] || FAMILY_CSS.sans, fontWeight: o.bold ? '700' : '400', fontStyle: o.italic ? 'italic' : 'normal', color: o.color, background: o.bg || 'transparent', minWidth: o.minW ? px(o.minW) : '', opacity: o.op ?? 1, textAlign: o.align || 'left' });
+    el = div('obj text'); el.textContent = o.text; const pf = pdfFontOf(o);
+    Object.assign(el.style, { left: px(o.x), top: px(o.y), fontSize: px(o.size), fontFamily: cssFamily(o), fontWeight: o.bold ? '700' : '400', fontStyle: o.italic && !pf ? 'italic' : 'normal', fontSynthesis: pf ? 'none' : '', color: o.color, background: o.bg || 'transparent', minWidth: o.minW ? px(o.minW) : '', opacity: o.op ?? 1, textAlign: o.align || 'left' });
   } else if (o.t === 'image') {
     el = div('obj image'); const img = new Image(); img.src = (S.assets[o.asset] || {}).data || ''; img.draggable = false; img.alt = ''; el.append(img); box(el, o); el.style.opacity = o.op ?? 1;
   } else if (o.t === 'rect' || o.t === 'ellipse') {
@@ -1225,9 +1305,14 @@ function finishEdit() {
     if (S.sel === o.id) S.sel = null; renderOverlay(p); renderProps(); updateStatus(); return;
   }
   if (txt !== orig || isNew) { S.undo.push(before); if (S.undo.length > 100) S.undo.shift(); S.redo = []; o.text = txt; setDirty(); updUndo(); }
-  renderOverlay(p); updateStatus();
+  renderOverlay(p); updateStatus(); warnMissing(o);
 }
 
+function warnMissing(o) {
+  const pf = pdfFontOf(o); if (!pf) return;
+  const miss = [...new Set([...o.text].filter(ch => ch !== '\n' && !pf.chars.has(ch)))];
+  if (miss.length) toast(`Not in this PDF's font: ${miss.slice(0, 8).map(c => c === ' ' ? 'space' : c).join(' ')}${miss.length > 8 ? ' …' : ''}. Those characters use the closest standard font.`, false, 5500);
+}
 /* ================= edit existing PDF text ================= */
 function fontInfo(pg, fontName, styles) {
   let name = '';
@@ -1250,13 +1335,13 @@ async function pageTextBoxes(p) {
     if (t[0] <= 0 || Math.abs(t[1]) > 0.05 || Math.abs(t[2]) > 0.05) continue;
     const size = Math.abs(t[3]); if (size < 2) continue;
     const fi = fcache[it.fontName] || (fcache[it.fontName] = fontInfo(pg, it.fontName, tc.styles));
-    raw.push({ x: t[4], base: t[5], size, w: it.width, str: it.str, fam: fi.fam, bold: fi.bold, italic: fi.italic });
+    raw.push({ x: t[4], base: t[5], size, w: it.width, str: it.str, fam: fi.fam, bold: fi.bold, italic: fi.italic, fontName: it.fontName });
   }
   raw.sort((a, b) => a.base - b.base || a.x - b.x);
   const boxes = [];
   for (const r of raw) {
     const c = boxes[boxes.length - 1];
-    if (c && Math.abs(c.base - r.base) < 0.6 && Math.abs(c.size - r.size) < 0.6 && c.fam === r.fam && c.bold === r.bold && c.italic === r.italic) {
+    if (c && Math.abs(c.base - r.base) < 0.6 && Math.abs(c.size - r.size) < 0.6 && c.fontName === r.fontName) {
       const gap = r.x - (c.x + c.w);
       if (gap < r.size * 0.8 && gap > -r.size * 0.5) { c.str += (gap > r.size * 0.12 && !c.str.endsWith(' ') && !r.str.startsWith(' ') ? ' ' : '') + r.str; c.w = Math.max(c.w, r.x + r.w - c.x); continue; }
     }
@@ -1292,11 +1377,15 @@ function sampleColors(pel, b) {
   } catch {}
   return { bg: toHex(bg[0], bg[1], bg[2]), ink: toHex(ink[0], ink[1], ink[2]) };
 }
-function convertTbox(tb, p, pel) {
+async function convertTbox(tb, p, pel) {
   const b = tb._b; const before = JSON.stringify(S.pages); const c = sampleColors(pel, b);
+  tb.style.pointerEvents = 'none';
+  const key = await captureFont(p, b.fontName);
   const size = r2(b.size);
-  const o = { id: uid(), t: 'text', x: b.x - 1, y: b.base - 0.93 * size, text: b.str, size, family: b.fam, bold: !!b.bold, italic: !!b.italic, color: c.ink, bg: c.bg, minW: b.w + 2, op: 1, fromPdf: true };
+  const o = { id: uid(), t: 'text', x: b.x, y: 0, text: b.str, size, family: key ? 'pdf' : b.fam, fb: b.fam, pdfFont: key || undefined, bold: !!b.bold, italic: !!b.italic, color: c.ink, bg: c.bg, minW: b.w + 1, op: 1, fromPdf: true };
+  o.y = b.base - baseK(o) * size;
   p.objs.push(o); tb.remove(); renderOverlay(p); select(o, p); startEdit(o, p, false, before);
+  if (!key) toast('This line uses a font that can\'t be reused, so the closest standard font is used.', false, 3500);
 }
 
 async function matchText(o, p) {
@@ -1309,9 +1398,9 @@ async function matchText(o, p) {
     const dx = cx < b.x ? b.x - cx : cx > b.x + b.w ? cx - b.x - b.w : 0;
     const d = dy * 2 + dx; if (d < bd) { bd = d; best = b; }
   }
-  const c = sampleColors(pel, best); snap();
-  Object.assign(o, { size: r2(best.size), family: best.fam, bold: !!best.bold, italic: !!best.italic, color: c.ink });
-  refreshObj(o, p); drawSel(); renderProps();
+  const c = sampleColors(pel, best); const key = await captureFont(p, best.fontName); snap();
+  Object.assign(o, { size: r2(best.size), family: key ? 'pdf' : best.fam, fb: best.fam, pdfFont: key || undefined, bold: !!best.bold, italic: !!best.italic, color: c.ink });
+  refreshObj(o, p); drawSel(); renderProps(); warnMissing(o);
   const t = best.str.length > 28 ? best.str.slice(0, 26) + '…' : best.str;
   toast(`Matched to "${t}"`);
 }
@@ -1426,7 +1515,10 @@ const TYPE_NAME = { text: 'Text', image: 'Image', rect: 'Rectangle', ellipse: 'E
 function styleControls(t, v) {
   let h = '';
   if (t === 'text') {
-    h += ui.row('Font', ui.seg('family', [['sans', 'Sans'], ['serif', 'Serif'], ['mono', 'Mono']], v.family));
+    const opts = [['sans', 'Sans'], ['serif', 'Serif'], ['mono', 'Mono']]; const pfx = v.pdfFont && fontStore[v.pdfFont];
+    if (pfx) opts.unshift(['pdf', 'Original']);
+    h += ui.row('Font', ui.seg('family', opts, v.family));
+    if (pfx) h += `<p class="hint" style="margin:-4px 0 10px">${v.family === 'pdf' ? 'Using' : 'Available'}: <b>${esc(pfx.name || 'font from this PDF')}</b>, taken from this PDF.</p>`;
     h += ui.row('Size', `<input class="inp" type="number" id="p-size" data-prop="size" min="4" max="200" step="0.5" value="${r2(v.size)}">`);
     h += ui.row('Style', `<div class="seg"><button data-set="bold" class="${v.bold ? 'on' : ''}" style="font-weight:700">Bold</button><button data-set="italic" class="${v.italic ? 'on' : ''}" style="font-style:italic">Italic</button></div>`);
     h += ui.row('Align', `<div class="iconrow">${[['left', 'l'], ['center', 'c'], ['right', 'r']].map(([a, k]) => `<button data-set="align" data-val="${a}" class="${(v.align || 'left') === a ? 'on' : ''}" title="Align text ${a}"><svg class="i"><use href="#i-ta-${k}"/></svg></button>`).join('')}</div>`);
@@ -1524,7 +1616,6 @@ function applyProp(k, raw, live) {
   else target[k] = v;
   if (s) {
     const g = groupOf(s.o.t); if (g && S.style[g] && k in S.style[g] && k !== 'bg') S.style[g][k] = target[k];
-    if (s.o.t === 'text' && k === 'family') s.o.fromPdf && delete s.o.minW;
     refreshObj(s.o, s.p); drawSel();
   }
   if (live) { const out = P.querySelector(`[data-out="${k}"]`); if (out) out.textContent = k === 'op' ? pct(v) : ptf(v); }
@@ -1777,6 +1868,14 @@ function stdKey(f, b, i) {
 }
 async function buildPdfDoc(indices, progress) {
   const out = await PDFDocument.create();
+  if (typeof fontkit !== 'undefined') out.registerFontkit(fontkit);
+  const pdfFonts = {};
+  F_PDF = async key => {
+    if (key in pdfFonts) return pdfFonts[key]; pdfFonts[key] = null; const st = fontStore[key]; if (!st) return null;
+    try { pdfFonts[key] = await out.embedFont(st.buf, { subset: true }); }
+    catch (e) { try { pdfFonts[key] = await out.embedFont(st.buf, { subset: false }); } catch (e2) { console.warn('Embedding PDF font failed', e2); } }
+    return pdfFonts[key];
+  };
   const fonts = {}; const F = async k => fonts[k] || (fonts[k] = await out.embedFont(StandardFonts[k]));
   const safe = sanitizer(await F('Helvetica'));
   const libs = {}; const imgs = {};
@@ -1805,11 +1904,14 @@ async function buildPdfDoc(indices, progress) {
 async function drawObj(out, page, o, W, H, F, imgs, safe) {
   const op = o.op ?? 1;
   if (o.t === 'text') {
-    const font = await F(stdKey(o.family, o.bold, o.italic)); const lines = o.text.split('\n'); const lh = o.size * 1.2;
-    const lw = lines.map(l => font.widthOfTextAtSize(safe(l), o.size)); const bw = Math.max(0, ...lw, o.minW || 0);
+    const pf = pdfFontOf(o); const std = await F(stdKey(pf ? (o.fb || 'sans') : o.family, o.bold, o.italic));
+    const emb = pf ? await F_PDF(o.pdfFont) : null;
+    const runsOf = l => { if (!emb) return [{ s: safe(l), f: std }]; const out = []; for (const ch of l) { const useP = pf.chars.has(ch); const sch = useP ? ch : safe(ch); const fnt = useP ? emb : std; const last = out[out.length - 1]; if (last && last.f === fnt) last.s += sch; else out.push({ s: sch, f: fnt }); } return out; };
+    const lines = o.text.split('\n'); const lh = o.size * 1.2; const bk = baseK(o);
+    const lr = lines.map(runsOf); const lw = lr.map(rs => rs.reduce((t, r) => t + r.f.widthOfTextAtSize(r.s, o.size), 0)); const bw = Math.max(0, ...lw, o.minW || 0);
     if (o.bg) { const bh = lines.length * lh; page.drawRectangle({ x: o.x, y: H - o.y - bh, width: bw, height: bh, color: hexToRgb(o.bg), opacity: op }); }
-    const f = o.align === 'center' ? 0.5 : o.align === 'right' ? 1 : 0;
-    lines.forEach((l, i) => { const s = safe(l); if (s && op > 0) page.drawText(s, { x: o.x + (bw - lw[i]) * f, y: H - (o.y + i * lh + o.size * 0.93), size: o.size, font, color: hexToRgb(o.color), opacity: op }); });
+    const fa = o.align === 'center' ? 0.5 : o.align === 'right' ? 1 : 0;
+    if (op > 0) lr.forEach((rs, i) => { let x = o.x + (bw - lw[i]) * fa; const y = H - (o.y + i * lh + o.size * bk); for (const r of rs) { if (r.s) page.drawText(r.s, { x, y, size: o.size, font: r.f, color: hexToRgb(o.color), opacity: op }); x += r.f.widthOfTextAtSize(r.s, o.size); } });
   } else if (o.t === 'image') {
     const a = S.assets[o.asset]; if (!a) return;
     let img = imgs[o.asset]; if (!img) { const bytes = dataURLtoBytes(a.data); img = imgs[o.asset] = a.type === 'jpg' ? await out.embedJpg(bytes) : await out.embedPng(bytes); }
@@ -1844,6 +1946,7 @@ async function drawDecor(page, i, N, W, H, F, safe) {
     page.drawText(t, { x: S.doc.pnPos === 'right' ? W - 40 - tw : (W - tw) / 2, y: 24, size: 9, font: f, color: rgb(0.27, 0.29, 0.34) });
   }
 }
+let F_PDF = async () => null;
 const allIdx = () => S.pages.map((_, i) => i);
 async function buildBytes(indices = allIdx(), label = 'Building PDF') {
   const doc = await buildPdfDoc(indices, (n, N) => busy(`${label} · page ${n + 1} of ${N}`));
@@ -1876,7 +1979,7 @@ async function renderPagePng(pg, scale) {
   const blob = await new Promise(r => c.toBlob(r, 'image/png')); return { bytes: new Uint8Array(await blob.arrayBuffer()), w: c.width, h: c.height };
 }
 const mctx = document.createElement('canvas').getContext('2d');
-function textW(o, line) { mctx.font = `${o.italic ? 'italic ' : ''}${o.bold ? 700 : 400} ${o.size}px ${FAMILY_CSS[o.family] || FAMILY_CSS.sans}`; return mctx.measureText(line).width; }
+function textW(o, line) { mctx.font = `${o.italic && !pdfFontOf(o) ? 'italic ' : ''}${o.bold ? 700 : 400} ${o.size}px ${cssFamily(o)}`; return mctx.measureText(line).width; }
 async function pageItems(p) {
   const { W, H, R } = viewSize(p); const items = [];
   const covers = [];
@@ -1895,7 +1998,7 @@ async function pageItems(p) {
       items.push({ s: it.str, x: t[4], y: H - t[5], w: it.width, size });
     }
   }
-  for (const o of p.objs) if (o.t === 'text') o.text.split('\n').forEach((l, i) => { if (l.trim()) items.push({ s: l, x: o.x, y: H - (o.y + i * o.size * 1.2 + o.size * 0.93), w: textW(o, l), size: o.size }); });
+  for (const o of p.objs) if (o.t === 'text') o.text.split('\n').forEach((l, i) => { if (l.trim()) items.push({ s: l, x: o.x, y: H - (o.y + i * o.size * 1.2 + o.size * baseK(o)), w: textW(o, l), size: o.size }); });
   return { items, W };
 }
 async function extractParas(p) {
