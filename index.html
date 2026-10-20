@@ -185,6 +185,11 @@ svg.vec .hit,svg.vec .head{pointer-events:none}
 .tbox{position:absolute;pointer-events:auto;cursor:text;border-radius:2px;background:var(--hit);box-shadow:inset 0 0 0 1px var(--hit-line)}
 .tbox:hover{background:rgba(42,63,209,.18)}
 
+.scanbar{flex:none;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:10px;padding-left:max(88px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--accent-soft);border-bottom:1px solid var(--line);font-size:13.5px}
+.scanbar .i{color:var(--accent);width:22px;height:22px}
+.scanbar span{flex:1;min-width:200px}
+.work.has-scan .dock{top:78px}
+@media (max-width:820px){.scanbar{padding-left:max(16px,env(safe-area-inset-left,0px))}.work.has-scan .dock{top:auto}}
 .dock{position:absolute;left:16px;top:16px;z-index:12;display:flex;flex-direction:column;gap:2px;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
 .dock hr{border:0;border-top:1px solid var(--line);margin:4px 6px;flex:none}
 .tool{position:relative;width:42px;height:42px;border-radius:11px;border:0;background:none;display:grid;place-items:center;flex:none;color:var(--ink)}
@@ -396,6 +401,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
     <symbol id="i-ta-l" viewBox="0 0 24 24"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></symbol>
     <symbol id="i-ta-c" viewBox="0 0 24 24"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></symbol>
     <symbol id="i-ta-r" viewBox="0 0 24 24"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 9h8M8 12h8M8 15h5"/></symbol>
     <symbol id="i-all" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></symbol>
   </defs>
 </svg>
@@ -432,6 +438,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
         <button data-cv="docx" class="needs-doc"><svg class="i"><use href="#i-word"/></svg><span><b>Word document</b><small>Editable .docx, or an exact-look copy</small></span></button>
         <button data-cv="png" class="needs-doc"><svg class="i"><use href="#i-images"/></svg><span><b>Images</b><small>One PNG per page</small></span></button>
         <button data-cv="txt" class="needs-doc"><svg class="i"><use href="#i-txt"/></svg><span><b>Plain text</b><small>All text as a .txt file</small></span></button>
+        <button data-cv="ocr" class="needs-doc"><svg class="i"><use href="#i-scan"/></svg><span><b>Make scanned pages editable</b><small>Recognise the text in a scan (OCR) so it can be edited</small></span></button>
         <button data-cv="extract" class="needs-doc"><svg class="i"><use href="#i-split"/></svg><span><b>Extract or split pages</b><small>Save chosen pages, or every page as its own file</small></span></button>
         <hr>
         <h6>Into PDF</h6>
@@ -509,6 +516,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
         <button class="tool" data-action="date" data-tip="Insert today's date"><svg class="i"><use href="#i-date"/></svg></button>
         <button class="tool sign" data-action="sign" data-tip="Signature  S"><svg class="i"><use href="#i-sign"/></svg></button>
       </nav>
+      <div class="scanbar" id="scanBar" hidden><svg class="i"><use href="#i-scan"/></svg><span><b>This PDF is a scanned copy.</b> Its text is part of a picture, so it can't be edited yet. Make it editable first: the pages keep their exact look.</span><button class="btn primary" id="scanGo"><svg class="i" style="color:inherit;width:18px;height:18px"><use href="#i-scan"/></svg>Make editable</button><button class="btn icon ghost" id="scanX" title="Hide"><svg class="i" style="width:16px;height:16px;color:inherit"><use href="#i-x"/></svg></button></div>
       <div class="scroller" id="scroller"><div class="viewer tool-select" id="viewer"></div></div>
       <footer class="status" id="status"></footer>
     </section>
@@ -606,6 +614,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <script>
 (() => {
 'use strict';
@@ -621,7 +630,7 @@ const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == nu
 
 const LIBS_OK = typeof pdfjsLib !== 'undefined' && typeof PDFLib !== 'undefined';
 if (!LIBS_OK) $('#libWarn').hidden = false;
-const { PDFDocument, rgb, StandardFonts, degrees, BlendMode, LineCapStyle, pushGraphicsState, popGraphicsState, concatTransformationMatrix } = window.PDFLib || {};
+const { PDFDocument, rgb, StandardFonts, degrees, BlendMode, LineCapStyle, pushGraphicsState, popGraphicsState, concatTransformationMatrix, setTextRenderingMode, setCharacterSqueeze, TextRenderingMode } = window.PDFLib || {};
 if (LIBS_OK) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const FAMILY_CSS = {
@@ -832,6 +841,7 @@ async function openPdf(bytes, name) {
     fitWidth(true);
     refreshAll();
     setDirty(false);
+    detectScanned();
   } catch (e) { console.error(e); toast(e.message || 'Could not open that file.', true); }
   finally { done(); }
 }
@@ -1104,7 +1114,7 @@ function setTool(t) {
   viewer.className = 'viewer tool-' + t;
   $$('.tool[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
   if (t !== 'select') select(null);
-  if (t === 'edittext') { $$('.page', viewer).forEach(el => { if (el._vis) buildTextLayer(el); }); if (!ls.get('inkwell.etHint', false)) { toast('Click any highlighted line of text to change it.'); ls.set('inkwell.etHint', true); } }
+  if (t === 'edittext') { if (!$('#scanBar').hidden) toast('This document is a scan. Click "Make editable" first so its text can be changed.', false, 4500); $$('.page', viewer).forEach(el => { if (el._vis) buildTextLayer(el); }); if (!ls.get('inkwell.etHint', false)) { toast('Click any highlighted line of text to change it.'); ls.set('inkwell.etHint', true); } }
   renderProps(); updateStatus();
 }
 $('#dock').addEventListener('click', e => {
@@ -1375,17 +1385,114 @@ function sampleColors(pel, b) {
     let r = 0, g = 0, bb = 0, n = 0; for (let i = 0; i < data.length; i += 8) { if (lum(data.subarray(i, i + 3)) < min + 30) { r += data[i]; g += data[i + 1]; bb += data[i + 2]; n++; } }
     if (n && min < bl - 60) ink = [r / n, g / n, bb / n];
   } catch {}
-  return { bg: toHex(bg[0], bg[1], bg[2]), ink: toHex(ink[0], ink[1], ink[2]) };
+  let heavy = false;
+  try {
+    const data = ctx.getImageData(clamp(X, 0, cv.width - 1), clamp(Y, 0, cv.height - 1), Math.min(Wp, cv.width - X), Math.min(Hp, cv.height - Y)).data;
+    const thr = (lum(bg) + lum(ink)) / 2; let dark = 0, n = 0; for (let i = 0; i < data.length; i += 4) { n++; if (lum(data.subarray(i, i + 3)) < thr) dark++; }
+    heavy = n > 0 && dark / n > 0.2;
+  } catch {}
+  return { bg: toHex(bg[0], bg[1], bg[2]), ink: toHex(ink[0], ink[1], ink[2]), heavy };
 }
-async function convertTbox(tb, p, pel) {
+/* Guess the typeface of text that has no usable font (scans): draw the same words in each
+   standard style, scaled to the original box, and keep the style whose letter shapes overlap
+   the original pixels best. */
+async function guessFontFromPixels(pel, b, c) {
+  try {
+    if (!b.str || b.str.trim().length < 2) return null;
+    const p = pageById(pel.dataset.id); if (!p || p.src < 0) return null; const { R } = viewSize(p);
+    // render just this line from the PDF at high resolution (about 48 px per line)
+    const s = clamp(48 / b.size, 2, 10);
+    const X = Math.floor(b.x * s), Y = Math.floor((b.base - b.size * 1.7) * s);
+    const w = Math.ceil(b.w * s), h = Math.ceil(b.size * 2.6 * s);
+    if (w < 8 || h < 6 || w * h > 6e6) return null;
+    const pg = await jsPage(p); const rc = document.createElement('canvas'); rc.width = w; rc.height = h;
+    const rctx = rc.getContext('2d'); rctx.fillStyle = '#fff'; rctx.fillRect(0, 0, w, h);
+    await pg.render({ canvasContext: rctx, viewport: pg.getViewport({ scale: s, rotation: R, offsetX: -X, offsetY: -Y }) }).promise;
+    const src = rctx.getImageData(0, 0, w, h).data;
+    { // keep only this line's band of ink, so lines above or below can't interfere
+      const lumR = i => 0.299 * src[i] + 0.587 * src[i + 1] + 0.114 * src[i + 2];
+      const hx0 = v => [1, 3, 5].map(k => parseInt(v.slice(k, k + 2), 16)); const bgc = hx0(c.bg), inc = hx0(c.ink);
+      const t0 = ((0.299 * bgc[0] + 0.587 * bgc[1] + 0.114 * bgc[2]) + (0.299 * inc[0] + 0.587 * inc[1] + 0.114 * inc[2])) / 2;
+      const rows = new Float32Array(h); for (let y = 0; y < h; y++) { let n = 0; for (let x = 0; x < w; x++) if (lumR((y * w + x) * 4) < t0) n++; rows[y] = n; }
+      const minInk = Math.max(1, w * 0.004);
+      let r = Math.round((b.size * 1.7 - b.size * 0.3) * s); // inside the x-height of this line
+      let best = -1; for (let d = 0; d < h; d++) { for (const rr of [r - d, r + d]) if (rr >= 0 && rr < h && rows[rr] >= minInk) { best = rr; break; } if (best >= 0) break; }
+      if (best >= 0) {
+        const gap = Math.max(2, Math.round(s * 0.6)); let top = best, bot = best, e = 0;
+        for (let y = best - 1; y >= 0; y--) { if (rows[y] >= minInk) { top = y; e = 0; } else if (++e > gap) break; }
+        e = 0; for (let y = best + 1; y < h; y++) { if (rows[y] >= minInk) { bot = y; e = 0; } else if (++e > gap) break; }
+        for (let y = 0; y < h; y++) if (y < top - 1 || y > bot + 1) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; src[i] = bgc[0]; src[i + 1] = bgc[1]; src[i + 2] = bgc[2]; }
+        rctx.putImageData(new ImageData(src, w, h), 0, 0);
+      }
+    }
+    const lum = (d, i) => 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    const hx = v => [1, 3, 5].map(k => parseInt(v.slice(k, k + 2), 16));
+    const thr = (lum(hx(c.bg), 0) + lum(hx(c.ink), 0)) / 2;
+    const A0 = new Uint8Array(w * h); let aCount = 0;
+    for (let j = 0; j < w * h; j++) if (lum(src, j * 4) < thr) { A0[j] = 1; aCount++; }
+    if (aCount < 10) return null;
+    const dil = M0 => { const D = new Uint8Array(w * h); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const j = y * w + x; if (M0[j] || (x > 0 && M0[j - 1]) || (x < w - 1 && M0[j + 1]) || (y > 0 && M0[j - w]) || (y < h - 1 && M0[j + w])) D[j] = 1; } return D; };
+    const median = arr => { if (!arr.length) return 0; const t = arr.slice().sort((p, q) => p - q); return t[t.length >> 1]; };
+    // per-column ink extents: robust to tilt and to the odd descender
+    const cols = M => { const out = []; for (let x = 0; x < w; x++) { let t = -1, bt = -1; for (let y = 0; y < h; y++) if (M[y * w + x]) { if (t < 0) t = y; bt = y; } if (t >= 0) out.push([x, t, bt]); } return out; };
+    const fitSlope = cs => { let pts = cs.map(q => [q[0], q[2]]); for (let k = 0; k < 2; k++) { const n = pts.length; if (n < 4) return 0; const mx = pts.reduce((a, q) => a + q[0], 0) / n, my = pts.reduce((a, q) => a + q[1], 0) / n; let num = 0, den = 0; for (const q of pts) { num += (q[0] - mx) * (q[1] - my); den += (q[0] - mx) ** 2; } const sl = den ? num / den : 0; const res = pts.map(q => q[1] - (my + sl * (q[0] - mx))); const sd = Math.sqrt(res.reduce((a, r) => a + r * r, 0) / n) || 1; pts = pts.filter((q, i) => Math.abs(res[i]) <= Math.max(1.5, sd * 1.5)); if (k === 1) return sl; } return 0; };
+    const ac = cols(A0); const slope = clamp(fitSlope(ac), -0.06, 0.06);
+    const stat = cs => ({ hgt: median(cs.map(q => q[2] - q[1] + 1)), bot: median(cs.map(q => q[2] - slope * q[0])) });
+    const sA = stat(ac); if (sA.hgt < 3) return null;
+    const bgL = lum(hx(c.bg), 0), inkL = lum(hx(c.ink), 0); const D = new Float32Array(w * h); let sa = 0, saa = 0;
+    const blurPx = clamp(s * 0.35, 0.8, 4);
+    const bc2 = document.createElement('canvas'); bc2.width = w; bc2.height = h; const bx = bc2.getContext('2d', { willReadFrequently: true });
+    bx.filter = `blur(${blurPx}px)`; bx.drawImage(rc, 0, 0); const srcB = bx.getImageData(0, 0, w, h).data;
+    for (let j = 0; j < w * h; j++) { const v = clamp((bgL - lum(srcB, j * 4)) / Math.max(20, bgL - inkL), 0, 1); D[j] = v; sa += v; saa += v * v; }
+    let inkScan = 0; for (let j = 0; j < w * h; j++) if (A0[j]) inkScan++;
+    const off = document.createElement('canvas'); off.width = w; off.height = h; const ctx = off.getContext('2d', { willReadFrequently: true });
+    const baseY = b.size * 1.7 * s; let best = null;
+    const draw = (font, tf) => { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, w, h); ctx.setTransform(...tf); ctx.font = font; ctx.fillStyle = '#000'; ctx.textBaseline = 'alphabetic'; ctx.fillText(b.str, 0, baseY); const r = ctx.getImageData(0, 0, w, h).data; const M = new Uint8Array(w * h); for (let j = 0; j < w * h; j++) M[j] = r[j * 4 + 3] > 110 ? 1 : 0; return M; };
+    for (const fam of ['sans', 'serif', 'mono']) for (const bold of [false, true]) {
+      const font = `${bold ? 700 : 400} ${b.size * s}px ${FAMILY_CSS[fam]}`;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.font = font; const mw = ctx.measureText(b.str).width; if (!mw) continue;
+      const kx = w / mw;
+      const s1 = stat(cols(draw(font, [kx, 0, 0, 1, 0, 0]))); if (!s1.hgt) continue;
+      const sy = sA.hgt / s1.hgt;
+      const s2 = stat(cols(draw(font, [kx, slope, 0, sy, 0, 0])));
+      const B0 = draw(font, [kx, slope, 0, sy, 0, sA.bot - s2.bot]);
+      // final render, softened like the scan, compared by shading correlation (keeps thin serifs)
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, w, h); ctx.filter = `blur(${blurPx}px)`;
+      ctx.setTransform(kx, slope, 0, sy, 0, sA.bot - s2.bot); ctx.font = font; ctx.fillText(b.str, 0, baseY); ctx.filter = 'none';
+      const rr = ctx.getImageData(0, 0, w, h).data; let sb = 0, sbb = 0, sab = 0;
+      for (let j = 0; j < w * h; j++) { const v = rr[j * 4 + 3] / 255; sb += v; sbb += v * v; sab += v * D[j]; }
+      const N = w * h, cov = sab - sa * sb / N, va = saa - sa * sa / N, vb = sbb - sb * sb / N;
+      const shape = va > 0 && vb > 0 ? cov / Math.sqrt(va * vb) : 0;
+      const ratio = (mw * sy) / w;
+      let inkCand = 0; for (let j = 0; j < w * h; j++) if (B0[j]) inkCand++;
+      const weight = inkScan && inkCand ? Math.abs(Math.log(inkCand / inkScan)) : 1;
+      const score = shape - 2 * Math.abs(Math.log(ratio)) - 0.8 * weight;
+      if (!best || score > best.score) best = { fam, bold, score, size: r2(b.size * sy) };
+    }
+    return best;
+  } catch (e) { console.warn(e); return null; }
+}
+function convertTbox(tb, p, pel) {
   const b = tb._b; const before = JSON.stringify(S.pages); const c = sampleColors(pel, b);
-  tb.style.pointerEvents = 'none';
-  const key = await captureFont(p, b.fontName);
   const size = r2(b.size);
-  const o = { id: uid(), t: 'text', x: b.x, y: 0, text: b.str, size, family: key ? 'pdf' : b.fam, fb: b.fam, pdfFont: key || undefined, bold: !!b.bold, italic: !!b.italic, color: c.ink, bg: c.bg, minW: b.w + 1, op: 1, fromPdf: true };
+  // start editing straight away with a first guess; the exact font is applied a moment later
+  const o = { id: uid(), t: 'text', x: b.x, y: 0, text: b.str, size, family: b.fam, fb: b.fam, bold: !!b.bold || !!c.heavy, italic: !!b.italic, color: c.ink, bg: c.bg, minW: b.w + 1, op: 1, fromPdf: true };
   o.y = b.base - baseK(o) * size;
   p.objs.push(o); tb.remove(); renderOverlay(p); select(o, p); startEdit(o, p, false, before);
-  if (!key) toast('This line uses a font that can\'t be reused, so the closest standard font is used.', false, 3500);
+  refineFont(o, p, pel, b, c);
+}
+async function refineFont(o, p, pel, b, c) {
+  const key = await captureFont(p, b.fontName);
+  if (key) { o.family = 'pdf'; o.pdfFont = key; o.bold = !!b.bold; }
+  else {
+    const g = await guessFontFromPixels(pel, b, c);
+    if (g) { o.family = g.fam; o.fb = g.fam; o.bold = g.bold; if (g.size > 3 && Math.abs(g.size / o.size - 1) < 0.35) o.size = g.size; }
+  }
+  o.y = b.base - baseK(o) * o.size;
+  const el = objEl(o.id);
+  if (el) { const fresh = makeEl(o, p); const keep = el.className; el.style.cssText = fresh.style.cssText; el.className = keep; }
+  drawSel(); if (S.sel === o.id) renderProps();
+  if (!key && !refineFont.hinted) { refineFont.hinted = true; toast('This line has no reusable font, so the closest matching standard font was chosen. You can change it under Font.', false, 3500); }
 }
 
 async function matchText(o, p) {
@@ -1414,6 +1521,103 @@ function alignSel(where) {
   snap(); moveObj(s.o, tx !== undefined ? tx - b.x : 0, ty !== undefined ? ty - b.y : 0); refreshObj(s.o, s.p); drawSel(); updatePosInputs();
 }
 function updatePosInputs() { const s = getSel(); if (!s) return; const b = objBox(s.o); const x = P.querySelector('#pos-x'), y = P.querySelector('#pos-y'); if (x && document.activeElement !== x) x.value = toMM(b.x); if (y && document.activeElement !== y) y.value = toMM(b.y); }
+
+/* ================= scanned pages: OCR ================= */
+const OCR_CFG = {
+  workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+  corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
+  langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int'
+};
+async function pageChars(p) { if (p.src < 0) return 0; try { const tc = await (await jsPage(p)).getTextContent(); return tc.items.reduce((n, i) => n + (i.str || '').trim().length, 0); } catch { return 0; } }
+async function detectScanned() {
+  const n = Math.min(S.pages.length, 6); let scanned = 0, real = 0;
+  for (let i = 0; i < n; i++) { const p = S.pages[i]; if (p.src < 0) continue; (await pageChars(p)) < 15 ? scanned++ : real++; }
+  const show = scanned > 0 && scanned >= real;
+  $('#scanBar').hidden = !show; $('.work').classList.toggle('has-scan', show);
+}
+$('#scanX').onclick = () => { $('#scanBar').hidden = true; $('.work').classList.remove('has-scan'); };
+$('#scanGo').onclick = () => makeEditable(false);
+let ocrWorker = null;
+async function getOcr(onProg) {
+  if (typeof Tesseract === 'undefined') throw new Error('Text recognition did not load.');
+  if (!ocrWorker) { window.__ocrLog = onProg; ocrWorker = await Tesseract.createWorker('eng', 1, { ...OCR_CFG, logger: m => window.__ocrLog && window.__ocrLog(m) }); }
+  window.__ocrLog = onProg; return ocrWorker;
+}
+function chunksToItems(data, sc) {
+  const items = [];
+  for (const b of data.blocks || []) for (const par of b.paragraphs || []) for (const ln of par.lines || []) {
+    const words = (ln.words || []).filter(w => w.text && w.text.trim() && w.confidence > 25);
+    if (!words.length) continue;
+    const bl = ln.baseline || {}; const hasBl = bl.has_baseline !== false && bl.x1 > bl.x0;
+    const baseAt = x => hasBl ? bl.y0 + (bl.y1 - bl.y0) * (x - bl.x0) / (bl.x1 - bl.x0) : ln.bbox.y1;
+    let cur = null;
+    const flush = () => {
+      if (!cur) return;
+      const base = baseAt((cur.x0 + cur.x1) / 2);
+      const capH = Math.max(1, base - cur.top);
+      const size = capH / 0.78;
+      items.push({ text: cur.words.join(' '), x: cur.x0 / sc, w: (cur.x1 - cur.x0) / sc, base: base / sc, size: size / sc, conf: cur.conf / cur.words.length });
+      cur = null;
+    };
+    for (const w of words) {
+      const hgt = w.bbox.y1 - w.bbox.y0;
+      if (cur && (w.bbox.x0 - cur.x1) > Math.max(hgt, cur.h) * 1.6) flush();
+      if (!cur) cur = { words: [], x0: w.bbox.x0, x1: w.bbox.x1, top: w.bbox.y0, h: hgt, conf: 0 };
+      cur.words.push(w.text); cur.x1 = Math.max(cur.x1, w.bbox.x1); cur.top = Math.min(cur.top, w.bbox.y0); cur.h = Math.max(cur.h, hgt); cur.conf += w.confidence;
+    }
+    flush();
+  }
+  return items;
+}
+async function makeEditable(fromMenu) {
+  if (!S.open) return; finishEdit();
+  const todo = [];
+  busy('Checking pages…');
+  for (let i = 0; i < S.pages.length; i++) { const p = S.pages[i]; if (p.src >= 0 && (await pageChars(p)) < 15) todo.push(i); }
+  if (!todo.length) { done(); return toast(fromMenu ? 'This document already has editable text on every page.' : 'No scanned pages found.', false, 3500); }
+  const results = {};
+  try {
+    busy('Loading text recognition…');
+    let pageNo = 0;
+    const worker = await getOcr(m => { if (m.status === 'recognizing text') busy(`Recognising text · page ${pageNo} of ${todo.length} · ${Math.round((m.progress || 0) * 100)}%`); else if (/load|initiali/i.test(m.status || '')) busy('Loading text recognition…'); });
+    for (const i of todo) {
+      pageNo++; busy(`Recognising text · page ${pageNo} of ${todo.length}`);
+      const p = S.pages[i]; const { W, H, R } = viewSize(p);
+      const sc = clamp(2600 / Math.max(W, H), 1.5, 4);
+      const pg = await jsPage(p); const vp = pg.getViewport({ scale: sc, rotation: R });
+      const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+      const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      await pg.render({ canvasContext: ctx, viewport: vp }).promise;
+      const { data } = await worker.recognize(c, {}, { blocks: true, text: false, hocr: false, tsv: false });
+      results[i] = chunksToItems(data, sc);
+    }
+  } catch (e) {
+    console.error(e); done();
+    return toast(inViewer ? 'Text recognition can\'t run inside this preview. Open Inkwell from your website or the downloaded file to make scans editable.' : 'Text recognition could not load. Check your internet connection and try again.', true, 7000);
+  }
+  const total = Object.values(results).reduce((n, a) => n + a.length, 0);
+  if (!total) { done(); return toast('No readable text was found on the scanned pages.', true, 5000); }
+  try {
+    const doc = await buildPdfDoc(allIdx(), (n, N) => busy(`Building editable PDF · page ${n + 1} of ${N}`), async (idx, page, W, H, F, safe) => {
+      const items = results[idx]; if (!items || !items.length) return;
+      const font = await F('Helvetica');
+      page.pushOperators(setTextRenderingMode(TextRenderingMode.Invisible));
+      for (const it of items) {
+        const t = safe(it.text); if (!t.trim()) continue;
+        const tw = font.widthOfTextAtSize(t, it.size); if (!tw) continue;
+        page.pushOperators(setCharacterSqueeze(clamp(100 * it.w / tw, 20, 500)));
+        page.drawText(t, { x: it.x, y: H - it.base, size: it.size, font });
+      }
+      page.pushOperators(setCharacterSqueeze(100), setTextRenderingMode(TextRenderingMode.Fill));
+    });
+    busy('Finishing…'); const bytes = await doc.save(); const name = S.name; done();
+    await openPdf(bytes, name); setDirty(true);
+    $('#scanBar').hidden = true; $('.work').classList.remove('has-scan');
+    setTool('edittext');
+    const conf = Object.values(results).flat(); const avg = conf.reduce((a, b) => a + b.conf, 0) / conf.length;
+    toast(`Recognised ${total} lines on ${todo.length} page${todo.length > 1 ? 's' : ''}. Click any line to edit it.${avg < 70 ? ' The scan is blurry, so check edited text carefully.' : ''}`, false, 6000);
+  } catch (e) { console.error(e); done(); toast('Could not build the editable PDF: ' + (e.message || e), true, 6000); }
+}
 
 /* ================= page operations ================= */
 function rotatePage(i, dir) {
@@ -1866,7 +2070,7 @@ function stdKey(f, b, i) {
   if (f === 'mono') return b && i ? 'CourierBoldOblique' : b ? 'CourierBold' : i ? 'CourierOblique' : 'Courier';
   return b && i ? 'HelveticaBoldOblique' : b ? 'HelveticaBold' : i ? 'HelveticaOblique' : 'Helvetica';
 }
-async function buildPdfDoc(indices, progress) {
+async function buildPdfDoc(indices, progress, extra) {
   const out = await PDFDocument.create();
   if (typeof fontkit !== 'undefined') out.registerFontkit(fontkit);
   const pdfFonts = {};
@@ -1895,6 +2099,7 @@ async function buildPdfDoc(indices, progress) {
     page.pushOperators(pushGraphicsState(), concatTransformationMatrix(...M));
     for (const o of p.objs) await drawObj(out, page, o, W, H, F, imgs, safe);
     await drawDecor(page, n, indices.length, W, H, F, safe);
+    if (extra) await extra(indices[n], page, W, H, F, safe);
     page.pushOperators(popGraphicsState());
   }
   out.setTitle(baseName()); out.setCreator('Inkwell PDF Studio'); out.setProducer('Inkwell PDF Studio');
@@ -2349,6 +2554,7 @@ cvMenu.onclick = async e => {
   if (k === 'docx') $('#dlgWord').showModal();
   else if (k === 'png') makePngs();
   else if (k === 'txt') makeTxt();
+  else if (k === 'ocr') makeEditable(true);
   else if (k === 'extract') { $('#exInfo').textContent = `This document has ${S.pages.length} page${S.pages.length > 1 ? 's' : ''}.`; $('#exRange').value = S.pages.length > 1 ? `1-${Math.min(2, S.pages.length)}` : '1'; $('#dlgExtract').showModal(); }
   else if (k === 'fromword') homeAct('fromword');
   else if (k === 'fromimg') homeAct('fromimg');
