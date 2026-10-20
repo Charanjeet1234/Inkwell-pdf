@@ -1,4 +1,6 @@
-# Inkwell PDF Studio
+<p align="center"><img src="assets/logo.svg" width="88" alt="Inkwell logo"></p>
+
+<h1 align="center">Inkwell PDF Studio</h1>
 
 Edit, sign and convert PDFs in the browser. Everything runs on the user's own device — files are never uploaded to a server.
 
@@ -16,6 +18,11 @@ Edit, sign and convert PDFs in the browser. Everything runs on the user's own de
   - Word (`.docx`) → PDF, with an editable preview first
   - Images → PDF
 - **Extras** — watermark, page numbers, keyboard shortcuts, drag and drop, light and dark mode, works on phones.
+
+## Brand assets
+
+- `favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` — browser and home-screen icons (also embedded inside `index.html`, so the single file works on its own)
+- `assets/logo.svg` — the logo mark; `assets/icon-192.png`, `assets/icon-512.png` — app icons used by `site.webmanifest`, which lets phones and Chrome install Inkwell like an app
 
 ## Run locally
 
