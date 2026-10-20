@@ -494,7 +494,10 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
       <div class="fonts" id="sigFonts"></div>
     </div>
     <div data-spane="upload" hidden>
-      <div class="upl" id="sigUpl"><div><p style="margin:0 0 10px">Use a photo or scan of your signature</p><button class="btn" id="sigPick">Choose image</button></div></div>
+      <div class="upl" id="sigUpl">
+        <div id="sigUplEmpty"><p style="margin:0 0 10px">Use a photo or scan of your signature</p><button class="btn" id="sigPick" type="button">Choose image</button></div>
+        <div id="sigUplFull" hidden><img id="sigUplImg" alt="Uploaded signature"><p style="margin:10px 0 0;display:flex;gap:8px;justify-content:center"><button class="btn" id="sigPickAgain" type="button">Choose another</button><button class="btn ghost" id="sigUplClear" type="button">Remove</button></p></div>
+      </div>
       <label class="check" style="margin-top:10px"><input type="checkbox" id="sigKnock" checked> Remove the white background</label>
     </div>
   </div>
@@ -1508,11 +1511,34 @@ pad.addEventListener('pointerdown', e => { padDown = true; pad.setPointerCapture
 pad.addEventListener('pointermove', e => { if (!padDown) return; const r = pad.getBoundingClientRect(); const st = sigStrokes[sigStrokes.length - 1]; const pt = [e.clientX - r.left, e.clientY - r.top]; const l = st[st.length - 1]; if (Math.hypot(pt[0] - l[0], pt[1] - l[1]) > 1) { st.push(pt); drawPad(); } });
 pad.addEventListener('pointerup', () => padDown = false);
 $('#sigClear').onclick = () => { sigStrokes = []; drawPad(); };
-$('#sigPick').onclick = async () => {
+function knockOut(ctx, w, h) {
+  const id = ctx.getImageData(0, 0, w, h), d = id.data;
+  const lum = i => 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+  const border = []; const step = Math.max(1, Math.floor((w + h) / 400));
+  for (let x = 0; x < w; x += step) { border.push(lum(x * 4), lum(((h - 1) * w + x) * 4)); }
+  for (let y = 0; y < h; y += step) { border.push(lum(y * w * 4), lum((y * w + w - 1) * 4)); }
+  border.sort((p, q) => p - q);
+  const bg = border[Math.floor(border.length * 0.6)] || 245;
+  const hi = bg - 14, lo = Math.max(0, bg - 90);
+  for (let i = 0; i < d.length; i += 4) { const l = lum(i); d[i + 3] = Math.round(d[i + 3] * clamp((hi - l) / (hi - lo), 0, 1)); }
+  ctx.putImageData(id, 0, 0);
+}
+async function processUpload() {
+  const img = await loadImg(sigUpload.data); const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0); if ($('#sigKnock').checked) knockOut(x, c.width, c.height); return c;
+}
+async function showUpload() {
+  const has = !!sigUpload; $('#sigUplEmpty').hidden = has; $('#sigUplFull').hidden = !has;
+  if (has) { try { $('#sigUplImg').src = (await processUpload()).toDataURL('image/png'); } catch { $('#sigUplImg').src = sigUpload.data; } }
+}
+async function pickSigImage() {
   const [f] = await pickFiles('image/*'); if (!f) return;
-  try { const a = await loadImageFile(f, 1600); sigUpload = a; $('#sigUpl').innerHTML = `<div><img src="${a.data}" alt="Uploaded signature"><p style="margin:10px 0 0"><button class="btn ghost" id="sigPick2">Choose another</button></p></div>`; $('#sigPick2').onclick = () => $('#sigPick').click(); }
-  catch (e) { toast(e.message, true); }
-};
+  try { sigUpload = await loadImageFile(f, 1600); await showUpload(); } catch (e) { toast(e.message, true); }
+}
+$('#sigPick').onclick = pickSigImage;
+$('#sigPickAgain').onclick = pickSigImage;
+$('#sigUplClear').onclick = () => { sigUpload = null; showUpload(); };
+$('#sigKnock').onchange = showUpload;
 function trimCanvas(c) {
   const ctx = c.getContext('2d'); const { width: w, height: h } = c; const d = ctx.getImageData(0, 0, w, h).data;
   let x0 = w, y0 = h, x1 = -1, y1 = -1;
@@ -1531,8 +1557,7 @@ async function buildSignature() {
     c.width = Math.min(w, 4000); c.height = size * 2; const x = c.getContext('2d'); x.font = font; x.fillStyle = sigColor; x.textBaseline = 'middle'; x.fillText(name, size / 2, size);
   } else {
     if (!sigUpload) throw new Error('Choose an image of your signature first.');
-    const img = await loadImg(sigUpload.data); c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; const x = c.getContext('2d'); x.drawImage(img, 0, 0);
-    if ($('#sigKnock').checked) { const id = x.getImageData(0, 0, c.width, c.height), d = id.data; for (let i = 0; i < d.length; i += 4) { const l = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; d[i + 3] = Math.round(d[i + 3] * clamp((235 - l) / 70, 0, 1)); } x.putImageData(id, 0, 0); }
+    c = await processUpload();
   }
   const t = trimCanvas(c); if (!t) throw new Error('The signature is empty.');
   return { data: t.toDataURL('image/png'), type: 'png', w: t.width, h: t.height };
@@ -1554,7 +1579,7 @@ $('#sigInsert').onclick = async () => {
   try {
     const a = await buildSignature();
     if ($('#sigRemember').checked) { const list = ls.get('inkwell.sigs', []); list.unshift(a); if (!ls.set('inkwell.sigs', list.slice(0, 5))) ls.set('inkwell.sigs', list.slice(0, 2)); }
-    sigDlg.close(); sigStrokes = []; drawPad(); placeImage(a, { width: 150, kind: 'sign' });
+    sigDlg.close(); sigStrokes = []; drawPad(); sigUpload = null; showUpload(); placeImage(a, { width: 150, kind: 'sign' });
   } catch (e) { toast(e.message, true); }
 };
 window.addEventListener('resize', () => { if (sigDlg.open && sigTab === 'draw') sizePad(); });
