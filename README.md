@@ -109,6 +109,10 @@ Open `https://<your-site>/admin.html`, paste your `ADMIN_TOKEN`, enter your emai
 
 Pro needs the website: the downloaded single file, `localhost` and the Claude preview always run the free version.
 
+## Free accounts (Supabase)
+
+This branch includes the same sign-up-to-save accounts as `main`. Set `SUPABASE_URL`, `SUPABASE_ANON_KEY` (and optionally `SUPABASE_GOOGLE=true`) in Vercel; see the "Accounts" section of the `main` branch README for the full Supabase setup, including the custom email (SMTP) step that is required for real users. Without these variables, accounts stay off and saving works without one.
+
 ## Usage statistics
 
 The hosted site counts visitors anonymously with [Vercel Web Analytics](https://vercel.com/docs/analytics): no cookies, no personal data, and never any file names or file contents. It stays off when `index.html` is opened as a local file, on localhost and in the Claude preview.
