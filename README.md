@@ -22,6 +22,23 @@ Edit, sign and convert PDFs in the browser. Everything runs on the user's own de
   - Images → PDF
 - **Extras** — watermark, page numbers, keyboard shortcuts, drag and drop, light and dark mode, works on phones.
 
+### Inkwell Pro (paid)
+
+| Free | Pro |
+| --- | --- |
+| Edit text in the original font, annotate, sign, page tools, PDF ↔ Word, images, merge and split | Everything in Free, plus: |
+| Saved files carry a small "Edited with Inkwell PDF Studio" mark | No mark on saved files |
+| | Make scanned PDFs editable (OCR), automatic font/weight/size detection on scans |
+| | 20 premium fonts and extra thickness control |
+| | Password protect (AES-256) and unlock PDFs |
+| | True redaction (redacted pages are rebuilt as images, so nothing underneath survives) |
+| | Compress PDFs (balanced or maximum) |
+| | Fill PDF form fields (saved filled and flattened) |
+| | Batch: compress, watermark, page numbers, password-protect or merge many PDFs |
+| | Stamps (Approved, Paid, Received…) and reusable templates |
+
+Plans: monthly, yearly and lifetime, sold through Stripe Checkout. A licence works on up to 3 devices at a time.
+
 ## Brand assets
 
 - `favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` — browser and home-screen icons (also embedded inside `index.html`, so the single file works on its own)
@@ -39,6 +56,47 @@ Any static host works — there is nothing to build.
 - **GitHub Pages:** Settings → Pages → deploy from branch `main`, folder `/ (root)`.
 - **Netlify / Cloudflare Pages:** connect the repo, leave the build command empty, publish directory `/`.
 
+## Selling Inkwell Pro
+
+Licensing runs in the Vercel functions in `api/`. There is no database: Stripe is the record of who has paid. Licence keys look like `INK-…` and are printed on the customer's Stripe invoices.
+
+### Go-live checklist
+
+1. **Stripe account.** Create and activate a Stripe account for your business (a UAE trade licence is required). Stripe reviews your website, so deploy first with the policy pages filled in (step 7).
+2. **Product and prices.** Either create a product with three prices in the Stripe dashboard (monthly recurring, yearly recurring, one-time lifetime), or run:
+   ```bash
+   STRIPE_SECRET_KEY=sk_test_... node scripts/setup-stripe.js --currency usd --monthly 600 --yearly 4800 --lifetime 9900
+   ```
+   (amounts are in cents). It prints the three price IDs.
+3. **Licence signing key.** Run `node scripts/generate-license-key.js` once. Keep the output secret and never commit it. Changing it later invalidates every issued licence key.
+4. **Vercel environment variables** (Project → Settings → Environment Variables), then redeploy:
+   | Variable | Value |
+   | --- | --- |
+   | `STRIPE_SECRET_KEY` | `sk_test_…` while testing, `sk_live_…` when live |
+   | `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_YEARLY` / `STRIPE_PRICE_LIFETIME` | the price IDs from step 2 |
+   | `LICENSE_PRIVATE_KEY` | the key from step 3 |
+   | `PUBLIC_URL` *(optional)* | your site address, e.g. `https://pdf.example.com` |
+   | `STRIPE_AUTOMATIC_TAX` *(optional)* | `true` once Stripe Tax is set up |
+   | `INKWELL_MAX_DEVICES` *(optional)* | devices per licence, default `3` |
+
+   Until all five required variables are set, the app shows "Pro purchases are not switched on yet".
+5. **Customer portal.** Stripe → Settings → Billing → Customer portal: save the default settings and allow cancelling, invoice history and switching between monthly and yearly. The **Manage billing** button opens it.
+6. **Receipts.** Stripe → Settings → Customer emails: turn on emails for successful payments and invoices, so customers get their licence key by email.
+7. **Policy pages.** Fill in every highlighted `[placeholder]` in `terms.html`, `privacy.html` and `refund.html` (company name, address, support email, governing law, refund days) and have them reviewed for your business.
+8. **Test** with Stripe test mode and card `4242 4242 4242 4242`: buy each plan, check Pro activates, open **Manage billing**, cancel, and activate on a second browser with the licence key.
+9. **Go live**: swap in your live secret key and live price IDs (run step 2 again with `sk_live_…`), then redeploy.
+
+### Refunds and cancellations
+
+- **Subscriptions:** refund in the Stripe dashboard *and cancel the subscription*; Pro switches off on that customer's next licence check (within a day).
+- **Lifetime:** refund the payment in Stripe; the licence switches off automatically on the next check. Disputed payments are treated the same way.
+
+### How the licence check works (and its limits)
+
+The server verifies every purchase with Stripe and issues a short-lived token signed with your private key; the app checks the signature and refreshes it about once a day. Because Inkwell runs in the browser, a technically skilled person could edit the app's code to unlock Pro features locally. That is true of every browser-only app; the checks stop casual sharing of keys (3-device limit, daily refresh), not determined tampering. Keep the repository private.
+
+Pro needs the website: the downloaded single file, `localhost` and the Claude preview always run the free version.
+
 ## Usage statistics
 
 The hosted site counts visitors anonymously with [Vercel Web Analytics](https://vercel.com/docs/analytics): no cookies, no personal data, and never any file names or file contents. It stays off when `index.html` is opened as a local file, on localhost and in the Claude preview.
@@ -50,7 +108,7 @@ The hosted site counts visitors anonymously with [Vercel Web Analytics](https://
 - **Devices, operating systems and browsers**
 - **Referrers** (which sites sent people here)
 
-The app also sends anonymous feature events (`Open PDF`, `Save PDF`, `Convert`, `Signature`, `Edit text`, `Make scan editable`) with at most a page-count range or method, never file details. Vercel only records these custom events on the Pro plan; on the free Hobby plan they're ignored and only visits are counted (50,000 events a month, 1-month reporting window).
+The app also sends anonymous feature events (`Open PDF`, `Save PDF`, `Convert`, `Signature`, `Edit text`, `Make scan editable`, `Pro tool`, `Upgrade prompt`, `Checkout started`, `Pro activated`) with at most a page-count range or method, never file details. Vercel only records these custom events on the Pro plan; on the free Hobby plan they're ignored and only visits are counted (50,000 events a month, 1-month reporting window).
 
 ## Built with
 
@@ -61,6 +119,8 @@ The app also sends anonymous feature events (`Open PDF`, `Save PDF`, `Convert`, 
 - [fontkit](https://github.com/foliojs/fontkit) — re-embedding the PDF's own fonts
 - [Tesseract.js](https://tesseract.projectnaptha.com/) — text recognition for scanned pages
 - [Fontsource](https://fontsource.org/) via jsDelivr — open-source font files
+- [@cantoo/pdf-lib](https://github.com/cantoo-scribe/pdf-lib) — AES-256 encryption and unlocking (loaded only when used)
+- [Stripe](https://stripe.com/) — payments, subscriptions and the customer portal
 
 ## Known limits
 
@@ -70,4 +130,4 @@ The app also sends anonymous feature events (`Open PDF`, `Save PDF`, `Convert`, 
 - PDF → Word simplifies complex layouts (multi-column pages, positioned tables) into paragraphs. Run **Make editable** first if you want text from scanned pages in Word.
 - Text recognition is English-only, needs an internet connection the first time (about 3 MB of language data) and runs on your device; it does not run inside the Claude preview. Accuracy depends on scan quality. Edited lines on a scan use the closest standard typeface and are placed straight, so on a tilted scan they can look very slightly level compared with the original.
 - Library fonts cover Latin characters and need an internet connection the first time each is used; they can't load inside the Claude preview. Automatic detection picks the closest available font, not necessarily the document's exact typeface (for example Arial is matched as Helvetica or Arimo, and similar slab fonts can be swapped).
-- Password-protected PDFs and legacy `.doc` files are not supported.
+- Password-protected PDFs open with Pro after you enter the password. PDFs with owner restrictions (no open password, but editing disallowed by the author) can be viewed but not saved, to respect those restrictions. Legacy `.doc` files are not supported.

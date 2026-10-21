@@ -115,7 +115,8 @@ button{cursor:pointer}
 .sigline .ln{flex:1;border-bottom:1.5px solid #1b1f2a;height:30px;position:relative}
 .sigline .ln span{position:absolute;left:12px;bottom:2px;font:600 26px/1 var(--f-hand);color:var(--accent);transform:rotate(-4deg)}
 
-.actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:8px}
+.actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:8px}
+@media (max-width:1100px) and (min-width:560px){.actions{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .tile{display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;padding:16px;border-radius:14px;border:1px solid var(--line);background:var(--panel);transition:border-color .15s, transform .15s}
 .tile:hover{border-color:var(--accent);transform:translateY(-2px)}
 .tile .ti{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
@@ -327,6 +328,66 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
 .dropveil{position:fixed;inset:10px;border:3px dashed var(--accent);border-radius:20px;background:color-mix(in srgb,var(--accent-soft) 70%,transparent);z-index:150;display:grid;place-items:center;font:700 26px var(--f-display);color:var(--accent);pointer-events:none}
 .libwarn{background:var(--danger);color:#fff;padding:10px 16px;text-align:center;font-weight:500}
 
+.pro-pill{display:inline-flex;align-items:center;font:700 9.5px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent);border-radius:5px;padding:3px 5px;margin-left:6px;vertical-align:2px;flex:none}
+.is-pro .pro-pill.lock{display:none}
+.btn.upgrade{background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 70%,#9b5cff));color:var(--accent-ink);border-color:transparent}
+.btn.upgrade:hover{filter:brightness(1.08)}
+.btn.prochip{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.tool.pro::before{content:"";position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.is-pro .tool.pro::before{display:none}
+.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.plan{position:relative;display:flex;flex-direction:column;gap:4px;text-align:left;border:1.5px solid var(--line);border-radius:14px;background:var(--panel);padding:14px 14px 12px}
+.plan:hover{border-color:var(--accent)}
+.plan.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.plan b{font:700 15px var(--f-display)}
+.plan .amt{font:800 26px/1.1 var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.plan .amt small{font:500 12px var(--f-body);color:var(--muted);letter-spacing:0}
+.plan .note{font-size:12px;color:var(--muted)}
+.plan .tag{position:absolute;top:-9px;right:10px;font:700 10px var(--f-body);text-transform:uppercase;letter-spacing:.06em;background:var(--ok);color:#fff;border-radius:6px;padding:3px 6px}
+.feats{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin:16px 0 4px;padding:0;list-style:none;font-size:13px}
+.feats li{display:flex;gap:8px;align-items:flex-start}
+.feats .i{color:var(--ok);width:16px;height:16px;margin-top:2px}
+.freeline{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+.keyrow{display:flex;gap:8px;margin-top:8px}
+.keyrow .inp{flex:1;font-family:var(--f-mono)}
+.keybox{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:500 14px var(--f-mono);word-break:break-all}
+.keybox span{flex:1;min-width:0}
+.acct dl{display:grid;grid-template-columns:110px 1fr;gap:8px 12px;margin:0 0 14px;font-size:13.5px}
+.acct dt{color:var(--muted)}
+.acct dd{margin:0;font-weight:500}
+.unavail{background:var(--panel-2);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--muted);margin-top:12px}
+.homefoot{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);padding-top:6px}
+.homefoot a{color:var(--muted)}
+.homefoot a:hover{color:var(--accent)}
+.prostrip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;font-size:13.5px;color:var(--muted)}
+.prostrip .btn{height:32px;font-size:13px}
+.formbar{flex:none;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:10px;padding-left:max(88px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:color-mix(in srgb,var(--ok) 14%,var(--panel));border-bottom:1px solid var(--line);font-size:13.5px}
+.formbar .i{color:var(--ok);width:22px;height:22px}
+.formbar span{flex:1;min-width:200px}
+.page .fl{position:absolute;inset:0;z-index:3;pointer-events:none}
+.fl .fld{position:absolute;pointer-events:auto;box-sizing:border-box;border:1px solid rgba(28,134,86,.55);background:rgba(28,134,86,.08);border-radius:2px;color:#111;font-family:Helvetica,Arial,sans-serif;padding:0 3px;margin:0;outline:none}
+.fl .fld:focus{border-color:#1c8656;background:rgba(28,134,86,.14);box-shadow:0 0 0 2px rgba(28,134,86,.25)}
+.fl textarea.fld{resize:none;line-height:1.2;padding-top:2px}
+.fl input[type=checkbox].fld,.fl input[type=radio].fld{accent-color:#1c8656;padding:0;background:none;border:0}
+.viewer:not(.tool-select) .fl{display:none}
+.obj.redact{background:#000}
+.obj.stamp{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Helvetica,Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.06em;line-height:1.05;box-sizing:border-box;white-space:nowrap;overflow:hidden}
+.obj.stamp small{font-weight:600;letter-spacing:.04em}
+.stampgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.stampgrid button{height:62px;border:1px solid var(--line);border-radius:12px;background:#fff;display:grid;place-items:center;padding:8px}
+.stampgrid button:hover{border-color:var(--accent)}
+.stampgrid .sp{border:3px solid;outline:1px solid;outline-offset:-6px;padding:6px 12px;font:700 15px Helvetica,Arial,sans-serif;letter-spacing:.06em;line-height:1;border-radius:4px}
+.tpls{display:grid;gap:6px}
+.tpl{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.tpl span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dropzone{border:1.5px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--muted);background:var(--panel-2)}
+.dropzone.over{border-color:var(--accent);color:var(--accent)}
+.flist{display:grid;gap:4px;max-height:160px;overflow:auto;margin-top:10px;font-size:13px}
+.flist div{display:flex;justify-content:space-between;gap:8px;background:var(--panel-2);border-radius:8px;padding:6px 10px}
+.flist small{color:var(--muted);font-family:var(--f-mono)}
+.formgrid{display:grid;gap:10px}
+.formgrid label{font-size:12.5px;color:var(--muted);display:grid;gap:4px}
+@media (max-width:820px){.plans{grid-template-columns:1fr}.feats{grid-template-columns:1fr}.formbar{padding-left:max(16px,env(safe-area-inset-left,0px))}}
 .only-md{display:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:1180px){
@@ -415,6 +476,15 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
     <symbol id="i-ta-c" viewBox="0 0 24 24"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></symbol>
     <symbol id="i-ta-r" viewBox="0 0 24 24"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></symbol>
     <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 9h8M8 12h8M8 15h5"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5 13.8 9l5.7 1.8-5.7 1.8L12 18.5l-1.8-5.9-5.7-1.8L10.2 9z"/><path d="M19 3v3M17.5 4.5h3"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/></symbol>
+    <symbol id="i-compress" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></symbol>
+    <symbol id="i-redact" viewBox="0 0 24 24"><path d="M4 6h16M4 18h9"/><rect x="4" y="9.5" width="16" height="5" rx="1" fill="currentColor"/></symbol>
+    <symbol id="i-form" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h5"/><rect x="7.5" y="15.5" width="3" height="2.5" rx=".5"/></symbol>
+    <symbol id="i-batch" viewBox="0 0 24 24"><path d="M8 3h9l3 3v11H8z"/><path d="M5 6v15h11"/><path d="m11 12 2 2 4-4"/></symbol>
+    <symbol id="i-stamp" viewBox="0 0 24 24"><path d="M9.5 4.5h5l-1 7h-3z"/><path d="M5 14.5h14v3H5zM6 20.5h12"/><path d="M8 11.5h8l1 3H7z"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l2 2M14 9l2 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
     <symbol id="i-all" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></symbol>
   </defs>
 </svg>
@@ -445,7 +515,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
     </div>
     <button class="btn ghost" id="btnOpen" title="Open (Ctrl+O)"><svg class="i"><use href="#i-open"/></svg><span class="hide-sm">Open</span></button>
     <div class="menuwrap">
-      <button class="btn" id="btnConvert" aria-haspopup="menu" aria-expanded="false"><svg class="i"><use href="#i-convert"/></svg><span class="hide-sm">Convert</span><svg class="i" style="width:14px"><use href="#i-chev"/></svg></button>
+      <button class="btn" id="btnConvert" aria-haspopup="menu" aria-expanded="false"><svg class="i"><use href="#i-convert"/></svg><span class="hide-sm">Tools</span><svg class="i" style="width:14px"><use href="#i-chev"/></svg></button>
       <div class="menu" id="convertMenu" role="menu" hidden>
         <h6>From this PDF</h6>
         <button data-cv="docx" class="needs-doc"><svg class="i"><use href="#i-word"/></svg><span><b>Word document</b><small>Editable .docx, or an exact-look copy</small></span></button>
@@ -458,8 +528,17 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
         <button data-cv="fromword"><svg class="i"><use href="#i-pdf"/></svg><span><b>Word to PDF</b><small>Review the document, then create a PDF</small></span></button>
         <button data-cv="fromimg"><svg class="i"><use href="#i-image"/></svg><span><b>Images to PDF</b><small>Photos and scans become pages</small></span></button>
         <button data-cv="merge" class="needs-doc"><svg class="i"><use href="#i-merge"/></svg><span><b>Add pages from another PDF</b><small>Merge into this document</small></span></button>
+        <hr>
+        <h6>Pro tools</h6>
+        <button data-cv="protect" class="needs-doc"><svg class="i"><use href="#i-lock"/></svg><span><b>Protect with password<span class="pro-pill lock">Pro</span></b><small>Lock with AES-256 and set print/copy permissions</small></span></button>
+        <button data-cv="compress" class="needs-doc"><svg class="i"><use href="#i-compress"/></svg><span><b>Compress PDF<span class="pro-pill lock">Pro</span></b><small>Make the file smaller to email or upload</small></span></button>
+        <button data-cv="redact" class="needs-doc"><svg class="i"><use href="#i-redact"/></svg><span><b>Redact<span class="pro-pill lock">Pro</span></b><small>Permanently remove text and images</small></span></button>
+        <button data-cv="forms" class="needs-doc"><svg class="i"><use href="#i-form"/></svg><span><b>Fill form fields<span class="pro-pill lock">Pro</span></b><small>Type into the PDF's own form fields</small></span></button>
+        <button data-cv="stamps" class="needs-doc"><svg class="i"><use href="#i-stamp"/></svg><span><b>Stamps &amp; templates<span class="pro-pill lock">Pro</span></b><small>Approved, Paid, Received and your saved items</small></span></button>
+        <button data-cv="batch"><svg class="i"><use href="#i-batch"/></svg><span><b>Batch process files<span class="pro-pill lock">Pro</span></b><small>Compress, watermark, number, protect or merge many PDFs</small></span></button>
       </div>
     </div>
+    <button class="btn upgrade" id="btnPro" title="Inkwell Pro"><svg class="i"><use href="#i-spark"/></svg><span class="hide-sm" id="btnProLabel">Upgrade</span></button>
     <button class="btn primary" id="btnSave" hidden title="Save PDF (Ctrl+S)"><svg class="i"><use href="#i-save"/></svg><span class="hide-sm">Save PDF</span></button>
     <button class="btn icon ghost" id="btnTheme" title="Theme: system"><svg class="i"><use href="#i-moon"/></svg></button>
   </header>
@@ -475,6 +554,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
           <button class="btn primary" data-home="open"><svg class="i"><use href="#i-open"/></svg>Choose a file</button>
           <button class="btn" data-home="sample">Try a sample agreement</button>
         </div>
+        <div class="prostrip" id="proStrip"><span>Free to use. <b>Inkwell Pro</b> adds scan editing, premium fonts, password protection, redaction, batch tools and removes the Inkwell mark.</span><button class="btn" data-home="pro"><svg class="i"><use href="#i-spark"/></svg>See Pro plans</button></div>
         <p class="privacy"><svg class="i"><use href="#i-shield"/></svg><span id="privacyNote">Everything runs on this computer. Your files are never uploaded.</span></p>
       </div>
       <button class="sheet" id="dropSheet" data-home="open" aria-label="Choose or drop a file">
@@ -489,6 +569,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
         <button class="tile" data-home="fromword"><span class="ti"><svg class="i"><use href="#i-pdf"/></svg></span><b>Word to PDF</b><small>Turn a .docx back into a PDF</small></button>
         <button class="tile" data-home="fromimg"><span class="ti"><svg class="i"><use href="#i-images"/></svg></span><b>Images to PDF</b><small>Scans and photos as pages</small></button>
         <button class="tile" data-home="merge"><span class="ti"><svg class="i"><use href="#i-merge"/></svg></span><b>Merge PDFs</b><small>Combine several files into one</small></button>
+        <button class="tile" data-home="batch"><span class="ti"><svg class="i"><use href="#i-batch"/></svg></span><b>Batch tools<span class="pro-pill lock">Pro</span></b><small>Compress, protect or watermark many PDFs at once</small></button>
       </div>
       <div class="flow">
         <span>A typical round trip:</span>
@@ -497,6 +578,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
         <span class="st"><em>3</em>Word to PDF</span><span>→</span>
         <span class="st"><em>4</em>Sign and save</span>
       </div>
+      <nav class="homefoot" aria-label="Legal"><span>© Inkwell PDF Studio</span><a href="#" data-home="pro">Pricing</a><a href="terms.html" target="_blank" rel="noopener">Terms</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="refund.html" target="_blank" rel="noopener">Refunds</a></nav>
     </div>
   </main>
 
@@ -519,6 +601,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
         <button class="tool" data-tool="draw" data-tip="Draw  D"><svg class="i"><use href="#i-draw"/></svg></button>
         <button class="tool" data-tool="hl" data-tip="Highlight  H"><svg class="i"><use href="#i-hl"/></svg></button>
         <button class="tool" data-tool="white" data-tip="Whiteout (hide content)  W"><svg class="i"><use href="#i-white"/></svg></button>
+        <button class="tool pro" data-tool="redact" data-tip="Redact (permanently remove)  X · Pro"><svg class="i"><use href="#i-redact"/></svg></button>
         <hr>
         <button class="tool" data-tool="rect" data-tip="Rectangle  R"><svg class="i"><use href="#i-rect"/></svg></button>
         <button class="tool" data-tool="ellipse" data-tip="Ellipse  O"><svg class="i"><use href="#i-ellipse"/></svg></button>
@@ -527,9 +610,11 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
         <hr>
         <button class="tool" data-action="image" data-tip="Insert image  I"><svg class="i"><use href="#i-image"/></svg></button>
         <button class="tool" data-action="date" data-tip="Insert today's date"><svg class="i"><use href="#i-date"/></svg></button>
+        <button class="tool pro" data-action="stamps" data-tip="Stamps & templates · Pro"><svg class="i"><use href="#i-stamp"/></svg></button>
         <button class="tool sign" data-action="sign" data-tip="Signature  S"><svg class="i"><use href="#i-sign"/></svg></button>
       </nav>
-      <div class="scanbar" id="scanBar" hidden><svg class="i"><use href="#i-scan"/></svg><span><b>This PDF is a scanned copy.</b> Its text is part of a picture, so it can't be edited yet. Make it editable first: the pages keep their exact look.</span><button class="btn primary" id="scanGo"><svg class="i" style="color:inherit;width:18px;height:18px"><use href="#i-scan"/></svg>Make editable</button><button class="btn icon ghost" id="scanX" title="Hide"><svg class="i" style="width:16px;height:16px;color:inherit"><use href="#i-x"/></svg></button></div>
+      <div class="scanbar" id="scanBar" hidden><svg class="i"><use href="#i-scan"/></svg><span><b>This PDF is a scanned copy.</b> Its text is part of a picture, so it can't be edited yet. Make it editable first: the pages keep their exact look.</span><button class="btn primary" id="scanGo"><svg class="i" style="color:inherit;width:18px;height:18px"><use href="#i-scan"/></svg>Make editable<span class="pro-pill lock" style="background:var(--accent-ink);color:var(--accent)">Pro</span></button><button class="btn icon ghost" id="scanX" title="Hide"><svg class="i" style="width:16px;height:16px;color:inherit"><use href="#i-x"/></svg></button></div>
+      <div class="formbar" id="formBar" hidden><svg class="i"><use href="#i-form"/></svg><span><b>This PDF has <span id="formCount">0</span> fillable fields.</b> Type straight into them; saved forms are filled and flattened.</span><button class="btn primary" id="formGo">Fill form<span class="pro-pill lock" style="background:var(--accent-ink);color:var(--accent)">Pro</span></button><button class="btn icon ghost" id="formX" title="Hide"><svg class="i" style="width:16px;height:16px;color:inherit"><use href="#i-x"/></svg></button></div>
       <div class="scroller" id="scroller"><div class="viewer tool-select" id="viewer"></div></div>
       <footer class="status" id="status"></footer>
     </section>
@@ -610,6 +695,118 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
     </div>
   </div>
   <div class="df"><button class="btn ghost" data-close>Cancel</button><button class="btn" id="rvDownload"><svg class="i"><use href="#i-save"/></svg>Download PDF</button><button class="btn primary" id="rvOpen"><svg class="i"><use href="#i-sign"/></svg>Open in editor to sign</button></div>
+</dialog>
+
+<!-- Upgrade -->
+<dialog id="dlgPro" class="wide" style="width:min(820px,calc(100vw - 24px))">
+  <div class="dh"><div><h2>Inkwell Pro</h2><p id="proWhy">Everything in Inkwell, plus the tools professionals need.</p></div><button class="btn icon ghost" data-close><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+    <div class="plans" id="plans">
+      <button class="plan" data-plan="monthly"><b>Monthly</b><span class="amt" data-amt="monthly">–</span><span class="note">Cancel any time</span></button>
+      <button class="plan on" data-plan="yearly"><span class="tag" id="yearSave" hidden></span><b>Yearly</b><span class="amt" data-amt="yearly">–</span><span class="note" id="yearNote">Billed once a year</span></button>
+      <button class="plan" data-plan="lifetime"><b>Lifetime</b><span class="amt" data-amt="lifetime">–</span><span class="note">Pay once, keep Pro</span></button>
+    </div>
+    <ul class="feats">
+      <li><svg class="i"><use href="#i-check"/></svg>No Inkwell mark on saved files</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Make scanned PDFs editable (OCR)</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Automatic font, weight and size detection on scans</li>
+      <li><svg class="i"><use href="#i-check"/></svg>20 premium fonts and extra thickness control</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Password protect and unlock PDFs (AES-256)</li>
+      <li><svg class="i"><use href="#i-check"/></svg>True redaction that permanently removes content</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Compress PDFs for email and upload</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Fill PDF form fields</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Batch: compress, watermark, number, protect, merge</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Stamps and reusable templates</li>
+    </ul>
+    <p class="freeline">Always free: editing in the original font, signatures, annotations, page tools, PDF ↔ Word, images, merge and split. Use Pro on up to 3 devices.</p>
+    <div class="unavail" id="proUnavail" hidden></div>
+    <details id="keyEntry" style="margin-top:14px"><summary style="cursor:pointer;font-size:13px;color:var(--accent)">Already bought Pro? Enter your licence key</summary>
+      <div class="keyrow"><input class="inp" id="keyIn" placeholder="INK-…" autocomplete="off" spellcheck="false"><button class="btn" id="keyGo">Activate</button></div>
+    </details>
+  </div>
+  <div class="df"><span style="margin-right:auto;font-size:12px;color:var(--muted)">Secure payment by Stripe. Prices shown before tax.</span><button class="btn ghost" data-close>Not now</button><button class="btn primary" id="buyGo"><svg class="i"><use href="#i-lock"/></svg>Continue to checkout</button></div>
+</dialog>
+
+<!-- Account -->
+<dialog id="dlgAcct">
+  <div class="dh"><div><h2 id="acctTitle">Inkwell Pro</h2><p id="acctSub">Thanks for supporting Inkwell.</p></div><button class="btn icon ghost" data-close><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db acct">
+    <dl id="acctDl"></dl>
+    <label style="font-size:12.5px;color:var(--muted)">Licence key (use it to activate Pro on your other devices)</label>
+    <div class="keybox" style="margin-top:6px"><span id="acctKey"></span><button class="btn icon ghost" id="acctCopy" title="Copy key"><svg class="i"><use href="#i-copy"/></svg></button></div>
+    <p class="hint" id="acctHint" style="margin-top:12px">Keep this key somewhere safe. It is also printed on your Stripe invoices.</p>
+  </div>
+  <div class="df"><button class="btn ghost danger" id="acctOut">Remove Pro from this device</button><button class="btn" id="acctSaveKey"><svg class="i"><use href="#i-save"/></svg>Save key</button><button class="btn primary" id="acctPortal">Manage billing</button></div>
+</dialog>
+
+<!-- Password protect -->
+<dialog id="dlgProtect">
+  <div class="dh"><div><h2>Protect with password</h2><p>Anyone opening the file will need this password. Your edits are included.</p></div><button class="btn icon ghost" data-close><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db formgrid">
+    <label>Password to open<input class="inp" id="pwOpen" type="password" autocomplete="new-password" placeholder="At least 4 characters"></label>
+    <label>Repeat password<input class="inp" id="pwOpen2" type="password" autocomplete="new-password"></label>
+    <label class="check"><input type="checkbox" id="pwShow"> Show password</label>
+    <div style="display:grid;gap:8px;margin-top:4px">
+      <b style="font-size:12.5px">People who open it can:</b>
+      <label class="check"><input type="checkbox" id="pwPrint" checked> Print</label>
+      <label class="check"><input type="checkbox" id="pwCopy" checked> Copy text</label>
+      <label class="check"><input type="checkbox" id="pwEdit"> Edit and fill</label>
+    </div>
+    <p class="hint">Inkwell cannot recover a forgotten password. Keep your unprotected original.</p>
+  </div>
+  <div class="df"><button class="btn ghost" data-close>Cancel</button><button class="btn primary" id="pwGo"><svg class="i"><use href="#i-lock"/></svg>Save protected PDF</button></div>
+</dialog>
+
+<!-- Unlock -->
+<dialog id="dlgUnlock">
+  <div class="dh"><div><h2>This PDF is password-protected</h2><p id="unlockName">Enter its password to open and edit it.</p></div></div>
+  <div class="db formgrid"><label>Password<input class="inp" id="unlockPw" type="password" autocomplete="off"></label><p class="hint" id="unlockErr" hidden style="color:var(--danger)"></p></div>
+  <div class="df"><button class="btn ghost" id="unlockCancel">Cancel</button><button class="btn primary" id="unlockGo"><svg class="i"><use href="#i-key"/></svg>Unlock</button></div>
+</dialog>
+
+<!-- Compress -->
+<dialog id="dlgCompress">
+  <div class="dh"><div><h2>Compress PDF</h2><p>Make the file smaller. Your edits are included.</p></div><button class="btn icon ghost" data-close><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db opts">
+    <label class="opt"><input type="radio" name="cmode" value="balanced" checked><span><b>Balanced</b><small>Shrinks photos and scans, keeps text sharp and selectable. Best for most files.</small></span></label>
+    <label class="opt"><input type="radio" name="cmode" value="strong"><span><b>Maximum</b><small>Turns each page into a compressed picture. Smallest file, but text can no longer be selected or searched.</small></span></label>
+  </div>
+  <div class="df"><button class="btn ghost" data-close>Cancel</button><button class="btn primary" id="cmpGo"><svg class="i"><use href="#i-compress"/></svg>Compress and save</button></div>
+</dialog>
+
+<!-- Stamps -->
+<dialog id="dlgStamps" class="wide" style="width:min(720px,calc(100vw - 24px))">
+  <div class="dh"><div><h2>Stamps &amp; templates</h2><p>Click one to place it, then drag it into position.</p></div><button class="btn icon ghost" data-close><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+    <div class="stampgrid" id="stampGrid"></div>
+    <div class="row" style="grid-template-columns:auto 1fr auto;margin-top:14px">
+      <label class="check"><input type="checkbox" id="stDate" checked> Add today's date</label>
+      <input class="inp" id="stCustom" placeholder="Custom stamp text, e.g. SHIPPED" maxlength="28">
+      <button class="btn" id="stCustomGo">Add</button>
+    </div>
+    <h4 style="font:600 11px var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 8px">My templates</h4>
+    <div class="tpls" id="tplList"></div>
+  </div>
+</dialog>
+
+<!-- Batch -->
+<dialog id="dlgBatch">
+  <div class="dh"><div><h2>Batch process</h2><p>Apply one action to many PDFs at once. Files stay on this computer.</p></div><button class="btn icon ghost" data-close><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db formgrid">
+    <div class="dropzone" id="bDrop">Drop PDFs here or <button class="btn" id="bPick" style="height:30px">Choose files</button></div>
+    <div class="flist" id="bList"></div>
+    <label>Action<select class="inp" id="bAct">
+      <option value="compress">Compress (balanced)</option>
+      <option value="watermark">Add a watermark</option>
+      <option value="numbers">Add page numbers</option>
+      <option value="protect">Protect with password</option>
+      <option value="merge">Merge into one PDF</option>
+    </select></label>
+    <label data-bopt="watermark">Watermark text<input class="inp" id="bWm" value="CONFIDENTIAL" maxlength="40"></label>
+    <label data-bopt="numbers">Format<select class="inp" id="bPn"><option value="pageof">Page 1 of 5</option><option value="slash">1 / 5</option><option value="num">1</option></select></label>
+    <label data-bopt="protect">Password to open<input class="inp" id="bPw" type="password" autocomplete="new-password"></label>
+  </div>
+  <div class="df"><button class="btn ghost" data-close>Cancel</button><button class="btn primary" id="bGo">Run</button></div>
 </dialog>
 
 <!-- Generic ask -->
@@ -800,11 +997,15 @@ const S = {
     shape: { stroke: '#2a3fd1', fill: '', sw: 2, op: 1 },
     line: { color: '#141821', sw: 2, op: 1 },
     hl: { color: '#ffe14d', op: 0.4 },
-    white: { fill: '#ffffff' }
+    white: { fill: '#ffffff' },
+    stamp: { color: '#1c8656', op: 0.9 }
   },
-  doc: { wm: '', wmOp: 0.15, pn: 'off', pnPos: 'center' }
+  doc: { wm: '', wmOp: 0.15, pn: 'off', pnPos: 'center' },
+  forms: {}, fields: {}, formMode: false
 };
-const groupOf = t => ({ text: 'text', ink: 'ink', rect: 'shape', ellipse: 'shape', line: 'line', arrow: 'line', hl: 'hl', white: 'white' })[t];
+/* Pro licence state: set by the licence module near the end of this script. */
+const PRO = { active: false, plan: null, exp: 0, until: null, cancelAt: null, key: null };
+const groupOf = t => ({ text: 'text', ink: 'ink', rect: 'shape', ellipse: 'shape', line: 'line', arrow: 'line', hl: 'hl', white: 'white', stamp: 'stamp' })[t];
 const toolGroup = t => ({ text: 'text', draw: 'ink', rect: 'shape', ellipse: 'shape', line: 'line', arrow: 'line', hl: 'hl', white: 'white' })[t];
 
 /* ================= ui helpers ================= */
@@ -823,7 +1024,7 @@ function ask(title, msg, buttons) {
     const d = $('#dlgAsk'); $('#askT').textContent = title; $('#askM').textContent = msg;
     const box = $('#askBtns'); box.innerHTML = '';
     buttons.forEach(b => { const el = document.createElement('button'); el.className = 'btn ' + (b.cls || ''); el.textContent = b.label; el.onclick = () => { d.close(); res(b.value); }; box.append(el); });
-    d.onclose = () => res(null);
+    d.onclose = () => { if (!d.open) res(null); };
     d.showModal();
   });
 }
@@ -875,10 +1076,11 @@ async function addSource(bytes) {
   let js;
   try { js = await pdfjsLib.getDocument({ data: u8.slice(), fontExtraProperties: true }).promise; }
   catch (e) {
-    if (e && e.name === 'PasswordException') throw new Error('This PDF is password-protected. Remove the password, then open it again.');
+    if (e && e.name === 'PasswordException') { const err = new Error('This PDF is password-protected.'); err.code = 'password'; throw err; }
     throw new Error('This file could not be read as a PDF.');
   }
-  S.sources.push({ bytes: u8, js });
+  S.sources.push({ bytes: u8, js, restricted: await isEncryptedPdf(u8) });
+  if (S.sources[S.sources.length - 1].restricted) toast('This PDF has restrictions set by its author. You can view it, but Inkwell can\'t save a changed copy.', true, 7000);
   return S.sources.length - 1;
 }
 async function pagesFromSource(si) {
@@ -908,15 +1110,19 @@ async function openPdf(bytes, name) {
     fitWidth(true);
     refreshAll();
     setDirty(false);
-    detectScanned();
+    detectScanned(); detectForms();
     track('Open PDF', { pages: bucket(S.pages.length) });
-  } catch (e) { console.error(e); toast(e.message || 'Could not open that file.', true); }
+  } catch (e) {
+    if (e && e.code === 'password') { done(); return unlockAndOpen(bytes, name, false); }
+    console.error(e); toast(e.message || 'Could not open that file.', true);
+  }
   finally { done(); }
 }
 function resetDoc() {
   S.sources.forEach(s => { try { s.js.destroy(); } catch {} });
   S.sources = []; S.pages = []; S.assets = {}; S.undo = []; S.redo = []; S.sel = null; S.selPage = null; S.cur = 0;
-  S.doc = { wm: '', wmOp: 0.15, pn: 'off', pnPos: 'center' };
+  S.doc = { wm: '', wmOp: 0.15, pn: 'off', pnPos: 'center' }; S.forms = {}; S.fields = {}; S.formMode = false;
+  if ($('#formBar')) { $('#formBar').hidden = true; }
   canvasCache.clear(); thumbCache.clear(); updUndo();
 }
 async function insertPdfPages(bytes, at = S.cur + 1) {
@@ -925,7 +1131,7 @@ async function insertPdfPages(bytes, at = S.cur + 1) {
     const si = await addSource(bytes); const pages = await pagesFromSource(si);
     snap(); S.pages.splice(at, 0, ...pages); refreshAll(); toast(`Added ${pages.length} page${pages.length > 1 ? 's' : ''}`);
     setTimeout(() => scrollToPage(at), 60);
-  } catch (e) { toast(e.message, true); } finally { done(); }
+  } catch (e) { if (e && e.code === 'password') { done(); return unlockAndOpen(bytes, 'This PDF', at); } toast(e.message, true); } finally { done(); }
 }
 
 function showEditor() {
@@ -990,7 +1196,7 @@ function buildViewer() {
   });
 }
 function sizePage(el, p) { const { W, H } = viewSize(p); el.style.width = W * S.zoom + 'px'; el.style.height = H * S.zoom + 'px'; }
-function ensureRendered(el) { renderCanvas(el); if (S.tool === 'edittext') buildTextLayer(el); }
+function ensureRendered(el) { renderCanvas(el); if (S.tool === 'edittext') buildTextLayer(el); if (S.formMode) buildFormLayer(el); }
 
 async function renderCanvas(el) {
   const p = pageById(el.dataset.id); if (!p) return;
@@ -1069,6 +1275,7 @@ function updateStatus() {
   st.innerHTML = `<span>Page <b>${S.cur + 1}</b> of ${S.pages.length}</span><span class="hide-sm">${sizeName(W, H)}</span><span>${Math.round(S.zoom * 100)}%</span><span class="hide-sm">${n} added item${n === 1 ? '' : 's'}</span><span class="grow"></span><span class="hide-sm">${toolLabel()}</span>`;
 }
 const TOOL_HELP = {
+  redact: 'Drag over anything to remove it permanently when you save.',
   select: 'Click an item to select it. Drag to move, use the corner handles to resize.',
   edittext: 'Click any line of text in the PDF to change it.',
   text: 'Click anywhere on the page and start typing.',
@@ -1104,6 +1311,17 @@ function makeEl(o, p) {
     el = div('obj hl'); box(el, o); el.style.background = o.color; el.style.opacity = o.op ?? 0.4;
   } else if (o.t === 'white') {
     el = div('obj white'); box(el, o); el.style.background = o.fill || '#fff';
+  } else if (o.t === 'redact') {
+    el = div('obj redact'); box(el, o);
+  } else if (o.t === 'stamp') {
+    el = div('obj stamp'); box(el, o); el.style.opacity = o.op ?? 0.9;
+    const g = stampGeom(o), c = esc(o.color || '#1c8656');
+    el.innerHTML = `<svg viewBox="0 0 ${o.w} ${o.h}" preserveAspectRatio="none" width="100%" height="100%" style="display:block;overflow:visible" aria-hidden="true">`
+      + `<rect x="${g.bw / 2}" y="${g.bw / 2}" width="${o.w - g.bw}" height="${o.h - g.bw}" fill="none" stroke="${c}" stroke-width="${g.bw}"/>`
+      + `<rect x="${g.ins}" y="${g.ins}" width="${Math.max(1, o.w - 2 * g.ins)}" height="${Math.max(1, o.h - 2 * g.ins)}" fill="none" stroke="${c}" stroke-width="${g.ib}"/>`
+      + `<text x="${o.w / 2}" y="${g.tBase}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="${g.fs}" letter-spacing="${g.sp}" fill="${c}">${esc(String(o.text || '').toUpperCase())}</text>`
+      + (o.sub ? `<text x="${o.w / 2}" y="${g.sBase}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="${g.ss}" fill="${c}">${esc(String(o.sub).toUpperCase())}</text>` : '')
+      + '</svg>';
   } else {
     el = vecEl(o, p);
   }
@@ -1180,6 +1398,7 @@ function drawSel() {
 
 /* ================= tools ================= */
 function setTool(t) {
+  if (t === 'redact' && !requirePro('redact')) return;
   finishEdit(); S.tool = t;
   viewer.className = 'viewer tool-' + t;
   $$('.tool[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
@@ -1192,6 +1411,7 @@ $('#dock').addEventListener('click', e => {
   if (b.dataset.tool) setTool(b.dataset.tool);
   else if (b.dataset.action === 'image') actImage();
   else if (b.dataset.action === 'sign') openSign();
+  else if (b.dataset.action === 'stamps') openStamps();
   else if (b.dataset.action === 'date') actDate();
 });
 
@@ -1286,6 +1506,7 @@ function onDown(e) {
   if (t === 'rect' || t === 'ellipse') { const st = S.style.shape; no = { id: uid(), t, x: pt.x, y: pt.y, w: 0, h: 0, stroke: st.stroke, fill: st.fill, sw: st.sw, op: st.op }; }
   else if (t === 'hl') { const st = S.style.hl; no = { id: uid(), t: 'hl', x: pt.x, y: pt.y, w: 0, h: 0, color: st.color, op: st.op }; }
   else if (t === 'white') { no = { id: uid(), t: 'white', x: pt.x, y: pt.y, w: 0, h: 0, fill: S.style.white.fill }; }
+  else if (t === 'redact') { no = { id: uid(), t: 'redact', x: pt.x, y: pt.y, w: 0, h: 0 }; }
   else if (t === 'line' || t === 'arrow') { const st = S.style.line; no = { id: uid(), t, x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y, color: st.color, sw: st.sw, op: st.op }; }
   if (!no) { S.undo.pop(); updUndo(); return; }
   p.objs.push(no); renderOverlay(p); drag = { mode: 'create', o: no, p, pel, start: pt };
@@ -1308,7 +1529,7 @@ function onMove(e) {
     else {
       const ax = h.includes('w') ? b0.x + b0.w : b0.x, ay = h.includes('n') ? b0.y + b0.h : b0.y;
       let nw = Math.abs(pt.x - ax), nh = Math.abs(pt.y - ay);
-      const lock = (o.t === 'text' || o.t === 'image') ? !e.shiftKey : e.shiftKey;
+      const lock = (o.t === 'text' || o.t === 'image' || o.t === 'stamp') ? !e.shiftKey : e.shiftKey;
       if (lock || o.t === 'text') { const s = Math.max(nw / b0.w, nh / b0.h); nw = b0.w * s; nh = b0.h * s; }
       nw = Math.max(nw, 4); nh = Math.max(nh, 4);
       const nx = h.includes('w') ? ax - nw : ax, ny = h.includes('n') ? ay - nh : ay;
@@ -1335,11 +1556,11 @@ function onUp() {
   if (d.mode === 'create') {
     const tiny = (o.t === 'line' || o.t === 'arrow') ? Math.hypot(o.x2 - o.x1, o.y2 - o.y1) < 4 : (o.w < 4 && o.h < 4);
     if (tiny) {
-      if (o.t === 'hl' || o.t === 'white') { p.objs = p.objs.filter(x => x !== o); S.undo.pop(); updUndo(); renderOverlay(p); return; }
+      if (o.t === 'hl' || o.t === 'white' || o.t === 'redact') { p.objs = p.objs.filter(x => x !== o); S.undo.pop(); updUndo(); renderOverlay(p); return; }
       if (o.t === 'line' || o.t === 'arrow') { o.x2 = o.x1 + 120; o.y2 = o.y1; } else { o.w = 140; o.h = 90; }
       refreshObj(o, p);
     }
-    if (o.t === 'hl' || o.t === 'white') { renderOverlay(p); updateStatus(); return; }
+    if (o.t === 'hl' || o.t === 'white' || o.t === 'redact') { renderOverlay(p); updateStatus(); return; }
     setTool('select'); select(o, p); updateStatus();
   } else if (d.mode === 'ink') {
     if (o.pts.length === 1) o.pts.push([o.pts[0][0] + 0.3, o.pts[0][1] + 0.3]);
@@ -1570,6 +1791,9 @@ function convertTbox(tb, p, pel) {
 async function refineFont(o, p, pel, b, c) {
   const key = await captureFont(p, b.fontName);
   if (key) { o.family = 'pdf'; o.pdfFont = key; o.bold = !!b.bold; o.weight = b.bold ? 700 : 400; o.detected = `${fontStore[key].name || 'Original font'}, ${r2(o.size)} pt (from this PDF)`; }
+  else if (!PRO.active) {
+    if (!refineFont.freeHint) { refineFont.freeHint = true; toast('Inkwell Pro detects the exact font, weight and size of this text automatically.', false, 4500); }
+  }
   else {
     await preloadMatchFonts();
     const g = await guessFontFromPixels(pel, b, c);
@@ -1662,7 +1886,7 @@ function chunksToItems(data, sc) {
   return items;
 }
 async function makeEditable(fromMenu) {
-  if (!S.open) return; finishEdit();
+  if (!S.open) return; if (!requirePro('ocr')) return; finishEdit();
   const todo = [];
   busy('Checking pages…');
   for (let i = 0; i < S.pages.length; i++) { const p = S.pages[i]; if (p.src >= 0 && (await pageChars(p)) < 15) todo.push(i); }
@@ -1809,7 +2033,7 @@ const pct = v => Math.round(v * 100) + '%', ptf = v => r2(v) + ' pt';
 let fontPickOpen = false, fontQuery = '';
 function fontPickerHtml(v) {
   const q = fontQuery.trim().toLowerCase(); const pfx = v.pdfFont && fontStore[v.pdfFont];
-  const item = (val, name, css, sub, cur) => (!q || name.toLowerCase().includes(q) || (sub || '').toLowerCase().includes(q)) ? `<button class="fp-item ${cur ? 'on' : ''}" data-set="family" data-val="${esc(val)}"><span style="font-family:${esc(css)}">${esc(name)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</button>` : '';
+  const item = (val, name, css, sub, cur) => (!q || name.toLowerCase().includes(q) || (sub || '').toLowerCase().includes(q)) ? `<button class="fp-item ${cur ? 'on' : ''}" data-set="family" data-val="${esc(val)}"><span style="font-family:${esc(css)}">${esc(name)}</span>${sub ? `<small>${esc(sub)}${val.startsWith('wf:') && !PRO.active ? ' · Pro' : ''}</small>` : (val.startsWith('wf:') && !PRO.active ? '<small>Pro</small>' : '')}</button>` : '';
   let h = `<div class="fpick"><input class="inp" id="fp-q" placeholder="Search fonts" value="${esc(fontQuery)}" autocomplete="off"><div class="fp-list">`;
   if (pfx) h += `<div class="fp-g">From this PDF</div>` + item('pdf', pfx.name || 'Original font', `"${pfx.fam}"`, 'Original', v.family === 'pdf');
   h += `<div class="fp-g">Standard PDF fonts</div>` + item('sans', 'Helvetica', FAMILY_CSS.sans, 'Sans', v.family === 'sans') + item('serif', 'Times', FAMILY_CSS.serif, 'Serif', v.family === 'serif') + item('mono', 'Courier', FAMILY_CSS.mono, 'Typewriter', v.family === 'mono');
@@ -1820,7 +2044,7 @@ function fontPickerHtml(v) {
   return h + `</div></div>`;
 }
 function previewFonts() { FONT_LIB.forEach(f => loadWebFont(f.id, 400, false).catch(() => {})); }
-const TYPE_NAME = { text: 'Text', image: 'Image', rect: 'Rectangle', ellipse: 'Ellipse', line: 'Line', arrow: 'Arrow', ink: 'Drawing', hl: 'Highlight', white: 'Whiteout' };
+const TYPE_NAME = { redact: 'Redaction', stamp: 'Stamp', text: 'Text', image: 'Image', rect: 'Rectangle', ellipse: 'Ellipse', line: 'Line', arrow: 'Arrow', ink: 'Drawing', hl: 'Highlight', white: 'Whiteout' };
 
 function styleControls(t, v) {
   let h = '';
@@ -1836,7 +2060,7 @@ function styleControls(t, v) {
       const cw = nearestW(ws, wOf(v));
       h += ui.row('Weight', `<div class="wrow"><input type="range" id="p-weight" data-prop="weight" min="${ws[0]}" max="${ws[ws.length - 1]}" step="100" value="${cw}" ${ws.length < 2 ? 'disabled' : ''}><output data-out="weight">${W_NAMES[cw] || cw} · ${cw}</output></div>`);
     }
-    h += ui.row('Thickness', `<div class="rng"><input type="range" id="r-boost" data-prop="boost" min="0" max="1" step="0.05" value="${v.boost || 0}"><output data-out="boost">${v.boost ? '+' + Math.round(v.boost * 100) + '%' : 'None'}</output></div>`);
+    h += ui.row(PRO.active ? 'Thickness' : 'Thickness<span class="pro-pill">Pro</span>', `<div class="rng"><input type="range" id="r-boost" data-prop="boost" min="0" max="1" step="0.05" value="${v.boost || 0}" ${PRO.active ? '' : 'disabled title="Inkwell Pro"'}><output data-out="boost">${v.boost ? '+' + Math.round(v.boost * 100) + '%' : 'None'}</output></div>`);
     const canIt = v.family !== 'pdf' && (!wfId(v) || (FONTS[wfId(v)] || {}).it);
     h += ui.row('Style', `<div class="seg"><button data-set="bold" class="${wOf(v) >= 600 ? 'on' : ''}" style="font-weight:700" ${ws ? '' : 'disabled'}>Bold</button><button data-set="italic" class="${v.italic ? 'on' : ''}" style="font-style:italic" ${canIt ? '' : 'disabled'}>Italic</button></div>`);
     h += ui.row('Align', `<div class="iconrow">${[['left', 'l'], ['center', 'c'], ['right', 'r']].map(([a, k]) => `<button data-set="align" data-val="${a}" class="${(v.align || 'left') === a ? 'on' : ''}" title="Align text ${a}"><svg class="i"><use href="#i-ta-${k}"/></svg></button>`).join('')}</div>`);
@@ -1856,6 +2080,13 @@ function styleControls(t, v) {
   } else if (t === 'hl') {
     h += ui.row('Colour', ui.sw('color', v.color, HLS));
     h += ui.row('Strength', ui.rng('op', v.op ?? 0.4, 0.15, 0.8, 0.05, pct));
+  } else if (t === 'redact') {
+    h += `<p class="hint">Everything under this box is permanently removed when you save. Pages with redactions are saved as an image, so the hidden text and pictures cannot be recovered or copied.</p>`;
+  } else if (t === 'stamp') {
+    h += ui.row('Text', `<input class="inp" id="p-stext" data-prop="text" value="${esc(v.text || '')}" maxlength="28">`);
+    h += ui.row('Second line', `<input class="inp" id="p-ssub" data-prop="sub" value="${esc(v.sub || '')}" placeholder="e.g. date or initials" maxlength="40">`);
+    h += ui.row('Colour', ui.sw('color', v.color, ['#1c8656', '#2a3fd1', '#c3323d', '#141821', '#e07a12']));
+    h += ui.row('Opacity', ui.rng('op', v.op ?? 0.9, 0.2, 1, 0.05, pct));
   } else if (t === 'white') {
     h += ui.row('Colour', ui.sw('fill', v.fill, ['#ffffff', '#f5f1e8', '#141821']));
     h += `<p class="hint">Whiteout hides content visually. The original text stays inside the file and can still be copied, so don't rely on it to remove confidential information.</p>`;
@@ -1891,6 +2122,7 @@ function renderProps() {
         </div></div>
       </div>
       <div class="ps"><h4>Arrange</h4><div class="acts">
+        ${o.t !== 'redact' ? `<button class="btn" data-do="template" style="grid-column:1/-1"><svg class="i"><use href="#i-stamp"/></svg>Save as template${PRO.active ? '' : '<span class="pro-pill">Pro</span>'}</button>` : ''}
         <button class="btn" data-do="dup"><svg class="i"><use href="#i-copy"/></svg>Duplicate</button>
         <button class="btn" data-do="all"><svg class="i"><use href="#i-all"/></svg>All pages</button>
         <button class="btn" data-do="front"><svg class="i"><use href="#i-up"/></svg>To front</button>
@@ -1924,6 +2156,8 @@ function renderProps() {
   P.innerHTML = h;
 }
 function applyProp(k, raw, live) {
+  if (k === 'family' && String(raw).startsWith('wf:') && !requirePro('fonts')) return;
+  if (k === 'boost' && +raw > 0 && !requirePro('fonts')) { renderProps(); return; }
   const s = getSel();
   const target = s ? s.o : S.style[toolGroup(S.tool)]; if (!target) return;
   let v = raw;
@@ -1945,6 +2179,7 @@ function applyProp(k, raw, live) {
   else renderProps();
 }
 P.addEventListener('click', e => {
+  if (!PRO.active && e.target.closest('.row') && e.target.closest('.row').querySelector('#r-boost')) { requirePro('fonts'); return; }
   const pk = e.target.closest('[data-pick]'); if (pk) { S.picking = S.picking === pk.dataset.pick ? null : pk.dataset.pick; viewer.classList.toggle('picking', !!S.picking); if (S.picking) toast('Click anywhere on the page to take its colour.', false, 2500); renderProps(); return; }
   const al = e.target.closest('[data-al]'); if (al) { alignSel(al.dataset.al); return; }
   const st = e.target.closest('[data-set="__step"]'); if (st) { nudgeMM = +st.dataset.val; renderProps(); return; }
@@ -1970,6 +2205,7 @@ P.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'fp-q') { fontQuery = t.value; const list = P.querySelector('.fp-list'); if (list) { const tmp = document.createElement('div'); const s0 = getSel(); tmp.innerHTML = fontPickerHtml(s0 ? s0.o : S.style.text); list.replaceWith(tmp.querySelector('.fp-list')); } return; }
   if (t.dataset.prop) applyProp(t.dataset.prop, t.value, true);
+  if (t.dataset.prop === 'text' || t.dataset.prop === 'sub') return;
   if (t.dataset.doc) { S.doc[t.dataset.doc] = t.type === 'range' ? +t.value : t.value; setDirty(); if (t.dataset.doc === 'wmOp') { const o = P.querySelector('[data-out="wmOp"]'); if (o) o.textContent = pct(+t.value); } S.pages.forEach(p => renderOverlay(p)); }
 });
 P.addEventListener('change', e => { if (e.target.type === 'color' && !getSel()) renderProps(); });
@@ -1984,6 +2220,7 @@ function doAction(a) {
   const s = getSel();
   if (s) {
     const { o, p } = s;
+    if (a === 'template') { saveTemplate(o); return; }
     if (a === 'del') { snap(); p.objs = p.objs.filter(x => x !== o); select(null); renderOverlay(p); updateStatus(); }
     else if (a === 'dup') { const c = cloneObj(o, 12, 12); addObj(c, p); select(c, p); }
     else if (a === 'front') { snap(); p.objs = p.objs.filter(x => x !== o).concat(o); renderOverlay(p); }
@@ -2024,7 +2261,7 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Escape' && S.picking) { S.picking = null; viewer.classList.remove('picking'); renderProps(); return; }
   if (e.key === 'Escape') { if (S.sel) select(null); else if (S.tool !== 'select') setTool('select'); return; }
   if (mod || e.altKey) return;
-  const map = { v: 'select', e: 'edittext', t: 'text', d: 'draw', h: 'hl', w: 'white', r: 'rect', o: 'ellipse', l: 'line', a: 'arrow' };
+  const map = { v: 'select', e: 'edittext', t: 'text', d: 'draw', h: 'hl', w: 'white', x: 'redact', r: 'rect', o: 'ellipse', l: 'line', a: 'arrow' };
   const k = e.key.toLowerCase();
   if (map[k]) { setTool(map[k]); return; }
   if (k === 's') { openSign(); return; }
@@ -2212,17 +2449,25 @@ async function buildPdfDoc(indices, progress, extra) {
     let page, cx = 0, cy = 0, w = W, h = H;
     if (p.src >= 0) {
       let sd = libs[p.src];
-      if (!sd) { sd = await PDFDocument.load(S.sources[p.src].bytes, { ignoreEncryption: true, updateMetadata: false }); libs[p.src] = sd; }
-      [page] = await out.copyPages(sd, [p.idx]); out.addPage(page);
+      if (!sd) { sd = await PDFDocument.load(S.sources[p.src].bytes, { ignoreEncryption: true, updateMetadata: false }); applyFormValues(sd, p.src); libs[p.src] = sd; }
+    }
+    let Rr = 0;
+    if (p.objs.some(o => o.t === 'redact')) {
+      // true redaction: rebuild the page from a picture with the areas burned out, so nothing underneath survives
+      const img = await out.embedJpg(await flattenPageJpeg(p));
+      page = out.addPage([W, H]); page.drawImage(img, { x: 0, y: 0, width: W, height: H });
+    } else if (p.src >= 0) {
+      if (S.sources[p.src].restricted) throw new Error('this PDF has restrictions set by its author, so a changed copy can\'t be saved. Ask the sender for a version without restrictions.');
+      [page] = await out.copyPages(libs[p.src], [p.idx]); out.addPage(page);
       const cb = page.getCropBox(); cx = cb.x; cy = cb.y; w = cb.width; h = cb.height;
-      page.setRotation(degrees(R));
+      page.setRotation(degrees(R)); Rr = R;
     } else { page = out.addPage([W, H]); }
-    const Rr = p.src >= 0 ? R : 0;
     const M = Rr === 90 ? [0, 1, -1, 0, w + cx, cy] : Rr === 180 ? [-1, 0, 0, -1, w + cx, h + cy] : Rr === 270 ? [0, -1, 1, 0, cx, h + cy] : [1, 0, 0, 1, cx, cy];
     page.pushOperators(pushGraphicsState(), concatTransformationMatrix(...M));
     for (const o of p.objs) await drawObj(out, page, o, W, H, F, imgs, safe);
     await drawDecor(page, n, indices.length, W, H, F, safe);
     if (extra) await extra(indices[n], page, W, H, F, safe);
+    if (!PRO.active) await drawFreeMark(page, W, H, F);
     page.pushOperators(popGraphicsState());
   }
   out.setTitle(baseName()); out.setCreator('Inkwell PDF Studio'); out.setProducer('Inkwell PDF Studio');
@@ -2262,6 +2507,10 @@ async function drawObj(out, page, o, W, H, F, imgs, safe) {
     page.drawRectangle({ x: o.x, y: H - o.y - o.h, width: o.w, height: o.h, color: hexToRgb(o.color), opacity: o.op ?? 0.4, blendMode: BlendMode.Multiply });
   } else if (o.t === 'white') {
     page.drawRectangle({ x: o.x, y: H - o.y - o.h, width: o.w, height: o.h, color: hexToRgb(o.fill || '#ffffff') });
+  } else if (o.t === 'redact') {
+    page.drawRectangle({ x: o.x, y: H - o.y - o.h, width: o.w, height: o.h, color: rgb(0, 0, 0) });
+  } else if (o.t === 'stamp') {
+    await drawStamp(page, o, H, F, safe);
   } else if (o.t === 'ink') {
     page.drawSvgPath(inkPath(o.pts), { x: 0, y: H, borderColor: hexToRgb(o.color), borderWidth: o.sw, borderOpacity: op, borderLineCap: LineCapStyle.Round });
   } else if (o.t === 'line' || o.t === 'arrow') {
@@ -2300,7 +2549,7 @@ async function savePdf() {
         const w = await h.createWritable(); await w.write(bytes); await w.close(); S.name = h.name; $('#docName').value = h.name;
       } catch (e) { if (e && e.name === 'AbortError') return; ok = await download(bytes, name, 'application/pdf'); }
     } else ok = await download(bytes, name, 'application/pdf');
-    if (ok) { setDirty(false); toast('Saved ' + S.name); track('Save PDF', { pages: bucket(S.pages.length) }); }
+    if (ok) { setDirty(false); toast('Saved ' + S.name + (PRO.active ? '' : '. Free saves include a small Inkwell mark; Pro removes it.'), false, PRO.active ? 3200 : 5000); track('Save PDF', { pages: bucket(S.pages.length), plan: PRO.active ? 'pro' : 'free' }); }
   } catch (e) { console.error(e); toast('Could not save: ' + (e.message || e), true, 6000); }
   finally { done(); }
 }
@@ -2320,7 +2569,7 @@ async function pageItems(p) {
   const { W, H, R } = viewSize(p); const items = [];
   const covers = [];
   for (const o of p.objs) {
-    if (o.t === 'white') covers.push(o);
+    if (o.t === 'white' || o.t === 'redact') covers.push(o);
     else if ((o.t === 'rect' || o.t === 'ellipse') && o.fill && (o.op ?? 1) > 0.9) covers.push(o);
     else if (o.t === 'text' && o.bg) { const ls = o.text.split('\n'); covers.push({ x: o.x, y: o.y, w: Math.max(o.minW || 0, ...ls.map(l => textW(o, l))), h: ls.length * o.size * 1.2 }); }
   }
@@ -2600,6 +2849,7 @@ async function htmlToPdf(root, opt) {
     }
   }
   await blocks(root, 0);
+  if (!PRO.active) { const FF2 = async k => FF[k] || (FF[k] = await doc.embedFont(StandardFonts[k])); for (const pg2 of doc.getPages()) await drawFreeMark(pg2, PW, PH, FF2); }
   doc.setTitle(reviewName); doc.setCreator('Inkwell PDF Studio'); doc.setProducer('Inkwell PDF Studio');
   if (safe.bad()) toast('Some characters (for example non-Latin scripts) are not supported by the standard fonts and appear as "?".', true, 6000);
   return doc.save();
@@ -2687,6 +2937,12 @@ cvMenu.onclick = async e => {
   else if (k === 'png') makePngs();
   else if (k === 'txt') makeTxt();
   else if (k === 'ocr') makeEditable(true);
+  else if (k === 'protect') { if (requirePro('protect')) openProtect(); }
+  else if (k === 'compress') { if (requirePro('compress')) $('#dlgCompress').showModal(); }
+  else if (k === 'redact') setTool('redact');
+  else if (k === 'forms') startForms(true);
+  else if (k === 'stamps') openStamps();
+  else if (k === 'batch') openBatch();
   else if (k === 'extract') { $('#exInfo').textContent = `This document has ${S.pages.length} page${S.pages.length > 1 ? 's' : ''}.`; $('#exRange').value = S.pages.length > 1 ? `1-${Math.min(2, S.pages.length)}` : '1'; $('#dlgExtract').showModal(); }
   else if (k === 'fromword') homeAct('fromword');
   else if (k === 'fromimg') homeAct('fromimg');
@@ -2724,6 +2980,8 @@ async function routeFiles(files, dropped) {
 }
 let afterOpenWord = false;
 async function homeAct(k) {
+  if (k === 'pro') return openUpgrade();
+  if (k === 'batch') return openBatch();
   if (!LIBS_OK) return toast('The PDF engine is not loaded. Connect to the internet and reload.', true);
   if (k === 'open') return openAny();
   if (k === 'sample') { if (!(await confirmReplace())) return; busy('Creating sample…'); const b = await makeSample(); done(); await openPdf(b, 'Sample-Agreement.pdf'); toast('Try the signature tool (S) or Edit text (E).', false, 4500); return; }
@@ -2759,8 +3017,497 @@ if (STATS_ON) {
   $('#privacyNote').textContent = 'Everything runs on this computer. Your files are never uploaded. Visits are counted anonymously, without cookies.';
 }
 
+/* ================= Inkwell Pro: licence ================= */
+const PL = window.PDFLib || {};
+const API_OK = /^https?:$/.test(location.protocol) && !inViewer;
+const LS_LIC = 'inkwell.license', LS_DEV = 'inkwell.device', LS_PK = 'inkwell.pk', LS_TPL = 'inkwell.templates';
+let proConfig = null;
+function deviceId() {
+  let d = ls.get(LS_DEV, null);
+  if (!d || d.length < 8) { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; d = [...crypto.getRandomValues(new Uint8Array(12))].map(b => A[b % A.length]).join(''); ls.set(LS_DEV, d); }
+  return d;
+}
+async function api(path, body) {
+  const r = await fetch('/api/' + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {});
+  let d = {}; try { d = await r.json(); } catch {}
+  if (!r.ok) { const e = new Error(d.message || 'Something went wrong. Please try again.'); e.code = d.error; e.status = r.status; throw e; }
+  return d;
+}
+const b64uDec = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+async function verifyToken(token, jwk) {
+  try {
+    const [body, sig] = String(token || '').split('.'); if (!body || !sig || !crypto.subtle || !jwk) return null;
+    const key = await crypto.subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', x: jwk.x, y: jwk.y, ext: true }, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+    if (!(await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, b64uDec(sig), new TextEncoder().encode(body)))) return null;
+    return JSON.parse(new TextDecoder().decode(b64uDec(body)));
+  } catch { return null; }
+}
+function setPro(p, key) {
+  const ok = !!p && p.exp * 1000 > Date.now() && p.dev === deviceId();
+  Object.assign(PRO, ok ? { active: true, plan: p.plan, exp: p.exp, until: p.until || null, cancelAt: p.cancelAt || null, key } : { active: false, plan: null, exp: 0, until: null, cancelAt: null, key: null });
+  applyProUI();
+}
+async function saveLicense(d) {
+  ls.set(LS_LIC, { token: d.token, key: d.key, at: Date.now() });
+  const p = (proConfig && proConfig.publicKey && await verifyToken(d.token, proConfig.publicKey)) || { plan: d.plan, exp: d.exp, until: d.until, cancelAt: d.cancelAt, dev: deviceId() };
+  setPro(p, d.key);
+}
+function clearPro(msg) { try { localStorage.removeItem(LS_LIC); } catch {} setPro(null); if (msg) toast(msg, true, 7000); }
+async function refreshLicense(force) {
+  const lic = ls.get(LS_LIC, null); if (!lic || !lic.key || !API_OK) return;
+  if (!force && PRO.active && lic.at && Date.now() - lic.at < 20 * 3600e3 && PRO.exp * 1000 - Date.now() > 3 * 86400e3) return;
+  try { await saveLicense(await api('license', { key: lic.key, deviceId: deviceId(), refresh: true })); }
+  catch (e) {
+    if (['device_removed', 'inactive', 'no_license', 'bad_key'].includes(e.code)) clearPro(e.message);
+  }
+}
+async function initPro() {
+  const lic = ls.get(LS_LIC, null), jwk = ls.get(LS_PK, null);
+  if (lic && jwk) setPro(await verifyToken(lic.token, jwk), lic.key); else applyProUI();
+  if (!API_OK) return;
+  try { proConfig = await api('config'); if (proConfig.publicKey) ls.set(LS_PK, proConfig.publicKey); } catch { proConfig = null; }
+  if (lic && !PRO.active && proConfig && proConfig.publicKey) setPro(await verifyToken(lic.token, proConfig.publicKey), lic.key);
+  const q = new URLSearchParams(location.search);
+  if (q.get('checkout_session')) { history.replaceState(null, '', location.pathname); await finishCheckout(q.get('checkout_session')); }
+  else if (q.get('checkout') === 'cancelled') { history.replaceState(null, '', location.pathname); toast('Checkout cancelled. You have not been charged.'); }
+  else refreshLicense(false);
+  setInterval(() => refreshLicense(false), 6 * 3600e3);
+}
+async function finishCheckout(sid, attempt = 0) {
+  busy('Activating Inkwell Pro…');
+  try { const d = await api('activate', { sessionId: sid, deviceId: deviceId() }); await saveLicense(d); done(); track('Pro activated', { plan: d.plan }); openAccount(true); }
+  catch (e) {
+    done();
+    if (e.code === 'unpaid' && attempt < 4) { setTimeout(() => finishCheckout(sid, attempt + 1), 2500); return; }
+    toast('We could not activate Pro yet: ' + e.message + ' If you were charged, use the licence key on your Stripe receipt or contact support.', true, 10000);
+  }
+}
+function applyProUI() {
+  const app = $('.app'); if (app) app.classList.toggle('is-pro', PRO.active);
+  const b = $('#btnPro'); if (b) { b.classList.toggle('upgrade', !PRO.active); b.classList.toggle('prochip', PRO.active); $('#btnProLabel').textContent = PRO.active ? 'Pro' : 'Upgrade'; b.title = PRO.active ? 'Your Inkwell Pro account' : 'Upgrade to Inkwell Pro'; }
+  const strip = $('#proStrip'); if (strip) strip.hidden = PRO.active;
+  if (S.open) renderProps();
+}
+const PRO_WHY = {
+  ocr: 'Making scanned PDFs editable is part of Inkwell Pro.', fonts: 'Premium fonts, automatic font detection and extra thickness are part of Inkwell Pro.',
+  protect: 'Password protection is part of Inkwell Pro.', unlock: 'Opening password-protected PDFs is part of Inkwell Pro.', compress: 'Compressing PDFs is part of Inkwell Pro.',
+  redact: 'Permanent redaction is part of Inkwell Pro.', forms: 'Filling PDF form fields is part of Inkwell Pro.', batch: 'Batch processing is part of Inkwell Pro.',
+  stamps: 'Stamps and templates are part of Inkwell Pro.', templates: 'Saving reusable templates is part of Inkwell Pro.', mark: 'Remove the Inkwell mark from everything you save.'
+};
+function requirePro(feature) {
+  if (PRO.active) return true;
+  openUpgrade(feature); track('Upgrade prompt', { feature }); return false;
+}
+const money = (a, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur.toUpperCase(), maximumFractionDigits: a % 100 ? 2 : 0 }).format(a / 100); } catch { return (a / 100).toFixed(2) + ' ' + cur.toUpperCase(); } };
+async function openUpgrade(feature) {
+  if (PRO.active) return openAccount();
+  $('#proWhy').textContent = PRO_WHY[feature] || 'Everything in Inkwell, plus the tools professionals need.';
+  const un = $('#proUnavail'); un.hidden = true; $('#buyGo').disabled = false; $('#keyGo').disabled = false;
+  if (API_OK && !proConfig) { try { proConfig = await api('config'); } catch {} }
+  if (!API_OK) { un.hidden = false; un.textContent = 'Pro can be bought and activated on the Inkwell website. This copy of Inkwell can\'t take payments.'; $('#buyGo').disabled = true; $('#keyGo').disabled = true; }
+  else if (!proConfig || !proConfig.enabled) { un.hidden = false; un.textContent = 'Pro purchases are not switched on yet. Please check back soon.'; $('#buyGo').disabled = true; $('#keyGo').disabled = !proConfig; }
+  const pr = proConfig && proConfig.prices;
+  for (const plan of ['monthly', 'yearly', 'lifetime']) {
+    const el = $(`[data-amt="${plan}"]`), p = pr && pr[plan];
+    el.innerHTML = p ? `${money(p.amount, p.currency)}<small>${plan === 'monthly' ? ' / month' : plan === 'yearly' ? ' / year' : ' once'}</small>` : '–';
+  }
+  if (pr && pr.monthly && pr.yearly && pr.monthly.currency === pr.yearly.currency) {
+    const save = Math.round((1 - pr.yearly.amount / (pr.monthly.amount * 12)) * 100);
+    $('#yearSave').hidden = !(save > 0); $('#yearSave').textContent = `Save ${save}%`;
+    $('#yearNote').textContent = `${money(Math.round(pr.yearly.amount / 12), pr.yearly.currency)} a month, billed yearly`;
+  }
+  const d = $('#dlgPro'); if (!d.open) d.showModal();
+}
+$('#plans').addEventListener('click', e => { const b = e.target.closest('.plan'); if (!b) return; $$('.plan').forEach(x => x.classList.toggle('on', x === b)); });
+$('#buyGo').onclick = async () => {
+  const plan = ($('.plan.on') || {}).dataset?.plan || 'yearly';
+  busy('Opening secure checkout…');
+  try { const d = await api('checkout', { plan }); track('Checkout started', { plan }); location.href = d.url; }
+  catch (e) { done(); toast(e.message, true, 6000); }
+};
+$('#keyGo').onclick = async () => {
+  const key = $('#keyIn').value.trim(); if (!key) return toast('Paste your licence key first.', true);
+  busy('Checking your licence…');
+  try { const d = await api('license', { key, deviceId: deviceId() }); await saveLicense(d); done(); $('#dlgPro').close(); track('Pro activated', { plan: d.plan, via: 'key' }); openAccount(true); }
+  catch (e) { done(); toast(e.message, true, 6000); }
+};
+const PLAN_NAME = { monthly: 'Pro monthly', yearly: 'Pro yearly', lifetime: 'Pro lifetime' };
+const fmtDate = t => new Date(t * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+function openAccount(welcome) {
+  if (!PRO.active) return openUpgrade();
+  $('#acctTitle').textContent = welcome ? 'Welcome to Inkwell Pro' : 'Inkwell Pro';
+  $('#acctSub').textContent = welcome ? 'Pro is active on this device. Save your licence key now.' : 'Thanks for supporting Inkwell.';
+  const status = PRO.plan === 'lifetime' ? 'Lifetime licence, never expires' : PRO.cancelAt ? `Ends on ${fmtDate(PRO.cancelAt)} (renewal cancelled)` : PRO.until ? `Renews on ${fmtDate(PRO.until)}` : 'Active';
+  $('#acctDl').innerHTML = `<dt>Plan</dt><dd>${PLAN_NAME[PRO.plan] || 'Pro'}</dd><dt>Status</dt><dd>${esc(status)}</dd><dt>Devices</dt><dd>Up to 3 at a time</dd>`;
+  $('#acctKey').textContent = PRO.key || '';
+  $('#acctPortal').textContent = PRO.plan === 'lifetime' ? 'Receipts' : 'Manage billing';
+  $('#acctPortal').disabled = !API_OK;
+  const d = $('#dlgAcct'); if (!d.open) d.showModal();
+}
+$('#btnPro').onclick = () => (PRO.active ? openAccount() : openUpgrade());
+$('#acctCopy').onclick = async () => { try { await navigator.clipboard.writeText(PRO.key); toast('Licence key copied.'); } catch { const r = document.createRange(); r.selectNodeContents($('#acctKey')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Press Ctrl+C to copy the key.'); } };
+$('#acctSaveKey').onclick = () => download(`Inkwell PDF Studio Pro\nLicence key: ${PRO.key}\nPlan: ${PLAN_NAME[PRO.plan] || 'Pro'}\n\nTo use Pro on another device, open Inkwell, click Upgrade, then "Already bought Pro? Enter your licence key".\n`, 'Inkwell-Pro-licence.txt', 'text/plain;charset=utf-8');
+$('#acctPortal').onclick = async () => { busy('Opening billing…'); try { const d = await api('portal', { key: PRO.key }); location.href = d.url; } catch (e) { done(); toast(e.message, true, 6000); } };
+$('#acctOut').onclick = async () => {
+  const a = await ask('Remove Pro from this device?', 'You can activate it again any time with your licence key.', [{ label: 'Cancel', value: false, cls: 'ghost' }, { label: 'Remove', value: true, cls: 'danger' }]);
+  if (!a) return; const key = PRO.key; $('#dlgAcct').close();
+  if (API_OK) { try { await api('signout', { key, deviceId: deviceId() }); } catch {} }
+  clearPro(); toast('Pro was removed from this device.');
+};
+
+/* ================= free-plan mark ================= */
+async function drawFreeMark(page, W, H, F) {
+  const f = await F('Helvetica'); const t = 'Edited with Inkwell PDF Studio'; const size = 6.5; const tw = f.widthOfTextAtSize(t, size);
+  page.drawText(t, { x: W - tw - 14, y: 10, size, font: f, color: rgb(0.42, 0.45, 0.5), opacity: 0.8 });
+}
+
+/* ================= encryption library (loaded on demand) ================= */
+let encLib = null;
+function loadEncLib() {
+  if (encLib) return encLib;
+  encLib = new Promise((res, rej) => {
+    const keep = window.PDFLib; const sc = document.createElement('script');
+    sc.src = 'https://cdn.jsdelivr.net/npm/@cantoo/pdf-lib@2.11.1/dist/pdf-lib.min.js';
+    sc.onload = () => { const lib = window.PDFLib; window.PDFLib = keep; lib && lib !== keep && lib.PDFDocument ? res(lib) : rej(new Error('The encryption library did not load.')); };
+    sc.onerror = () => { window.PDFLib = keep; encLib = null; rej(new Error('Could not load the encryption library. Check your internet connection.')); };
+    document.head.append(sc);
+  });
+  return encLib;
+}
+async function isEncryptedPdf(u8) { try { return (await PDFDocument.load(u8, { ignoreEncryption: true, updateMetadata: false })).isEncrypted; } catch { return false; } }
+async function encryptBytes(bytes, pw, perm) {
+  const C = await loadEncLib(); const d = await C.PDFDocument.load(bytes, { updateMetadata: false });
+  const owner = [...crypto.getRandomValues(new Uint8Array(18))].map(b => b.toString(16).padStart(2, '0')).join('');
+  d.encrypt({ userPassword: pw, ownerPassword: owner, permissions: { printing: perm.printing ? 'highResolution' : false, copying: !!perm.copying, modifying: !!perm.editing, annotating: !!perm.editing, fillingForms: !!perm.editing, documentAssembly: !!perm.editing, contentAccessibility: true } });
+  return d.save();
+}
+
+/* ================= unlock ================= */
+function askPassword(name, err) {
+  return new Promise(res => {
+    const d = $('#dlgUnlock'); $('#unlockName').textContent = `Enter the password for ${name} to open and edit it.`;
+    $('#unlockErr').hidden = !err; $('#unlockErr').textContent = err || ''; $('#unlockPw').value = '';
+    const finish = v => { d.onclose = null; d.close(); res(v); };
+    $('#unlockGo').onclick = () => finish($('#unlockPw').value);
+    $('#unlockPw').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); finish($('#unlockPw').value); } };
+    $('#unlockCancel').onclick = () => finish(null);
+    d.onclose = () => { if (!d.open) res(null); };
+    d.showModal(); setTimeout(() => $('#unlockPw').focus(), 50);
+  });
+}
+async function unlockAndOpen(bytes, name, at, err) {
+  if (!requirePro('unlock')) return;
+  const pw = await askPassword(name, err); if (pw == null) return;
+  busy('Unlocking…');
+  try {
+    const C = await loadEncLib();
+    const d = await C.PDFDocument.load(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), { password: pw, updateMetadata: false });
+    const plain = await d.save(); done();
+    if (at === false) await openPdf(plain, name); else await insertPdfPages(plain, at);
+    toast('Unlocked. Copies you save won\'t need a password unless you protect them again.', false, 5000); track('Pro tool', { tool: 'unlock' });
+  } catch (e) {
+    done();
+    if (/password/i.test(e.message)) return unlockAndOpen(bytes, name, at, 'That password is not correct. Try again.');
+    toast('Could not unlock this PDF: ' + e.message, true, 6000);
+  }
+}
+
+/* ================= protect ================= */
+function openProtect() { ['#pwOpen', '#pwOpen2'].forEach(q => { $(q).value = ''; }); $('#dlgProtect').showModal(); setTimeout(() => $('#pwOpen').focus(), 50); }
+$('#pwShow').onchange = e => ['#pwOpen', '#pwOpen2'].forEach(q => { $(q).type = e.target.checked ? 'text' : 'password'; });
+$('#pwGo').onclick = async () => {
+  const a = $('#pwOpen').value, b = $('#pwOpen2').value;
+  if (a.length < 4) return toast('Use a password of at least 4 characters.', true);
+  if (a !== b) return toast('The two passwords don\'t match.', true);
+  $('#dlgProtect').close(); finishEdit();
+  try {
+    busy('Protecting…'); const bytes = await buildBytes(allIdx(), 'Protecting'); busy('Encrypting…');
+    const out = await encryptBytes(bytes, a, { printing: $('#pwPrint').checked, copying: $('#pwCopy').checked, editing: $('#pwEdit').checked });
+    if (await download(out, baseName() + '-protected.pdf', 'application/pdf')) { toast('Saved a password-protected copy (AES-256).'); track('Pro tool', { tool: 'protect' }); }
+  } catch (e) { console.error(e); toast('Could not protect the PDF: ' + e.message, true, 6000); } finally { done(); }
+};
+
+/* ================= compress ================= */
+const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+// Undo simple wrapper encodings some PDF makers put around JPEG data.
+const PRE_FILTERS = {
+  '/ASCII85Decode': u8 => { const s = new TextDecoder('latin1').decode(u8).replace(/\s+/g, '').replace(/^<~/, '').replace(/~>.*$/, ''); const out = []; let g = [];
+    for (const ch of s) { if (ch === 'z' && !g.length) { out.push(0, 0, 0, 0); continue; } g.push(ch.charCodeAt(0) - 33); if (g.length === 5) { let n = 0; for (const v of g) n = n * 85 + v; out.push(n >>> 24 & 255, n >>> 16 & 255, n >>> 8 & 255, n & 255); g = []; } }
+    if (g.length) { const k = g.length; while (g.length < 5) g.push(84); let n = 0; for (const v of g) n = n * 85 + v; const b4 = [n >>> 24 & 255, n >>> 16 & 255, n >>> 8 & 255, n & 255]; out.push(...b4.slice(0, k - 1)); }
+    return new Uint8Array(out); },
+  '/ASCIIHexDecode': u8 => { const s = new TextDecoder('latin1').decode(u8).replace(/[^0-9a-fA-F]/g, ''); const out = new Uint8Array(Math.ceil(s.length / 2)); for (let i = 0; i < out.length; i++) out[i] = parseInt((s.substr(i * 2, 2) + '0').slice(0, 2), 16); return out; },
+  '/FlateDecode': async u8 => new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer())
+};
+async function recompressImages(doc, { quality = 0.62, maxDim = 1800 } = {}) {
+  const { PDFRawStream, PDFName, PDFNumber, PDFArray } = PL; const N = n => PDFName.of(n); let saved = 0, count = 0;
+  for (const [ref, obj] of doc.context.enumerateIndirectObjects()) {
+    if (!(obj instanceof PDFRawStream)) continue; const d = obj.dict;
+    if (d.get(N('Subtype')) !== N('Image')) continue;
+    let filt = d.get(N('Filter')), pre = [];
+    if (filt instanceof PDFArray) { const all = filt.asArray(); filt = all[all.length - 1]; pre = all.slice(0, -1).map(x => x.asString ? x.asString() : String(x)); }
+    if (filt !== N('DCTDecode') || d.get(N('Decode')) || d.get(N('ImageMask')) || d.get(N('Mask'))) continue;
+    if (pre.some(x => !PRE_FILTERS[x])) continue;
+    const cs = d.lookup(N('ColorSpace'));
+    if (cs === N('DeviceCMYK')) continue;
+    if (cs instanceof PDFArray) {
+      const kind = cs.get(0);
+      if (kind === N('ICCBased')) { const icc = cs.lookup(1); const n = icc && icc.dict && icc.dict.get(N('N')); if (n && n.asNumber() === 4) continue; }
+      else if (kind !== N('CalRGB') && kind !== N('CalGray')) continue;
+    }
+    const stored = obj.contents; if (stored.length < 20000) continue;
+    let bytes = stored; try { for (const fn of pre) bytes = await PRE_FILTERS[fn](bytes); } catch { continue; }
+    let bmp; try { bmp = await createImageBitmap(new Blob([bytes], { type: 'image/jpeg' })); } catch { continue; }
+    const sc = d.get(N('SMask')) ? 1 : Math.min(1, maxDim / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * sc)), h = Math.max(1, Math.round(bmp.height * sc));
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.drawImage(bmp, 0, 0, w, h); if (bmp.close) bmp.close();
+    const nb = new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/jpeg', quality))).arrayBuffer());
+    if (nb.length >= stored.length * 0.9) continue;
+    d.set(N('Width'), PDFNumber.of(w)); d.set(N('Height'), PDFNumber.of(h)); d.set(N('ColorSpace'), N('DeviceRGB')); d.set(N('BitsPerComponent'), PDFNumber.of(8)); d.delete(N('DecodeParms')); d.set(N('Filter'), N('DCTDecode'));
+    doc.context.assign(ref, PDFRawStream.of(d, nb)); saved += stored.length - nb.length; count++;
+  }
+  return { saved, count };
+}
+async function rasterizeBytes(bytes, dpi, quality, onPage) {
+  const js = await pdfjsLib.getDocument({ data: bytes.slice() }).promise; const out = await PDFDocument.create();
+  for (let i = 1; i <= js.numPages; i++) {
+    if (onPage) onPage(i, js.numPages);
+    const pg = await js.getPage(i); const v1 = pg.getViewport({ scale: 1 }); const vp = pg.getViewport({ scale: dpi / 72 });
+    const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height); const x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); await pg.render({ canvasContext: x, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+    const jpg = new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/jpeg', quality))).arrayBuffer());
+    const img = await out.embedJpg(jpg); out.addPage([v1.width, v1.height]).drawImage(img, { x: 0, y: 0, width: v1.width, height: v1.height });
+  }
+  js.destroy(); return out.save({ useObjectStreams: true });
+}
+$('#cmpGo').onclick = async () => {
+  const mode = $('input[name=cmode]:checked').value; $('#dlgCompress').close(); finishEdit();
+  try {
+    const doc = await buildPdfDoc(allIdx(), (n, T) => busy(`Preparing · page ${n + 1} of ${T}`));
+    busy('Measuring…'); const before = await doc.save(); let out;
+    if (mode === 'strong') out = await rasterizeBytes(before, 110, 0.55, (i, T) => busy(`Compressing · page ${i} of ${T}`));
+    else { busy('Compressing images…'); await recompressImages(doc); busy('Finishing…'); out = await doc.save({ useObjectStreams: true }); }
+    done();
+    if (out.length >= before.length * 0.97) { toast('This PDF is already compact, so there was nothing worth reducing.', false, 5000); return; }
+    const pct = Math.round((1 - out.length / before.length) * 100);
+    if (await download(out, baseName() + '-compressed.pdf', 'application/pdf')) { toast(`Compressed from ${fmtSize(before.length)} to ${fmtSize(out.length)} (${pct}% smaller).`, false, 6000); track('Pro tool', { tool: 'compress', mode }); }
+  } catch (e) { console.error(e); toast('Could not compress: ' + e.message, true, 6000); } finally { done(); }
+};
+
+/* ================= redaction ================= */
+async function flattenPageJpeg(p) {
+  const { W, H, R } = viewSize(p); const sc = 200 / 72;
+  const c = document.createElement('canvas'); c.width = Math.ceil(W * sc); c.height = Math.ceil(H * sc);
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+  if (p.src >= 0) { const pg = await jsPage(p); await pg.render({ canvasContext: x, viewport: pg.getViewport({ scale: sc, rotation: R }), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise; }
+  x.fillStyle = '#000';
+  for (const o of p.objs) if (o.t === 'redact') x.fillRect(Math.floor(o.x * sc) - 1, Math.floor(o.y * sc) - 1, Math.ceil(o.w * sc) + 2, Math.ceil(o.h * sc) + 2);
+  return new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9))).arrayBuffer());
+}
+
+/* ================= forms ================= */
+async function detectForms() {
+  S.fields = {}; const names = new Set();
+  try {
+    for (let si = 0; si < S.sources.length; si++) {
+      const js = S.sources[si].js; const n = Math.min(js.numPages, 300);
+      for (let i = 1; i <= n; i++) {
+        const an = (await (await js.getPage(i)).getAnnotations()).filter(a => a.subtype === 'Widget' && a.fieldName && a.fieldType && !a.pushButton);
+        if (an.length) { (S.fields[si] = S.fields[si] || {})[i - 1] = an; an.forEach(a => names.add(si + ':' + a.fieldName)); }
+      }
+    }
+  } catch (e) { console.warn(e); }
+  const bar = $('#formBar'); $('#formCount').textContent = names.size;
+  bar.hidden = !names.size || S.formMode;
+}
+$('#formGo').onclick = () => startForms(false);
+$('#formX').onclick = () => { $('#formBar').hidden = true; };
+function startForms(fromMenu) {
+  const has = Object.keys(S.fields).length;
+  if (!has) return toast('This PDF has no fillable form fields. Use Add text (T) to type anywhere on the page.', false, 5000);
+  if (!requirePro('forms')) return;
+  S.formMode = true; $('#formBar').hidden = true; setTool('select');
+  $$('.page', viewer).forEach(el => { if (el._vis) buildFormLayer(el); });
+  toast('Click a field to type. Saved copies are filled in and flattened.', false, 4500); track('Pro tool', { tool: 'forms' });
+}
+async function buildFormLayer(el) {
+  const p = pageById(el.dataset.id); if (!p || p.src < 0) return;
+  let fl = el.querySelector('.fl'); if (!fl) { fl = div('fl'); el.append(fl); }
+  const key = `${p.src}:${p.idx}:${p.rot}:${S.zoom}`; if (fl._key === key) return; fl._key = key; fl.innerHTML = '';
+  const an = (S.fields[p.src] || {})[p.idx]; if (!an) return;
+  const pg = await jsPage(p); const { R } = viewSize(p); const vp = pg.getViewport({ scale: S.zoom, rotation: R });
+  const vals = S.forms[p.src] = S.forms[p.src] || {};
+  for (const a of an) {
+    const [x1, y1, x2, y2] = vp.convertToViewportRectangle(a.rect);
+    const L = Math.min(x1, x2), T = Math.min(y1, y2), Wd = Math.abs(x2 - x1), Ht = Math.abs(y2 - y1);
+    let inp;
+    if (a.fieldType === 'Tx') {
+      inp = document.createElement(a.multiLine ? 'textarea' : 'input'); if (!a.multiLine) inp.type = 'text';
+      inp.value = vals[a.fieldName] ?? (a.fieldValue || ''); if (a.maxLen) inp.maxLength = a.maxLen;
+      inp.style.fontSize = Math.max(8, Math.min(Ht * 0.72, a.textSize ? a.textSize * S.zoom : Ht * 0.62)) + 'px';
+      inp.oninput = () => { vals[a.fieldName] = inp.value; $$('.fld', viewer).forEach(x => { if (x !== inp && x.dataset.field === a.fieldName && x.tagName === inp.tagName) x.value = inp.value; }); setDirty(); };
+    } else if (a.fieldType === 'Btn' && a.checkBox) {
+      inp = document.createElement('input'); inp.type = 'checkbox';
+      const v = vals[a.fieldName]; inp.checked = v !== undefined ? !!v : !!(a.fieldValue && a.fieldValue !== 'Off');
+      inp.onchange = () => { vals[a.fieldName] = inp.checked; setDirty(); };
+    } else if (a.fieldType === 'Btn' && a.radioButton) {
+      inp = document.createElement('input'); inp.type = 'radio'; inp.name = `r${p.src}_${a.fieldName}`;
+      inp.checked = (vals[a.fieldName] ?? a.fieldValue) === a.buttonValue;
+      inp.onchange = () => { if (inp.checked) { vals[a.fieldName] = a.buttonValue; setDirty(); } };
+    } else if (a.fieldType === 'Ch') {
+      inp = document.createElement('select');
+      for (const o of a.options || []) { const op = document.createElement('option'); op.value = o.exportValue ?? o.displayValue; op.textContent = o.displayValue ?? o.exportValue; inp.append(op); }
+      const cur = vals[a.fieldName] ?? (Array.isArray(a.fieldValue) ? a.fieldValue[0] : a.fieldValue); if (cur != null) inp.value = cur;
+      inp.style.fontSize = Math.max(8, Ht * 0.6) + 'px';
+      inp.onchange = () => { vals[a.fieldName] = inp.value; setDirty(); };
+    } else continue;
+    inp.className = 'fld'; inp.dataset.field = a.fieldName; if (a.readOnly) inp.disabled = true;
+    inp.setAttribute('aria-label', a.alternativeText || a.fieldName);
+    Object.assign(inp.style, { left: L + 'px', top: T + 'px', width: Wd + 'px', height: Ht + 'px' });
+    if (inp.type === 'checkbox' || inp.type === 'radio') { const m = Math.min(Wd, Ht); Object.assign(inp.style, { width: m + 'px', height: m + 'px', left: L + (Wd - m) / 2 + 'px', top: T + (Ht - m) / 2 + 'px' }); }
+    ['pointerdown', 'mousedown', 'dblclick'].forEach(ev => inp.addEventListener(ev, e => e.stopPropagation()));
+    fl.append(inp);
+  }
+}
+function applyFormValues(sd, src) {
+  const vals = S.forms[src]; if (!vals || !Object.keys(vals).length) return;
+  try {
+    const form = sd.getForm();
+    for (const [name, v] of Object.entries(vals)) {
+      let f; try { f = form.getField(name); } catch { continue; }
+      try {
+        if (f instanceof PL.PDFTextField) f.setText(String(v ?? ''));
+        else if (f instanceof PL.PDFCheckBox) { if (v) f.check(); else f.uncheck(); }
+        else if (f instanceof PL.PDFRadioGroup) { if (v && v !== 'Off') f.select(String(v)); }
+        else if (f instanceof PL.PDFDropdown || f instanceof PL.PDFOptionList) { if (v != null && v !== '') f.select(String(v)); }
+      } catch (e) { console.warn('Form field', name, e); }
+    }
+    form.flatten();
+  } catch (e) { console.warn(e); toast('Some form fields could not be filled in the saved copy.', true, 5000); }
+}
+
+/* ================= stamps & templates ================= */
+const STAMPS = [['APPROVED', '#1c8656'], ['PAID', '#1c8656'], ['RECEIVED', '#2a3fd1'], ['VERIFIED', '#2a3fd1'], ['ORIGINAL', '#2a3fd1'], ['FOR REVIEW', '#e07a12'], ['COPY', '#141821'], ['DRAFT', '#141821'], ['CONFIDENTIAL', '#c3323d'], ['URGENT', '#c3323d'], ['VOID', '#c3323d'], ['REJECTED', '#c3323d']];
+function stampFontSize(o) {
+  const base = o.h * (o.sub ? 0.36 : 0.5);
+  mctx.font = '700 100px Helvetica, Arial, sans-serif'; const w100 = mctx.measureText(String(o.text || '').toUpperCase()).width * 1.06 || 1;
+  return Math.max(4, Math.min(base, (o.w * 0.84) / (w100 / 100)));
+}
+// One geometry for both the screen and the saved PDF, measured from the stamp's top edge.
+function stampGeom(o) {
+  const bw = Math.max(1.2, o.h * 0.055), ins = bw * 2.2, ib = Math.max(0.6, bw * 0.4), fs = stampFontSize(o), sp = fs * 0.06, ss = fs * 0.42, gap = fs * 0.24;
+  const block = fs * 0.72 + (o.sub ? gap + ss * 0.72 : 0), tBase = o.h / 2 - block / 2 + fs * 0.72;
+  return { bw, ins, ib, fs, sp, ss, tBase, sBase: tBase + gap + ss * 0.72 };
+}
+async function drawStamp(page, o, H, F, safe) {
+  const col = hexToRgb(o.color || '#1c8656'), op = o.op ?? 0.9, g = stampGeom(o), y0 = H - o.y - o.h;
+  page.drawRectangle({ x: o.x + g.bw / 2, y: y0 + g.bw / 2, width: o.w - g.bw, height: o.h - g.bw, borderColor: col, borderWidth: g.bw, borderOpacity: op });
+  page.drawRectangle({ x: o.x + g.ins, y: y0 + g.ins, width: Math.max(1, o.w - 2 * g.ins), height: Math.max(1, o.h - 2 * g.ins), borderColor: col, borderWidth: g.ib, borderOpacity: op });
+  const f = await F('HelveticaBold'), f2 = await F('Helvetica');
+  const t = safe(String(o.text || '').toUpperCase()), tw = f.widthOfTextAtSize(t, g.fs) + g.sp * Math.max(0, t.length - 1);
+  page.pushOperators(PL.setCharacterSpacing(g.sp));
+  page.drawText(t, { x: o.x + (o.w - tw) / 2, y: H - o.y - g.tBase, size: g.fs, font: f, color: col, opacity: op });
+  page.pushOperators(PL.setCharacterSpacing(0));
+  if (o.sub) { const sub = safe(String(o.sub).toUpperCase()), sw = f2.widthOfTextAtSize(sub, g.ss); page.drawText(sub, { x: o.x + (o.w - sw) / 2, y: H - o.y - g.sBase, size: g.ss, font: f2, color: col, opacity: op }); }
+}
+function openStamps() {
+  if (!S.open) return; if (!requirePro('stamps')) return;
+  $('#stampGrid').innerHTML = STAMPS.map(([t, c], i) => `<button data-st="${i}" title="Place ${t}"><span class="sp" style="color:${c};border-color:${c};outline-color:${c}">${t}</span></button>`).join('');
+  renderTemplates(); $('#dlgStamps').showModal();
+}
+function placeStamp(text, color) {
+  const p = curPage(); if (!p) return; const { W, H } = viewSize(p); const c = visibleCenter(p);
+  const sub = $('#stDate').checked ? new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+  const h = sub ? 56 : 46; mctx.font = '700 100px Helvetica, Arial, sans-serif';
+  const fs = h * (sub ? 0.36 : 0.5); const w = clamp(mctx.measureText(text).width * 1.06 * fs / 100 / 0.84 + 8, 90, W * 0.8);
+  const o = { id: uid(), t: 'stamp', x: clamp(c.x - w / 2, 0, W - w), y: clamp(c.y - h / 2, 0, H - h), w, h, text, sub, color, op: 0.9 };
+  $('#dlgStamps').close(); if (S.tool !== 'select') setTool('select'); addObj(o, p); select(o, p); track('Pro tool', { tool: 'stamp' });
+}
+$('#stampGrid').addEventListener('click', e => { const b = e.target.closest('[data-st]'); if (b) { const [t, c] = STAMPS[+b.dataset.st]; placeStamp(t, c); } });
+$('#stCustomGo').onclick = () => { const t = $('#stCustom').value.trim().toUpperCase(); if (!t) return toast('Type the stamp text first.', true); placeStamp(t, '#2a3fd1'); };
+function renderTemplates() {
+  const list = ls.get(LS_TPL, []);
+  $('#tplList').innerHTML = list.length ? list.map((t, i) => `<div class="tpl"><span>${esc(t.name)}</span><button class="btn" data-tpl="${i}">Insert</button><button class="btn icon ghost" data-tpldel="${i}" title="Delete"><svg class="i"><use href="#i-trash"/></svg></button></div>`).join('') : '<p class="hint">Select anything on a page (text, a signature, an image, a stamp) and choose <b>Save as template</b> in the panel to reuse it in any document.</p>';
+}
+function saveTemplate(o) {
+  if (!requirePro('templates')) return;
+  const name = o.t === 'text' ? o.text.split('\n')[0].slice(0, 40) : o.t === 'stamp' ? `Stamp: ${o.text}` : o.t === 'image' ? (o.kind === 'sign' ? 'Signature' : 'Image') + ' ' + new Date().toLocaleDateString() : TYPE_NAME[o.t] || 'Item';
+  const item = { id: uid(), name, obj: JSON.parse(JSON.stringify(o)), asset: o.t === 'image' ? S.assets[o.asset] : null };
+  const list = ls.get(LS_TPL, []); list.unshift(item);
+  if (!ls.set(LS_TPL, list.slice(0, 40))) return toast('Template storage on this device is full. Delete an old template first.', true, 5000);
+  toast(`Saved "${name}" to My templates.`); track('Pro tool', { tool: 'template' });
+}
+$('#tplList').addEventListener('click', e => {
+  const list = ls.get(LS_TPL, []);
+  const del = e.target.closest('[data-tpldel]'); if (del) { list.splice(+del.dataset.tpldel, 1); ls.set(LS_TPL, list); renderTemplates(); return; }
+  const b = e.target.closest('[data-tpl]'); if (!b) return; const t = list[+b.dataset.tpl]; const p = curPage(); if (!t || !p) return;
+  let o = JSON.parse(JSON.stringify(t.obj));
+  if (t.asset) { const aid = uid(); S.assets[aid] = t.asset; o.asset = aid; }
+  const bx = objBox(o), c = visibleCenter(p); o = cloneObj(o, c.x - (bx.x + bx.w / 2), c.y - (bx.y + bx.h / 2));
+  $('#dlgStamps').close(); if (S.tool !== 'select') setTool('select'); addObj(o, p); select(o, p);
+});
+
+/* ================= batch ================= */
+let batchFiles = [];
+function openBatch() {
+  if (!requirePro('batch')) return;
+  batchFiles = []; renderBatch(); showBatchOpts(); $('#dlgBatch').showModal();
+}
+function renderBatch() { $('#bList').innerHTML = batchFiles.map(f => `<div><span>${esc(f.name)}</span><small>${fmtSize(f.size)}</small></div>`).join(''); $('#bGo').textContent = batchFiles.length ? `Run on ${batchFiles.length} file${batchFiles.length > 1 ? 's' : ''}` : 'Run'; }
+function showBatchOpts() { const a = $('#bAct').value; $$('[data-bopt]').forEach(el => { el.hidden = el.dataset.bopt !== a; }); }
+$('#bAct').onchange = showBatchOpts;
+$('#bPick').onclick = async () => { const fs = await pickFiles('.pdf,application/pdf', true); batchFiles.push(...fs.filter(isPdf)); renderBatch(); };
+const bDrop = $('#bDrop');
+bDrop.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); bDrop.classList.add('over'); });
+bDrop.addEventListener('dragleave', () => bDrop.classList.remove('over'));
+bDrop.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); bDrop.classList.remove('over'); dragDepth = 0; $('#dropVeil').hidden = true; batchFiles.push(...[...(e.dataTransfer?.files || [])].filter(isPdf)); renderBatch(); });
+function inViewSpace(page, fn) {
+  const R = ((page.getRotation().angle % 360) + 360) % 360; const cb = page.getCropBox();
+  const W = R % 180 ? cb.height : cb.width, H = R % 180 ? cb.width : cb.height, w = cb.width, h = cb.height, cx = cb.x, cy = cb.y;
+  const M = R === 90 ? [0, 1, -1, 0, w + cx, cy] : R === 180 ? [-1, 0, 0, -1, w + cx, h + cy] : R === 270 ? [0, -1, 1, 0, cx, h + cy] : [1, 0, 0, 1, cx, cy];
+  page.pushOperators(pushGraphicsState(), concatTransformationMatrix(...M)); fn(W, H); page.pushOperators(popGraphicsState());
+}
+$('#bGo').onclick = async () => {
+  if (!batchFiles.length) return toast('Add some PDFs first.', true);
+  const act = $('#bAct').value, pw = $('#bPw').value;
+  if (act === 'protect' && pw.length < 4) return toast('Use a password of at least 4 characters.', true);
+  $('#dlgBatch').close();
+  const zip = new JSZip(), skipped = [], used = new Set(); let merged = act === 'merge' ? await PDFDocument.create() : null, ok = 0, saved = 0;
+  const suffix = { compress: 'compressed', watermark: 'watermarked', numbers: 'numbered', protect: 'protected' }[act];
+  const nameFor = n => { let b = n.replace(/\.pdf$/i, '') + '-' + suffix, k = b, i = 2; while (used.has(k)) k = `${b}-${i++}`; used.add(k); return k + '.pdf'; };
+  try {
+    for (let i = 0; i < batchFiles.length; i++) {
+      const f = batchFiles[i]; busy(`Processing ${i + 1} of ${batchFiles.length}: ${f.name}`); await tick();
+      try {
+        const bytes = new Uint8Array(await f.arrayBuffer());
+        const doc = await PDFDocument.load(bytes, { updateMetadata: false });
+        if (merged) { (await merged.copyPages(doc, doc.getPageIndices())).forEach(pg => merged.addPage(pg)); ok++; continue; }
+        if (act === 'compress') await recompressImages(doc);
+        if (act === 'watermark' || act === 'numbers') {
+          const font = await doc.embedFont(act === 'watermark' ? StandardFonts.HelveticaBold : StandardFonts.Helvetica); const safeT = sanitizer(font); const N = doc.getPageCount();
+          doc.getPages().forEach((pg, k) => inViewSpace(pg, (W, H) => {
+            if (act === 'watermark') { const t = safeT($('#bWm').value || 'CONFIDENTIAL'); const size = Math.min(W, H) * 0.12, tw = font.widthOfTextAtSize(t, size), a = Math.PI / 4; pg.drawText(t, { x: W / 2 - (tw / 2) * Math.cos(a) + size * 0.35 * Math.sin(a), y: H / 2 - (tw / 2) * Math.sin(a) - size * 0.35 * Math.cos(a), size, font, color: rgb(0.49, 0.52, 0.58), opacity: 0.15, rotate: degrees(45) }); }
+            else { const fmt = $('#bPn').value, t = fmt === 'pageof' ? `Page ${k + 1} of ${N}` : fmt === 'slash' ? `${k + 1} / ${N}` : `${k + 1}`; const tw = font.widthOfTextAtSize(t, 9); pg.drawText(t, { x: (W - tw) / 2, y: 24, size: 9, font, color: rgb(0.27, 0.29, 0.34) }); }
+          }));
+        }
+        let out = await doc.save({ useObjectStreams: true });
+        if (act === 'protect') out = await encryptBytes(out, pw, { printing: true, copying: true, editing: false });
+        if (act === 'compress') { if (out.length >= bytes.length) out = bytes; saved += bytes.length - out.length; }
+        zip.file(nameFor(f.name), out); ok++;
+      } catch (e) { console.warn(e); skipped.push(`${f.name} (${/password|encrypt/i.test(e.message) ? 'password-protected or restricted' : 'could not be read'})`); }
+    }
+    if (!ok) { done(); return toast('None of the files could be processed. ' + skipped.join(', '), true, 8000); }
+    busy('Packaging…');
+    const saveOk = merged ? await download(await merged.save({ useObjectStreams: true }), 'Merged.pdf', 'application/pdf') : await download(await zip.generateAsync({ type: 'blob' }), `Inkwell-${suffix}.zip`);
+    if (saveOk) toast(`Processed ${ok} file${ok > 1 ? 's' : ''}${act === 'compress' && saved > 0 ? `, saving ${fmtSize(saved)}` : ''}.${skipped.length ? ' Skipped: ' + skipped.join(', ') : ''}`, !!skipped.length, 8000);
+    track('Pro tool', { tool: 'batch', action: act, files: bucket(batchFiles.length) });
+  } finally { done(); }
+};
+
+initPro();
+
 // test hook
-window.__inkwell = { S, openPdf, makeSample, buildBytes, makeDocx, htmlToPdf, setTool, savePdf, refreshAll, select, renderOverlay, rotatePage, extractParas };
+window.__inkwell = { PRO, S, openPdf, makeSample, buildBytes, makeDocx, htmlToPdf, setTool, savePdf, refreshAll, select, renderOverlay, rotatePage, extractParas };
 })();
 </script>
 </body>
