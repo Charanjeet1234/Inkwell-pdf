@@ -1,10 +1,6 @@
 {
   "name": "inkwell-pdf",
   "private": true,
-  "description": "Inkwell PDF Studio: browser PDF editor with Pro licensing via Stripe",
-  "engines": { "node": ">=18" },
-  "scripts": {
-    "generate-license-key": "node scripts/generate-license-key.js",
-    "setup-stripe": "node scripts/setup-stripe.js"
-  }
+  "description": "Inkwell PDF Studio: free browser PDF editor, signer and converter",
+  "engines": { "node": ">=18" }
 }

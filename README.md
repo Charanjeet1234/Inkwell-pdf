@@ -22,22 +22,16 @@ Edit, sign and convert PDFs in the browser. Everything runs on the user's own de
   - Images → PDF
 - **Extras** — watermark, page numbers, keyboard shortcuts, drag and drop, light and dark mode, works on phones.
 
-### Inkwell Pro (paid)
+### Free during launch
 
-| Free | Pro |
-| --- | --- |
-| Edit text in the original font, annotate, sign, page tools, PDF ↔ Word, images, merge and split | Everything in Free, plus: |
-| No watermark, no sign-up, no editing limits | |
-| | Make scanned PDFs editable (OCR), automatic font/weight/size detection on scans |
-| | 20 premium fonts and extra thickness control |
-| | Password protect (AES-256) and open password-protected PDFs |
-| | True redaction (redacted pages are rebuilt as images, so nothing underneath survives) |
-| | Compress PDFs (balanced or maximum) |
-| | Fill PDF form fields (saved filled and flattened) |
-| | Batch: compress, watermark, page numbers, password-protect or merge many PDFs |
-| | Stamps (Approved, Paid, Received…) and reusable templates |
+Every feature above, including scan editing (OCR), automatic font detection, premium fonts, password protection and unlocking, true redaction, compression, form filling, batch processing, and stamps and templates, is free. Saved files have no watermark.
 
-Plans: monthly, yearly and lifetime, sold through Stripe Checkout (suggested prices $3 / month, $24 / year, $49 lifetime). A licence works on up to 3 devices at a time.
+Saving or downloading needs a free account (email code or Google sign-in) once Supabase is connected (see below). Until then, everything works without an account.
+
+### Branches
+
+- **`main`**: this free edition. Deploy it to your live site.
+- **`payments`**: the full paid version (Stripe checkout, Pro licences, owner admin page, Pro tools served only to licence holders). It is kept up to date with the sign-up feature and ready to merge when you introduce paid plans. Vercel builds it as a preview deployment, so you can test payments without touching the live site.
 
 ## Brand assets
 
@@ -56,58 +50,39 @@ Any static host works — there is nothing to build.
 - **GitHub Pages:** Settings → Pages → deploy from branch `main`, folder `/ (root)`.
 - **Netlify / Cloudflare Pages:** connect the repo, leave the build command empty, publish directory `/`.
 
-## Selling Inkwell Pro
+## Accounts: sign-up to save (Supabase)
 
-Licensing runs in the Vercel functions in `api/`. There is no database: Stripe is the record of who has paid. Licence keys look like `INK-…` and are printed on the customer's Stripe invoices.
-
-### Go-live checklist
-
-1. **Stripe account.** Create and activate a Stripe account for your business (a UAE trade licence is required). Stripe reviews your website, so deploy first with the policy pages filled in (step 7).
-2. **Product and prices.** Either create a product with three prices in the Stripe dashboard (monthly recurring, yearly recurring, one-time lifetime), or run:
-   ```bash
-   STRIPE_SECRET_KEY=sk_test_... node scripts/setup-stripe.js --currency usd --monthly 300 --yearly 2400 --lifetime 4900
+1. **Create a project** at [supabase.com](https://supabase.com) (the free plan is enough to start).
+2. **Connect your own email sender.** Supabase's built-in email only delivers to members of your Supabase team, at 2 emails an hour, so real users would never get their code. Go to **Authentication → Emails → SMTP Settings** and connect a provider such as Resend, Brevo, Postmark or Amazon SES using your own domain. Then raise the email limit under **Authentication → Rate Limits** (it starts at 30 an hour).
+3. **Show the sign-in code in the emails.** Under **Authentication → Emails → Templates**, add this line to both **Confirm signup** and **Magic Link**:
+   ```html
+   <p>Your Inkwell code: <strong>{{ .Token }}</strong></p>
    ```
-   (amounts are in cents). It prints the three price IDs.
-3. **Licence signing key and admin token.** Run `node scripts/generate-license-key.js` once. It prints `LICENSE_PRIVATE_KEY` and `ADMIN_TOKEN`. Keep both secret and never commit them. Changing the licence key later invalidates every issued licence key.
-4. **Vercel environment variables** (Project → Settings → Environment Variables), then redeploy:
+   Users can then type the 6-digit code without leaving their document (the link in the email works too).
+4. **Allow your site's address.** Under **Authentication → URL Configuration**, set **Site URL** to your site (for example `https://pdf.example.com`) and add `https://pdf.example.com/**` to **Redirect URLs**.
+5. **Google sign-in (optional, recommended).** Under **Authentication → Sign In / Providers → Google**, add a Google OAuth client ID and secret (from Google Cloud Console; add Supabase's callback URL shown there as an authorised redirect URI). Then set `SUPABASE_GOOGLE=true` in Vercel. Google sign-in sends no email, so it isn't affected by email limits.
+6. **Vercel environment variables**, then redeploy:
    | Variable | Value |
    | --- | --- |
-   | `STRIPE_SECRET_KEY` | `sk_test_…` while testing, `sk_live_…` when live |
-   | `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_YEARLY` / `STRIPE_PRICE_LIFETIME` | the price IDs from step 2 |
-   | `LICENSE_PRIVATE_KEY` | the key from step 3 |
-   | `ADMIN_TOKEN` | the admin token from step 3 (password for `/admin.html`) |
-   | `SUPPORT_EMAIL` *(recommended)* | the address shown to customers for help |
-   | `PUBLIC_URL` *(optional)* | your site address, e.g. `https://pdf.example.com` |
-   | `STRIPE_AUTOMATIC_TAX` *(optional)* | `true` once Stripe Tax is set up |
-   | `INKWELL_MAX_DEVICES` *(optional)* | devices per licence, default `3` |
+   | `SUPABASE_URL` | Project Settings → API → Project URL, e.g. `https://abcd1234.supabase.co` |
+   | `SUPABASE_ANON_KEY` | Project Settings → API → the **anon / publishable** key (never the service-role or secret key) |
+   | `SUPABASE_GOOGLE` *(optional)* | `true` after step 5 |
+   | `SUPPORT_EMAIL` *(recommended)* | the address shown to users for help |
 
-   Until all five required variables are set, the app shows "Pro purchases are not switched on yet".
-5. **Customer portal.** Stripe → Settings → Billing → Customer portal: save the default settings and allow cancelling, invoice history and switching between monthly and yearly. The **Manage billing** button opens it.
-6. **Receipts.** Stripe → Settings → Customer emails: turn on emails for successful payments and invoices, so customers get their licence key by email.
-7. **Policy pages.** Fill in every highlighted `[placeholder]` in `terms.html`, `privacy.html`, `refund.html`, `security.html` and `.well-known/security.txt` (company name, address, support email, governing law, refund days) and have them reviewed for your business.
-8. **Test** with Stripe test mode and card `4242 4242 4242 4242`: buy each plan, check Pro activates, open **Manage billing**, cancel, and activate on a second browser with the licence key.
-9. **Go live**: swap in your live secret key and live price IDs (run step 2 again with `sk_live_…`), then redeploy.
+### Seeing how many people use Inkwell
 
-### Your own Pro account (owner access)
+- **Registered users:** Supabase → **Authentication → Users** shows every account and the total.
+- **People who agreed to update emails:** Supabase → **SQL Editor**:
+  ```sql
+  select email, created_at from auth.users
+  where raw_user_meta_data->>'updates' = 'true'
+  order by created_at desc;
+  ```
+- **All visitors, including people who never sign up:** Vercel → **Analytics** (see below), which shows daily visitors, countries, devices and where they came from.
 
-Open `https://<your-site>/admin.html`, paste your `ADMIN_TOKEN`, enter your email and click **Create licence**. You get a free lifetime licence key (default 5 devices). In Inkwell, click **Upgrade → Already bought Pro? Enter your licence key**. The same page can create free licences for staff or partners, look up a key, and revoke free or lifetime licences.
+### Honest limits
 
-### Refunds and cancellations
-
-- **Subscriptions:** refund in the Stripe dashboard *and cancel the subscription*; Pro switches off on that customer's next licence check (within a day).
-- **Lifetime:** refund the payment in Stripe; the licence switches off automatically on the next check. Disputed payments are treated the same way.
-
-### How Pro is protected
-
-- **The Pro tools are not in the public app.** Their code lives in `api/_prokit.js`, which is never published as a static file. `/api/pro` sends it only to a browser holding a valid licence token signed with your private key, so flipping a switch in the browser does not unlock anything.
-- **Licences are checked with Stripe on the server** and re-checked about once a day; cancelled, refunded or disputed purchases stop working. A licence works on a limited number of devices (rolling; the oldest is signed out).
-- **Limits, honestly:** someone who has paid can capture the Pro code from their own browser and could, with real effort, rebuild it elsewhere. No browser-based app can prevent that entirely; this design stops casual unlocking and key sharing. Keep the repository private, never commit secrets, and rotate `ADMIN_TOKEN` if it leaks.
-
-### Website security
-
-`vercel.json` sets a strict Content Security Policy, HSTS, `X-Frame-Options: DENY`, `nosniff`, a referrer policy and a permissions policy. Third-party libraries load only from jsDelivr, pinned to exact versions with Subresource Integrity hashes. If you change a library version, update its `integrity` value too, or it will not load.
-
-Pro needs the website: the downloaded single file, `localhost` and the Claude preview always run the free version.
+The account check runs in the browser. It is there to count users and build your mailing list, not to protect anything secret, so a technical user could get around it. That is fine for a free product; real enforcement comes with the server-side checks in the `payments` branch.
 
 ## Usage statistics
 
@@ -120,7 +95,11 @@ The hosted site counts visitors anonymously with [Vercel Web Analytics](https://
 - **Devices, operating systems and browsers**
 - **Referrers** (which sites sent people here)
 
-The app also sends anonymous feature events (`Open PDF`, `Save PDF`, `Convert`, `Signature`, `Edit text`, `Make scan editable`, `Pro tool`, `Upgrade prompt`, `Checkout started`, `Pro activated`) with at most a page-count range or method, never file details. Vercel only records these custom events on the Pro plan; on the free Hobby plan they're ignored and only visits are counted (50,000 events a month, 1-month reporting window).
+The app also sends anonymous feature events (`Open PDF`, `Save PDF`, `Convert`, `Signature`, `Edit text`, `Make scan editable`, `Pro tool`, `Sign-up prompt`, `Sign up`, `Sign in`) with at most a page-count range or method, never file details. Vercel only records these custom events on the Pro plan; on the free Hobby plan they're ignored and only visits are counted (50,000 events a month, 1-month reporting window).
+
+## Website security
+
+`vercel.json` sets a strict Content Security Policy, HSTS, `X-Frame-Options: DENY`, `nosniff`, a referrer policy and a permissions policy. Third-party libraries load only from jsDelivr, pinned to exact versions with Subresource Integrity hashes; if you change a library version, update its `integrity` value too, or it will not load. Converted Word files are cleaned of scripts and unsafe links. Before launch, fill in the highlighted `[placeholder]` fields in `terms.html`, `privacy.html`, `security.html` and `.well-known/security.txt`.
 
 ## Built with
 
@@ -132,7 +111,7 @@ The app also sends anonymous feature events (`Open PDF`, `Save PDF`, `Convert`, 
 - [Tesseract.js](https://tesseract.projectnaptha.com/) — text recognition for scanned pages
 - [Fontsource](https://fontsource.org/) via jsDelivr — open-source font files
 - [@cantoo/pdf-lib](https://github.com/cantoo-scribe/pdf-lib) — AES-256 encryption and unlocking (loaded only when used, integrity-checked)
-- [Stripe](https://stripe.com/) — payments, subscriptions and the customer portal
+- [Supabase](https://supabase.com/) — free accounts (email code and Google sign-in)
 
 ## Known limits
 
@@ -142,4 +121,4 @@ The app also sends anonymous feature events (`Open PDF`, `Save PDF`, `Convert`, 
 - PDF → Word simplifies complex layouts (multi-column pages, positioned tables) into paragraphs. Run **Make editable** first if you want text from scanned pages in Word.
 - Text recognition is English-only, needs an internet connection the first time (about 3 MB of language data) and runs on your device; it does not run inside the Claude preview. Accuracy depends on scan quality. Edited lines on a scan use the closest standard typeface and are placed straight, so on a tilted scan they can look very slightly level compared with the original.
 - Library fonts cover Latin characters and need an internet connection the first time each is used; they can't load inside the Claude preview. Automatic detection picks the closest available font, not necessarily the document's exact typeface (for example Arial is matched as Helvetica or Arimo, and similar slab fonts can be swapped).
-- Password-protected PDFs open with Pro after you enter the password. PDFs with owner restrictions (no open password, but editing disallowed by the author) can be viewed but not saved, to respect those restrictions. Legacy `.doc` files are not supported.
+- Password-protected PDFs open after you enter the password. PDFs with owner restrictions (no open password, but editing disallowed by the author) can be viewed but not saved, to respect those restrictions. Legacy `.doc` files are not supported.
