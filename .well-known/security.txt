@@ -1,0 +1,5 @@
+# Replace the placeholder email before going live.
+Contact: mailto:[support email]
+Expires: 2027-10-21T00:00:00.000Z
+Preferred-Languages: en
+Policy: /security.html

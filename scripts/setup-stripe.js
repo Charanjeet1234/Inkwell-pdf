@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Creates the "Inkwell PDF Studio Pro" product and its three prices in your Stripe account.
 // Usage (prices in the smallest currency unit, e.g. cents):
-//   STRIPE_SECRET_KEY=sk_test_... node scripts/setup-stripe.js --currency usd --monthly 600 --yearly 4800 --lifetime 9900
+//   STRIPE_SECRET_KEY=sk_test_... node scripts/setup-stripe.js --currency usd --monthly 300 --yearly 2400 --lifetime 4900
 // Then copy the printed STRIPE_PRICE_* lines into Vercel's environment variables.
 // Run it with a test key (sk_test_...) first, then again with your live key.
 'use strict';
@@ -9,7 +9,7 @@ const args = Object.fromEntries(process.argv.slice(2).join(' ').split('--').filt
 const key = process.env.STRIPE_SECRET_KEY;
 if (!key) { console.error('Set STRIPE_SECRET_KEY first.'); process.exit(1); }
 const currency = (args.currency || 'usd').toLowerCase();
-const amt = { monthly: +(args.monthly || 600), yearly: +(args.yearly || 4800), lifetime: +(args.lifetime || 9900) };
+const amt = { monthly: +(args.monthly || 300), yearly: +(args.yearly || 2400), lifetime: +(args.lifetime || 4900) };
 const call = async (path, params) => {
   const body = new URLSearchParams(params).toString();
   const r = await fetch('https://api.stripe.com' + path, { method: 'POST', body, headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/x-www-form-urlencoded', 'Stripe-Version': '2024-06-20' } });

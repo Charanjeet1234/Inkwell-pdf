@@ -356,6 +356,11 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
 .acct dt{color:var(--muted)}
 .acct dd{margin:0;font-weight:500}
 .unavail{background:var(--panel-2);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--muted);margin-top:12px}
+.trust{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.trust>div{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,var(--panel) 70%,transparent);border:1px solid var(--line);font-size:13px;color:var(--muted)}
+.trust .i{color:var(--ok);width:20px;height:20px;margin-top:2px}
+.trust b{display:block;color:var(--ink);font-size:14px;margin-bottom:2px}
+.trust a{color:var(--accent)}
 .homefoot{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);padding-top:6px}
 .homefoot a{color:var(--muted)}
 .homefoot a:hover{color:var(--accent)}
@@ -554,7 +559,7 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
           <button class="btn primary" data-home="open"><svg class="i"><use href="#i-open"/></svg>Choose a file</button>
           <button class="btn" data-home="sample">Try a sample agreement</button>
         </div>
-        <div class="prostrip" id="proStrip"><span>Free to use. <b>Inkwell Pro</b> adds scan editing, premium fonts, password protection, redaction, batch tools and removes the Inkwell mark.</span><button class="btn" data-home="pro"><svg class="i"><use href="#i-spark"/></svg>See Pro plans</button></div>
+        <div class="prostrip" id="proStrip"><span>Free to use. <b>Inkwell Pro</b> adds scan editing, premium fonts, password protection, redaction and batch tools.</span><button class="btn" data-home="pro"><svg class="i"><use href="#i-spark"/></svg>See Pro plans</button></div>
         <p class="privacy"><svg class="i"><use href="#i-shield"/></svg><span id="privacyNote">Everything runs on this computer. Your files are never uploaded.</span></p>
       </div>
       <button class="sheet" id="dropSheet" data-home="open" aria-label="Choose or drop a file">
@@ -578,7 +583,12 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
         <span class="st"><em>3</em>Word to PDF</span><span>→</span>
         <span class="st"><em>4</em>Sign and save</span>
       </div>
-      <nav class="homefoot" aria-label="Legal"><span>© Inkwell PDF Studio</span><a href="#" data-home="pro">Pricing</a><a href="terms.html" target="_blank" rel="noopener">Terms</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="refund.html" target="_blank" rel="noopener">Refunds</a></nav>
+      <section class="trust" aria-label="Why you can trust Inkwell">
+        <div><svg class="i"><use href="#i-shield"/></svg><span><b>Files never leave your device</b>Everything happens in your browser. Nothing is uploaded or stored on a server.</span></div>
+        <div><svg class="i"><use href="#i-check"/></svg><span><b>Free means free</b>No sign-up, no watermark and no limits on editing, signing or converting.</span></div>
+        <div><svg class="i"><use href="#i-lock"/></svg><span><b>Safe payments for Pro</b>Paid securely through Stripe. Cancel any time; see the <a href="refund.html" target="_blank" rel="noopener">refund policy</a>.</span></div>
+      </section>
+      <nav class="homefoot" aria-label="Legal"><span>© Inkwell PDF Studio</span><a href="#" data-home="pro">Pricing</a><a href="terms.html" target="_blank" rel="noopener">Terms</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="refund.html" target="_blank" rel="noopener">Refunds</a><a href="security.html" target="_blank" rel="noopener">Security</a><span id="supportLink" hidden>Support: <span id="supportMail" style="user-select:all"></span></span></nav>
     </div>
   </main>
 
@@ -707,18 +717,18 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
       <button class="plan" data-plan="lifetime"><b>Lifetime</b><span class="amt" data-amt="lifetime">–</span><span class="note">Pay once, keep Pro</span></button>
     </div>
     <ul class="feats">
-      <li><svg class="i"><use href="#i-check"/></svg>No Inkwell mark on saved files</li>
       <li><svg class="i"><use href="#i-check"/></svg>Make scanned PDFs editable (OCR)</li>
       <li><svg class="i"><use href="#i-check"/></svg>Automatic font, weight and size detection on scans</li>
       <li><svg class="i"><use href="#i-check"/></svg>20 premium fonts and extra thickness control</li>
-      <li><svg class="i"><use href="#i-check"/></svg>Password protect and unlock PDFs (AES-256)</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Password protect PDFs (AES-256)</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Open and edit password-protected PDFs</li>
       <li><svg class="i"><use href="#i-check"/></svg>True redaction that permanently removes content</li>
       <li><svg class="i"><use href="#i-check"/></svg>Compress PDFs for email and upload</li>
       <li><svg class="i"><use href="#i-check"/></svg>Fill PDF form fields</li>
       <li><svg class="i"><use href="#i-check"/></svg>Batch: compress, watermark, number, protect, merge</li>
       <li><svg class="i"><use href="#i-check"/></svg>Stamps and reusable templates</li>
     </ul>
-    <p class="freeline">Always free: editing in the original font, signatures, annotations, page tools, PDF ↔ Word, images, merge and split. Use Pro on up to 3 devices.</p>
+    <p class="freeline">Always free, with no watermark and no sign-up: editing in the original font, signatures, annotations, page tools, PDF ↔ Word, images, merge and split. Pro works on up to 3 devices; cancel any time.</p>
     <div class="unavail" id="proUnavail" hidden></div>
     <details id="keyEntry" style="margin-top:14px"><summary style="cursor:pointer;font-size:13px;color:var(--accent)">Already bought Pro? Enter your licence key</summary>
       <div class="keyrow"><input class="inp" id="keyIn" placeholder="INK-…" autocomplete="off" spellcheck="false"><button class="btn" id="keyGo">Activate</button></div>
@@ -819,12 +829,13 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
 <div class="busy" id="busy" hidden><div class="busy-card"><span class="spin"></span><span id="busyMsg">Working…</span></div></div>
 <div class="dropveil" id="dropVeil" hidden>Drop to open</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<!-- Libraries are pinned to exact versions and checked with Subresource Integrity: a modified file will not run. -->
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js" integrity="sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js" integrity="sha384-nFoSjZIoH3CCp8W639jJyQkuPHinJ2NHe7on1xvlUA7SuGfJAfvMldrsoAVm6ECz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js" integrity="sha384-2p6U+1mmqF10USehFeRiyG2ESG9FwIqN+jxULn5w9jjQIihSn9Pt13dVCn/Hawjn" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js" integrity="sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F" crossorigin="anonymous"></script>
 <script>
 (() => {
 'use strict';
@@ -841,7 +852,7 @@ const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == nu
 const LIBS_OK = typeof pdfjsLib !== 'undefined' && typeof PDFLib !== 'undefined';
 if (!LIBS_OK) $('#libWarn').hidden = false;
 const { PDFDocument, rgb, StandardFonts, degrees, BlendMode, LineCapStyle, pushGraphicsState, popGraphicsState, concatTransformationMatrix, setTextRenderingMode, setCharacterSqueeze, TextRenderingMode, setLineWidth, setStrokingColor, setGraphicsState, PDFName } = window.PDFLib || {};
-if (LIBS_OK) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+if (LIBS_OK) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
 const FAMILY_CSS = {
   sans: 'Helvetica, Arial, "Liberation Sans", sans-serif',
@@ -1060,6 +1071,34 @@ const toHex = (r, g, b) => '#' + [r, g, b].map(v => Math.round(v).toString(16).p
 const isPdf = f => /\.pdf$/i.test(f.name) || f.type === 'application/pdf';
 const isDocx = f => /\.docx$/i.test(f.name);
 const isImg = f => /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name);
+
+/* Keep only safe formatting from converted Word files (no scripts, handlers or unsafe links). */
+function sanitizeHtml(html) {
+  const t = document.createElement('template'); t.innerHTML = html;
+  t.content.querySelectorAll('script,style,iframe,object,embed,link,meta,form,input,button,textarea,select,svg,math').forEach(n => n.remove());
+  t.content.querySelectorAll('*').forEach(el => {
+    for (const a of [...el.attributes]) {
+      const n = a.name.toLowerCase(), v = a.value.trim();
+      if (n.startsWith('on') || n === 'srcdoc' || n === 'formaction') el.removeAttribute(a.name);
+      else if (n === 'href' && !/^(https?:|mailto:|#)/i.test(v)) el.removeAttribute(a.name);
+      else if (n === 'src' && !/^data:image\/(png|jpe?g|gif|webp|bmp);/i.test(v)) el.removeAttribute(a.name);
+    }
+    if (el.tagName === 'A') { el.setAttribute('rel', 'noopener noreferrer'); el.setAttribute('target', '_blank'); }
+  });
+  return t.innerHTML;
+}
+
+/* Friendly message instead of a silent failure if something unexpected goes wrong. */
+let lastErrAt = 0;
+function reportProblem(err) {
+  const msg = (err && (err.message || err.reason || err)) + '';
+  if (/ResizeObserver|RenderingCancelled|AbortError|Script error/i.test(msg)) return;
+  console.error(err); try { done(); } catch {}
+  if (Date.now() - lastErrAt < 4000) return; lastErrAt = Date.now();
+  toast('Something went wrong: ' + msg.slice(0, 140) + '. Your document is still open, so you can try again or save.', true, 8000);
+}
+window.addEventListener('error', e => { if (!e.filename || e.filename.startsWith(location.origin) || e.filename.startsWith('blob:') || location.protocol === 'file:') reportProblem(e.error || e.message); });
+window.addEventListener('unhandledrejection', e => reportProblem(e.reason));
 
 /* ================= theme ================= */
 let theme = ls.get('inkwell.theme', 'system');
@@ -1684,101 +1723,6 @@ function sampleColors(pel, b) {
   } catch {}
   return { bg: toHex(bg[0], bg[1], bg[2]), ink: toHex(ink[0], ink[1], ink[2]), heavy };
 }
-const MATCH_FONTS = ['roboto', 'open-sans', 'merriweather', 'roboto-slab', 'arvo', 'courier-prime', 'roboto-condensed'];
-function preloadMatchFonts() { return Promise.race([Promise.allSettled(MATCH_FONTS.flatMap(id => [400, 700].map(w => loadWebFont(id, w, false)))), new Promise(r => setTimeout(r, 4000))]); }
-/* Guess the typeface of text that has no usable font (scans): draw the same words in each
-   standard style, scaled to the original box, and keep the style whose letter shapes overlap
-   the original pixels best. */
-async function guessFontFromPixels(pel, b, c) {
-  try {
-    if (!b.str || b.str.trim().length < 2) return null;
-    const p = pageById(pel.dataset.id); if (!p || p.src < 0) return null; const { R } = viewSize(p);
-    // render just this line from the PDF at high resolution (about 48 px per line)
-    const s = clamp(48 / b.size, 2, 10);
-    const X = Math.floor(b.x * s), Y = Math.floor((b.base - b.size * 1.7) * s);
-    const w = Math.ceil(b.w * s), h = Math.ceil(b.size * 2.6 * s);
-    if (w < 8 || h < 6 || w * h > 6e6) return null;
-    const pg = await jsPage(p); const rc = document.createElement('canvas'); rc.width = w; rc.height = h;
-    const rctx = rc.getContext('2d'); rctx.fillStyle = '#fff'; rctx.fillRect(0, 0, w, h);
-    await pg.render({ canvasContext: rctx, viewport: pg.getViewport({ scale: s, rotation: R, offsetX: -X, offsetY: -Y }) }).promise;
-    const src = rctx.getImageData(0, 0, w, h).data;
-    { // keep only this line's band of ink, so lines above or below can't interfere
-      const lumR = i => 0.299 * src[i] + 0.587 * src[i + 1] + 0.114 * src[i + 2];
-      const hx0 = v => [1, 3, 5].map(k => parseInt(v.slice(k, k + 2), 16)); const bgc = hx0(c.bg), inc = hx0(c.ink);
-      const t0 = ((0.299 * bgc[0] + 0.587 * bgc[1] + 0.114 * bgc[2]) + (0.299 * inc[0] + 0.587 * inc[1] + 0.114 * inc[2])) / 2;
-      const rows = new Float32Array(h); for (let y = 0; y < h; y++) { let n = 0; for (let x = 0; x < w; x++) if (lumR((y * w + x) * 4) < t0) n++; rows[y] = n; }
-      const minInk = Math.max(1, w * 0.004);
-      let r = Math.round((b.size * 1.7 - b.size * 0.3) * s); // inside the x-height of this line
-      let best = -1; for (let d = 0; d < h; d++) { for (const rr of [r - d, r + d]) if (rr >= 0 && rr < h && rows[rr] >= minInk) { best = rr; break; } if (best >= 0) break; }
-      if (best >= 0) {
-        const gap = Math.max(2, Math.round(s * 0.6)); let top = best, bot = best, e = 0;
-        for (let y = best - 1; y >= 0; y--) { if (rows[y] >= minInk) { top = y; e = 0; } else if (++e > gap) break; }
-        e = 0; for (let y = best + 1; y < h; y++) { if (rows[y] >= minInk) { bot = y; e = 0; } else if (++e > gap) break; }
-        for (let y = 0; y < h; y++) if (y < top - 1 || y > bot + 1) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; src[i] = bgc[0]; src[i + 1] = bgc[1]; src[i + 2] = bgc[2]; }
-        rctx.putImageData(new ImageData(src, w, h), 0, 0);
-      }
-    }
-    const lum = (d, i) => 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-    const hx = v => [1, 3, 5].map(k => parseInt(v.slice(k, k + 2), 16));
-    const thr = (lum(hx(c.bg), 0) + lum(hx(c.ink), 0)) / 2;
-    const A0 = new Uint8Array(w * h); let aCount = 0;
-    for (let j = 0; j < w * h; j++) if (lum(src, j * 4) < thr) { A0[j] = 1; aCount++; }
-    if (aCount < 10) return null;
-    const dil = M0 => { const D = new Uint8Array(w * h); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const j = y * w + x; if (M0[j] || (x > 0 && M0[j - 1]) || (x < w - 1 && M0[j + 1]) || (y > 0 && M0[j - w]) || (y < h - 1 && M0[j + w])) D[j] = 1; } return D; };
-    const median = arr => { if (!arr.length) return 0; const t = arr.slice().sort((p, q) => p - q); return t[t.length >> 1]; };
-    // per-column ink extents: robust to tilt and to the odd descender
-    const cols = M => { const out = []; for (let x = 0; x < w; x++) { let t = -1, bt = -1; for (let y = 0; y < h; y++) if (M[y * w + x]) { if (t < 0) t = y; bt = y; } if (t >= 0) out.push([x, t, bt]); } return out; };
-    const fitSlope = cs => { let pts = cs.map(q => [q[0], q[2]]); for (let k = 0; k < 2; k++) { const n = pts.length; if (n < 4) return 0; const mx = pts.reduce((a, q) => a + q[0], 0) / n, my = pts.reduce((a, q) => a + q[1], 0) / n; let num = 0, den = 0; for (const q of pts) { num += (q[0] - mx) * (q[1] - my); den += (q[0] - mx) ** 2; } const sl = den ? num / den : 0; const res = pts.map(q => q[1] - (my + sl * (q[0] - mx))); const sd = Math.sqrt(res.reduce((a, r) => a + r * r, 0) / n) || 1; pts = pts.filter((q, i) => Math.abs(res[i]) <= Math.max(1.5, sd * 1.5)); if (k === 1) return sl; } return 0; };
-    const ac = cols(A0); const slope = clamp(fitSlope(ac), -0.06, 0.06);
-    const stat = cs => ({ hgt: median(cs.map(q => q[2] - q[1] + 1)), bot: median(cs.map(q => q[2] - slope * q[0])) });
-    const sA = stat(ac); if (sA.hgt < 3) return null;
-    const bgL = lum(hx(c.bg), 0), inkL = lum(hx(c.ink), 0); const D = new Float32Array(w * h); let sa = 0, saa = 0;
-    const blurPx = clamp(s * 0.35, 0.8, 4);
-    const bc2 = document.createElement('canvas'); bc2.width = w; bc2.height = h; const bx = bc2.getContext('2d', { willReadFrequently: true });
-    bx.filter = `blur(${blurPx}px)`; bx.drawImage(rc, 0, 0); const srcB = bx.getImageData(0, 0, w, h).data;
-    for (let j = 0; j < w * h; j++) { const v = clamp((bgL - lum(srcB, j * 4)) / Math.max(20, bgL - inkL), 0, 1); D[j] = v; sa += v; saa += v * v; }
-    let inkScan = 0; for (let j = 0; j < w * h; j++) if (A0[j]) inkScan++;
-    const off = document.createElement('canvas'); off.width = w; off.height = h; const ctx = off.getContext('2d', { willReadFrequently: true });
-    const baseY = b.size * 1.7 * s; let best = null;
-    const draw = (font, tf) => { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, w, h); ctx.setTransform(...tf); ctx.font = font; ctx.fillStyle = '#000'; ctx.textBaseline = 'alphabetic'; ctx.fillText(b.str, 0, baseY); const r = ctx.getImageData(0, 0, w, h).data; const M = new Uint8Array(w * h); for (let j = 0; j < w * h; j++) M[j] = r[j * 4 + 3] > 110 ? 1 : 0; return M; };
-    const cands = [];
-    for (const fam of ['sans', 'serif', 'mono']) for (const w of [400, 700]) cands.push({ fam, w, css: FAMILY_CSS[fam], std: true });
-    for (const id of MATCH_FONTS) { const lib = FONTS[id]; for (const w0 of [400, 700]) { const w = nearestW(lib.w, w0); if (document.fonts.check(`${w} 20px "ink-wf-${id}"`) && !cands.some(c0 => c0.fam === 'wf:' + id && c0.w === w)) cands.push({ fam: 'wf:' + id, w, css: `"ink-wf-${id}"` }); } }
-    for (const cand of cands) {
-      const fam = cand.fam, bold = cand.w >= 600;
-      const font = `${cand.w} ${b.size * s}px ${cand.css}`;
-      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.font = font; const mw = ctx.measureText(b.str).width; if (!mw) continue;
-      const kx = w / mw;
-      const s1 = stat(cols(draw(font, [kx, 0, 0, 1, 0, 0]))); if (!s1.hgt) continue;
-      const sy = sA.hgt / s1.hgt;
-      const s2 = stat(cols(draw(font, [kx, slope, 0, sy, 0, 0])));
-      const B0 = draw(font, [kx, slope, 0, sy, 0, sA.bot - s2.bot]);
-      // final render, softened like the scan, compared by shading correlation (keeps thin serifs)
-      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, w, h); ctx.filter = `blur(${blurPx}px)`;
-      ctx.setTransform(kx, slope, 0, sy, 0, sA.bot - s2.bot); ctx.font = font; ctx.fillText(b.str, 0, baseY); ctx.filter = 'none';
-      const rr = ctx.getImageData(0, 0, w, h).data; let sb = 0, sbb = 0, sab = 0;
-      for (let j = 0; j < w * h; j++) { const v = rr[j * 4 + 3] / 255; sb += v; sbb += v * v; sab += v * D[j]; }
-      const N = w * h, cov = sab - sa * sb / N, va = saa - sa * sa / N, vb = sbb - sb * sb / N;
-      const shape = va > 0 && vb > 0 ? cov / Math.sqrt(va * vb) : 0;
-      const ratio = (mw * sy) / w;
-      let inkCand = 0; for (let j = 0; j < w * h; j++) if (B0[j]) inkCand++;
-      const weight = inkScan && inkCand ? Math.abs(Math.log(inkCand / inkScan)) : 1;
-      const score = shape - 2 * Math.abs(Math.log(ratio)) - 0.8 * weight + (cand.std ? 0.03 : 0);
-      if (!best || score > best.score) best = { fam, bold, w: cand.w, font, score, size: r2(b.size * sy), tf: [kx, slope, 0, sy, 0, sA.bot - s2.bot], inkCand };
-    }
-    if (best) { // extra stroke thickness for heavy or ink-bled print
-      let bestB = 0, bestD = Math.abs(Math.log((best.inkCand || 1) / inkScan));
-      for (const bo of [0.25, 0.5, 0.75, 1]) {
-        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, w, h); ctx.setTransform(...best.tf); ctx.font = best.font; ctx.fillStyle = '#000'; ctx.strokeStyle = '#000';
-        ctx.lineWidth = bo * b.size * 0.06 * s; ctx.lineJoin = 'round'; ctx.fillText(b.str, 0, baseY); ctx.strokeText(b.str, 0, baseY);
-        const r = ctx.getImageData(0, 0, w, h).data; let n = 0; for (let j = 0; j < w * h; j++) if (r[j * 4 + 3] > 110) n++;
-        const dd = Math.abs(Math.log(n / inkScan)); if (dd < bestD - 0.02) { bestD = dd; bestB = bo; }
-      }
-      best.boost = bestB;
-    }
-    return best;
-  } catch (e) { console.warn(e); return null; }
-}
 function convertTbox(tb, p, pel) {
   const b = tb._b; const before = JSON.stringify(S.pages); const c = sampleColors(pel, b);
   const size = r2(b.size);
@@ -1795,8 +1739,7 @@ async function refineFont(o, p, pel, b, c) {
     if (!refineFont.freeHint) { refineFont.freeHint = true; toast('Inkwell Pro detects the exact font, weight and size of this text automatically.', false, 4500); }
   }
   else {
-    await preloadMatchFonts();
-    const g = await guessFontFromPixels(pel, b, c);
+    const K = await needKit(); const g = K ? (await K.preloadMatchFonts(), await K.guessFontFromPixels(pel, b, c)) : null;
     if (g) {
       o.family = g.fam; o.fb = g.fam.startsWith('wf:') ? GROUP_FALLBACK[FONTS[g.fam.slice(3)].group] : g.fam; o.weight = g.w; o.bold = g.w >= 600; o.boost = g.boost || 0;
       if (g.size > 3 && Math.abs(g.size / o.size - 1) < 0.35) o.size = g.size;
@@ -1839,11 +1782,6 @@ function alignSel(where) {
 function updatePosInputs() { const s = getSel(); if (!s) return; const b = objBox(s.o); const x = P.querySelector('#pos-x'), y = P.querySelector('#pos-y'); if (x && document.activeElement !== x) x.value = toMM(b.x); if (y && document.activeElement !== y) y.value = toMM(b.y); }
 
 /* ================= scanned pages: OCR ================= */
-const OCR_CFG = {
-  workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
-  corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
-  langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int'
-};
 async function pageChars(p) { if (p.src < 0) return 0; try { const tc = await (await jsPage(p)).getTextContent(); return tc.items.reduce((n, i) => n + (i.str || '').trim().length, 0); } catch { return 0; } }
 async function detectScanned() {
   const n = Math.min(S.pages.length, 6); let scanned = 0, real = 0;
@@ -1853,86 +1791,9 @@ async function detectScanned() {
 }
 $('#scanX').onclick = () => { $('#scanBar').hidden = true; $('.work').classList.remove('has-scan'); };
 $('#scanGo').onclick = () => makeEditable(false);
-let ocrWorker = null;
-async function getOcr(onProg) {
-  if (typeof Tesseract === 'undefined') throw new Error('Text recognition did not load.');
-  if (!ocrWorker) { window.__ocrLog = onProg; ocrWorker = await Tesseract.createWorker('eng', 1, { ...OCR_CFG, logger: m => window.__ocrLog && window.__ocrLog(m) }); }
-  window.__ocrLog = onProg; return ocrWorker;
-}
-function chunksToItems(data, sc) {
-  const items = [];
-  for (const b of data.blocks || []) for (const par of b.paragraphs || []) for (const ln of par.lines || []) {
-    const words = (ln.words || []).filter(w => w.text && w.text.trim() && w.confidence > 25);
-    if (!words.length) continue;
-    const bl = ln.baseline || {}; const hasBl = bl.has_baseline !== false && bl.x1 > bl.x0;
-    const baseAt = x => hasBl ? bl.y0 + (bl.y1 - bl.y0) * (x - bl.x0) / (bl.x1 - bl.x0) : ln.bbox.y1;
-    let cur = null;
-    const flush = () => {
-      if (!cur) return;
-      const base = baseAt((cur.x0 + cur.x1) / 2);
-      const capH = Math.max(1, base - cur.top);
-      const size = capH / 0.78;
-      items.push({ text: cur.words.join(' '), x: cur.x0 / sc, w: (cur.x1 - cur.x0) / sc, base: base / sc, size: size / sc, conf: cur.conf / cur.words.length });
-      cur = null;
-    };
-    for (const w of words) {
-      const hgt = w.bbox.y1 - w.bbox.y0;
-      if (cur && (w.bbox.x0 - cur.x1) > Math.max(hgt, cur.h) * 1.6) flush();
-      if (!cur) cur = { words: [], x0: w.bbox.x0, x1: w.bbox.x1, top: w.bbox.y0, h: hgt, conf: 0 };
-      cur.words.push(w.text); cur.x1 = Math.max(cur.x1, w.bbox.x1); cur.top = Math.min(cur.top, w.bbox.y0); cur.h = Math.max(cur.h, hgt); cur.conf += w.confidence;
-    }
-    flush();
-  }
-  return items;
-}
 async function makeEditable(fromMenu) {
-  if (!S.open) return; if (!requirePro('ocr')) return; finishEdit();
-  const todo = [];
-  busy('Checking pages…');
-  for (let i = 0; i < S.pages.length; i++) { const p = S.pages[i]; if (p.src >= 0 && (await pageChars(p)) < 15) todo.push(i); }
-  if (!todo.length) { done(); return toast(fromMenu ? 'This document already has editable text on every page.' : 'No scanned pages found.', false, 3500); }
-  const results = {};
-  try {
-    busy('Loading text recognition…');
-    let pageNo = 0;
-    const worker = await getOcr(m => { if (m.status === 'recognizing text') busy(`Recognising text · page ${pageNo} of ${todo.length} · ${Math.round((m.progress || 0) * 100)}%`); else if (/load|initiali/i.test(m.status || '')) busy('Loading text recognition…'); });
-    for (const i of todo) {
-      pageNo++; busy(`Recognising text · page ${pageNo} of ${todo.length}`);
-      const p = S.pages[i]; const { W, H, R } = viewSize(p);
-      const sc = clamp(2600 / Math.max(W, H), 1.5, 4);
-      const pg = await jsPage(p); const vp = pg.getViewport({ scale: sc, rotation: R });
-      const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
-      const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-      await pg.render({ canvasContext: ctx, viewport: vp }).promise;
-      const { data } = await worker.recognize(c, {}, { blocks: true, text: false, hocr: false, tsv: false });
-      results[i] = chunksToItems(data, sc);
-    }
-  } catch (e) {
-    console.error(e); done();
-    return toast(inViewer ? 'Text recognition can\'t run inside this preview. Open Inkwell from your website or the downloaded file to make scans editable.' : 'Text recognition could not load. Check your internet connection and try again.', true, 7000);
-  }
-  const total = Object.values(results).reduce((n, a) => n + a.length, 0);
-  if (!total) { done(); return toast('No readable text was found on the scanned pages.', true, 5000); }
-  try {
-    const doc = await buildPdfDoc(allIdx(), (n, N) => busy(`Building editable PDF · page ${n + 1} of ${N}`), async (idx, page, W, H, F, safe) => {
-      const items = results[idx]; if (!items || !items.length) return;
-      const font = await F('Helvetica');
-      page.pushOperators(setTextRenderingMode(TextRenderingMode.Invisible));
-      for (const it of items) {
-        const t = safe(it.text); if (!t.trim()) continue;
-        const tw = font.widthOfTextAtSize(t, it.size); if (!tw) continue;
-        page.pushOperators(setCharacterSqueeze(clamp(100 * it.w / tw, 20, 500)));
-        page.drawText(t, { x: it.x, y: H - it.base, size: it.size, font });
-      }
-      page.pushOperators(setCharacterSqueeze(100), setTextRenderingMode(TextRenderingMode.Fill));
-    });
-    busy('Finishing…'); const bytes = await doc.save(); const name = S.name; done();
-    await openPdf(bytes, name); setDirty(true);
-    $('#scanBar').hidden = true; $('.work').classList.remove('has-scan');
-    setTool('edittext'); track('Make scan editable', { pages: bucket(todo.length) });
-    const conf = Object.values(results).flat(); const avg = conf.reduce((a, b) => a + b.conf, 0) / conf.length;
-    toast(`Recognised ${total} lines on ${todo.length} page${todo.length > 1 ? 's' : ''}. Click any line to edit it.${avg < 70 ? ' The scan is blurry, so check edited text carefully.' : ''}`, false, 6000);
-  } catch (e) { console.error(e); done(); toast('Could not build the editable PDF: ' + (e.message || e), true, 6000); }
+  if (!S.open) return; if (!requirePro('ocr')) return;
+  const K = await needKit(); if (K) return K.makeEditable(fromMenu);
 }
 
 /* ================= page operations ================= */
@@ -2467,7 +2328,6 @@ async function buildPdfDoc(indices, progress, extra) {
     for (const o of p.objs) await drawObj(out, page, o, W, H, F, imgs, safe);
     await drawDecor(page, n, indices.length, W, H, F, safe);
     if (extra) await extra(indices[n], page, W, H, F, safe);
-    if (!PRO.active) await drawFreeMark(page, W, H, F);
     page.pushOperators(popGraphicsState());
   }
   out.setTitle(baseName()); out.setCreator('Inkwell PDF Studio'); out.setProducer('Inkwell PDF Studio');
@@ -2549,7 +2409,7 @@ async function savePdf() {
         const w = await h.createWritable(); await w.write(bytes); await w.close(); S.name = h.name; $('#docName').value = h.name;
       } catch (e) { if (e && e.name === 'AbortError') return; ok = await download(bytes, name, 'application/pdf'); }
     } else ok = await download(bytes, name, 'application/pdf');
-    if (ok) { setDirty(false); toast('Saved ' + S.name + (PRO.active ? '' : '. Free saves include a small Inkwell mark; Pro removes it.'), false, PRO.active ? 3200 : 5000); track('Save PDF', { pages: bucket(S.pages.length), plan: PRO.active ? 'pro' : 'free' }); }
+    if (ok) { setDirty(false); toast('Saved ' + S.name); track('Save PDF', { pages: bucket(S.pages.length), plan: PRO.active ? 'pro' : 'free' }); }
   } catch (e) { console.error(e); toast('Could not save: ' + (e.message || e), true, 6000); }
   finally { done(); }
 }
@@ -2719,7 +2579,7 @@ async function openWord(file) {
   try {
     const res = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
     reviewName = file.name.replace(/\.docx$/i, '');
-    $('#rvDoc').innerHTML = res.value || '<p></p>'; $('#rvTitle').textContent = file.name;
+    $('#rvDoc').innerHTML = sanitizeHtml(res.value || '<p></p>'); $('#rvTitle').textContent = file.name;
     const warn = res.messages.filter(m => m.type === 'warning').length;
     $('#rvNote').textContent = 'Headings, bold, italic, underline, lists, tables and pictures are kept. Fonts are standardised and page headers and footers are not carried over.' + (warn ? ` ${warn} minor formatting item${warn > 1 ? 's' : ''} could not be read.` : '');
     applyRvFont(); $('#dlgReview').showModal(); $('.rv-page').scrollTop = 0;
@@ -2849,7 +2709,6 @@ async function htmlToPdf(root, opt) {
     }
   }
   await blocks(root, 0);
-  if (!PRO.active) { const FF2 = async k => FF[k] || (FF[k] = await doc.embedFont(StandardFonts[k])); for (const pg2 of doc.getPages()) await drawFreeMark(pg2, PW, PH, FF2); }
   doc.setTitle(reviewName); doc.setCreator('Inkwell PDF Studio'); doc.setProducer('Inkwell PDF Studio');
   if (safe.bad()) toast('Some characters (for example non-Latin scripts) are not supported by the standard fonts and appear as "?".', true, 6000);
   return doc.save();
@@ -3044,13 +2903,15 @@ async function verifyToken(token, jwk) {
 }
 function setPro(p, key) {
   const ok = !!p && p.exp * 1000 > Date.now() && p.dev === deviceId();
+  if (!ok) KIT = null;
   Object.assign(PRO, ok ? { active: true, plan: p.plan, exp: p.exp, until: p.until || null, cancelAt: p.cancelAt || null, key } : { active: false, plan: null, exp: 0, until: null, cancelAt: null, key: null });
   applyProUI();
 }
 async function saveLicense(d) {
-  ls.set(LS_LIC, { token: d.token, key: d.key, at: Date.now() });
+  ls.set(LS_LIC, { token: d.token, key: d.key, at: Date.now() }); KIT = null;
   const p = (proConfig && proConfig.publicKey && await verifyToken(d.token, proConfig.publicKey)) || { plan: d.plan, exp: d.exp, until: d.until, cancelAt: d.cancelAt, dev: deviceId() };
   setPro(p, d.key);
+  if (PRO.active) loadKit().catch(() => {});
 }
 function clearPro(msg) { try { localStorage.removeItem(LS_LIC); } catch {} setPro(null); if (msg) toast(msg, true, 7000); }
 async function refreshLicense(force) {
@@ -3066,7 +2927,9 @@ async function initPro() {
   if (lic && jwk) setPro(await verifyToken(lic.token, jwk), lic.key); else applyProUI();
   if (!API_OK) return;
   try { proConfig = await api('config'); if (proConfig.publicKey) ls.set(LS_PK, proConfig.publicKey); } catch { proConfig = null; }
+  if (proConfig && proConfig.supportEmail) { $('#supportMail').textContent = proConfig.supportEmail; $('#supportLink').hidden = false; }
   if (lic && !PRO.active && proConfig && proConfig.publicKey) setPro(await verifyToken(lic.token, proConfig.publicKey), lic.key);
+  if (PRO.active) loadKit().catch(() => {});
   const q = new URLSearchParams(location.search);
   if (q.get('checkout_session')) { history.replaceState(null, '', location.pathname); await finishCheckout(q.get('checkout_session')); }
   else if (q.get('checkout') === 'cancelled') { history.replaceState(null, '', location.pathname); toast('Checkout cancelled. You have not been charged.'); }
@@ -3092,7 +2955,7 @@ const PRO_WHY = {
   ocr: 'Making scanned PDFs editable is part of Inkwell Pro.', fonts: 'Premium fonts, automatic font detection and extra thickness are part of Inkwell Pro.',
   protect: 'Password protection is part of Inkwell Pro.', unlock: 'Opening password-protected PDFs is part of Inkwell Pro.', compress: 'Compressing PDFs is part of Inkwell Pro.',
   redact: 'Permanent redaction is part of Inkwell Pro.', forms: 'Filling PDF form fields is part of Inkwell Pro.', batch: 'Batch processing is part of Inkwell Pro.',
-  stamps: 'Stamps and templates are part of Inkwell Pro.', templates: 'Saving reusable templates is part of Inkwell Pro.', mark: 'Remove the Inkwell mark from everything you save.'
+  stamps: 'Stamps and templates are part of Inkwell Pro.', templates: 'Saving reusable templates is part of Inkwell Pro.'
 };
 function requirePro(feature) {
   if (PRO.active) return true;
@@ -3145,6 +3008,39 @@ function openAccount(welcome) {
   const d = $('#dlgAcct'); if (!d.open) d.showModal();
 }
 $('#btnPro').onclick = () => (PRO.active ? openAccount() : openUpgrade());
+
+/* ================= Pro tools bundle =================
+   The Pro tools are not part of this file. After a licence check, the server sends them
+   (signed-licence holders only) and they are started here with the app's internals. */
+let KIT = null, kitLoading = null;
+function kitContext() { return { $, $$, FAMILY_CSS, FONTS, LS_TPL, PDFDocument, PL, S, StandardFonts, TYPE_NAME, TextRenderingMode, addObj, allIdx, askPassword, baseName, bucket, buildBytes, buildPdfDoc, busy, clamp, cloneObj, concatTransformationMatrix, curPage, degrees, div, done, download, finishEdit, fmtSize, inViewer, insertPdfPages, jsPage, loadWebFont, ls, mctx, nearestW, objBox, openPdf, pageById, pageChars, popGraphicsState, pushGraphicsState, r2, renderTemplates, requirePro, rgb, sanitizer, select, setCharacterSqueeze, setDirty, setTextRenderingMode, setTool, tick, toast, track, uid, viewSize, viewer, visibleCenter, getBatchFiles: () => batchFiles }; }
+async function loadKit() {
+  if (KIT) return KIT; if (kitLoading) return kitLoading;
+  kitLoading = (async () => {
+    const lic = ls.get(LS_LIC, null);
+    if (!lic || !lic.token || !API_OK) { const e = new Error('Pro tools are available on the Inkwell website with an active licence.'); e.code = 'no_licence'; throw e; }
+    const r = await fetch('/api/pro', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: lic.token, deviceId: deviceId() }) });
+    if (!r.ok) { let d = {}; try { d = await r.json(); } catch {} const e = new Error(d.message || 'Pro tools could not load. Check your connection and try again.'); e.code = d.error; throw e; }
+    const url = URL.createObjectURL(new Blob([await r.text()], { type: 'text/javascript' }));
+    try { await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = url; sc.onload = res; sc.onerror = () => rej(new Error('Pro tools could not start.')); document.head.append(sc); sc.remove(); }); }
+    finally { URL.revokeObjectURL(url); }
+    const factory = window.__inkwellKitFactory; delete window.__inkwellKitFactory;
+    if (typeof factory !== 'function') throw new Error('Pro tools could not start.');
+    KIT = factory(kitContext()); return KIT;
+  })();
+  try { return await kitLoading; } finally { kitLoading = null; }
+}
+async function needKit() {
+  if (KIT) return KIT;
+  if (!PRO.active) { requirePro(); return null; }
+  const showBusy = $('#busy').hidden; if (showBusy) busy('Loading Pro tools…');
+  try { return await loadKit(); }
+  catch (e) {
+    if (e.code === 'bad_token') { await refreshLicense(true); if (PRO.active) { try { return await loadKit(); } catch {} } }
+    toast(e.message || 'Pro tools could not load.', true, 6000); return null;
+  }
+  finally { if (showBusy) done(); }
+}
 $('#acctCopy').onclick = async () => { try { await navigator.clipboard.writeText(PRO.key); toast('Licence key copied.'); } catch { const r = document.createRange(); r.selectNodeContents($('#acctKey')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Press Ctrl+C to copy the key.'); } };
 $('#acctSaveKey').onclick = () => download(`Inkwell PDF Studio Pro\nLicence key: ${PRO.key}\nPlan: ${PLAN_NAME[PRO.plan] || 'Pro'}\n\nTo use Pro on another device, open Inkwell, click Upgrade, then "Already bought Pro? Enter your licence key".\n`, 'Inkwell-Pro-licence.txt', 'text/plain;charset=utf-8');
 $('#acctPortal').onclick = async () => { busy('Opening billing…'); try { const d = await api('portal', { key: PRO.key }); location.href = d.url; } catch (e) { done(); toast(e.message, true, 6000); } };
@@ -3155,33 +3051,8 @@ $('#acctOut').onclick = async () => {
   clearPro(); toast('Pro was removed from this device.');
 };
 
-/* ================= free-plan mark ================= */
-async function drawFreeMark(page, W, H, F) {
-  const f = await F('Helvetica'); const t = 'Edited with Inkwell PDF Studio'; const size = 6.5; const tw = f.widthOfTextAtSize(t, size);
-  page.drawText(t, { x: W - tw - 14, y: 10, size, font: f, color: rgb(0.42, 0.45, 0.5), opacity: 0.8 });
-}
-
 /* ================= encryption library (loaded on demand) ================= */
-let encLib = null;
-function loadEncLib() {
-  if (encLib) return encLib;
-  encLib = new Promise((res, rej) => {
-    const keep = window.PDFLib; const sc = document.createElement('script');
-    sc.src = 'https://cdn.jsdelivr.net/npm/@cantoo/pdf-lib@2.11.1/dist/pdf-lib.min.js';
-    sc.onload = () => { const lib = window.PDFLib; window.PDFLib = keep; lib && lib !== keep && lib.PDFDocument ? res(lib) : rej(new Error('The encryption library did not load.')); };
-    sc.onerror = () => { window.PDFLib = keep; encLib = null; rej(new Error('Could not load the encryption library. Check your internet connection.')); };
-    document.head.append(sc);
-  });
-  return encLib;
-}
 async function isEncryptedPdf(u8) { try { return (await PDFDocument.load(u8, { ignoreEncryption: true, updateMetadata: false })).isEncrypted; } catch { return false; } }
-async function encryptBytes(bytes, pw, perm) {
-  const C = await loadEncLib(); const d = await C.PDFDocument.load(bytes, { updateMetadata: false });
-  const owner = [...crypto.getRandomValues(new Uint8Array(18))].map(b => b.toString(16).padStart(2, '0')).join('');
-  d.encrypt({ userPassword: pw, ownerPassword: owner, permissions: { printing: perm.printing ? 'highResolution' : false, copying: !!perm.copying, modifying: !!perm.editing, annotating: !!perm.editing, fillingForms: !!perm.editing, documentAssembly: !!perm.editing, contentAccessibility: true } });
-  return d.save();
-}
-
 /* ================= unlock ================= */
 function askPassword(name, err) {
   return new Promise(res => {
@@ -3197,19 +3068,7 @@ function askPassword(name, err) {
 }
 async function unlockAndOpen(bytes, name, at, err) {
   if (!requirePro('unlock')) return;
-  const pw = await askPassword(name, err); if (pw == null) return;
-  busy('Unlocking…');
-  try {
-    const C = await loadEncLib();
-    const d = await C.PDFDocument.load(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), { password: pw, updateMetadata: false });
-    const plain = await d.save(); done();
-    if (at === false) await openPdf(plain, name); else await insertPdfPages(plain, at);
-    toast('Unlocked. Copies you save won\'t need a password unless you protect them again.', false, 5000); track('Pro tool', { tool: 'unlock' });
-  } catch (e) {
-    done();
-    if (/password/i.test(e.message)) return unlockAndOpen(bytes, name, at, 'That password is not correct. Try again.');
-    toast('Could not unlock this PDF: ' + e.message, true, 6000);
-  }
+  const K = await needKit(); if (K) return K.unlockAndOpen(bytes, name, at, err);
 }
 
 /* ================= protect ================= */
@@ -3220,89 +3079,20 @@ $('#pwGo').onclick = async () => {
   if (a.length < 4) return toast('Use a password of at least 4 characters.', true);
   if (a !== b) return toast('The two passwords don\'t match.', true);
   $('#dlgProtect').close(); finishEdit();
-  try {
-    busy('Protecting…'); const bytes = await buildBytes(allIdx(), 'Protecting'); busy('Encrypting…');
-    const out = await encryptBytes(bytes, a, { printing: $('#pwPrint').checked, copying: $('#pwCopy').checked, editing: $('#pwEdit').checked });
-    if (await download(out, baseName() + '-protected.pdf', 'application/pdf')) { toast('Saved a password-protected copy (AES-256).'); track('Pro tool', { tool: 'protect' }); }
-  } catch (e) { console.error(e); toast('Could not protect the PDF: ' + e.message, true, 6000); } finally { done(); }
+  const K = await needKit(); if (K) return K.protectAndSave(a, { printing: $('#pwPrint').checked, copying: $('#pwCopy').checked, editing: $('#pwEdit').checked });
 };
 
 /* ================= compress ================= */
 const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
-// Undo simple wrapper encodings some PDF makers put around JPEG data.
-const PRE_FILTERS = {
-  '/ASCII85Decode': u8 => { const s = new TextDecoder('latin1').decode(u8).replace(/\s+/g, '').replace(/^<~/, '').replace(/~>.*$/, ''); const out = []; let g = [];
-    for (const ch of s) { if (ch === 'z' && !g.length) { out.push(0, 0, 0, 0); continue; } g.push(ch.charCodeAt(0) - 33); if (g.length === 5) { let n = 0; for (const v of g) n = n * 85 + v; out.push(n >>> 24 & 255, n >>> 16 & 255, n >>> 8 & 255, n & 255); g = []; } }
-    if (g.length) { const k = g.length; while (g.length < 5) g.push(84); let n = 0; for (const v of g) n = n * 85 + v; const b4 = [n >>> 24 & 255, n >>> 16 & 255, n >>> 8 & 255, n & 255]; out.push(...b4.slice(0, k - 1)); }
-    return new Uint8Array(out); },
-  '/ASCIIHexDecode': u8 => { const s = new TextDecoder('latin1').decode(u8).replace(/[^0-9a-fA-F]/g, ''); const out = new Uint8Array(Math.ceil(s.length / 2)); for (let i = 0; i < out.length; i++) out[i] = parseInt((s.substr(i * 2, 2) + '0').slice(0, 2), 16); return out; },
-  '/FlateDecode': async u8 => new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer())
-};
-async function recompressImages(doc, { quality = 0.62, maxDim = 1800 } = {}) {
-  const { PDFRawStream, PDFName, PDFNumber, PDFArray } = PL; const N = n => PDFName.of(n); let saved = 0, count = 0;
-  for (const [ref, obj] of doc.context.enumerateIndirectObjects()) {
-    if (!(obj instanceof PDFRawStream)) continue; const d = obj.dict;
-    if (d.get(N('Subtype')) !== N('Image')) continue;
-    let filt = d.get(N('Filter')), pre = [];
-    if (filt instanceof PDFArray) { const all = filt.asArray(); filt = all[all.length - 1]; pre = all.slice(0, -1).map(x => x.asString ? x.asString() : String(x)); }
-    if (filt !== N('DCTDecode') || d.get(N('Decode')) || d.get(N('ImageMask')) || d.get(N('Mask'))) continue;
-    if (pre.some(x => !PRE_FILTERS[x])) continue;
-    const cs = d.lookup(N('ColorSpace'));
-    if (cs === N('DeviceCMYK')) continue;
-    if (cs instanceof PDFArray) {
-      const kind = cs.get(0);
-      if (kind === N('ICCBased')) { const icc = cs.lookup(1); const n = icc && icc.dict && icc.dict.get(N('N')); if (n && n.asNumber() === 4) continue; }
-      else if (kind !== N('CalRGB') && kind !== N('CalGray')) continue;
-    }
-    const stored = obj.contents; if (stored.length < 20000) continue;
-    let bytes = stored; try { for (const fn of pre) bytes = await PRE_FILTERS[fn](bytes); } catch { continue; }
-    let bmp; try { bmp = await createImageBitmap(new Blob([bytes], { type: 'image/jpeg' })); } catch { continue; }
-    const sc = d.get(N('SMask')) ? 1 : Math.min(1, maxDim / Math.max(bmp.width, bmp.height));
-    const w = Math.max(1, Math.round(bmp.width * sc)), h = Math.max(1, Math.round(bmp.height * sc));
-    const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
-    x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.drawImage(bmp, 0, 0, w, h); if (bmp.close) bmp.close();
-    const nb = new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/jpeg', quality))).arrayBuffer());
-    if (nb.length >= stored.length * 0.9) continue;
-    d.set(N('Width'), PDFNumber.of(w)); d.set(N('Height'), PDFNumber.of(h)); d.set(N('ColorSpace'), N('DeviceRGB')); d.set(N('BitsPerComponent'), PDFNumber.of(8)); d.delete(N('DecodeParms')); d.set(N('Filter'), N('DCTDecode'));
-    doc.context.assign(ref, PDFRawStream.of(d, nb)); saved += stored.length - nb.length; count++;
-  }
-  return { saved, count };
-}
-async function rasterizeBytes(bytes, dpi, quality, onPage) {
-  const js = await pdfjsLib.getDocument({ data: bytes.slice() }).promise; const out = await PDFDocument.create();
-  for (let i = 1; i <= js.numPages; i++) {
-    if (onPage) onPage(i, js.numPages);
-    const pg = await js.getPage(i); const v1 = pg.getViewport({ scale: 1 }); const vp = pg.getViewport({ scale: dpi / 72 });
-    const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height); const x = c.getContext('2d');
-    x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); await pg.render({ canvasContext: x, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
-    const jpg = new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/jpeg', quality))).arrayBuffer());
-    const img = await out.embedJpg(jpg); out.addPage([v1.width, v1.height]).drawImage(img, { x: 0, y: 0, width: v1.width, height: v1.height });
-  }
-  js.destroy(); return out.save({ useObjectStreams: true });
-}
 $('#cmpGo').onclick = async () => {
   const mode = $('input[name=cmode]:checked').value; $('#dlgCompress').close(); finishEdit();
-  try {
-    const doc = await buildPdfDoc(allIdx(), (n, T) => busy(`Preparing · page ${n + 1} of ${T}`));
-    busy('Measuring…'); const before = await doc.save(); let out;
-    if (mode === 'strong') out = await rasterizeBytes(before, 110, 0.55, (i, T) => busy(`Compressing · page ${i} of ${T}`));
-    else { busy('Compressing images…'); await recompressImages(doc); busy('Finishing…'); out = await doc.save({ useObjectStreams: true }); }
-    done();
-    if (out.length >= before.length * 0.97) { toast('This PDF is already compact, so there was nothing worth reducing.', false, 5000); return; }
-    const pct = Math.round((1 - out.length / before.length) * 100);
-    if (await download(out, baseName() + '-compressed.pdf', 'application/pdf')) { toast(`Compressed from ${fmtSize(before.length)} to ${fmtSize(out.length)} (${pct}% smaller).`, false, 6000); track('Pro tool', { tool: 'compress', mode }); }
-  } catch (e) { console.error(e); toast('Could not compress: ' + e.message, true, 6000); } finally { done(); }
+  const K = await needKit(); if (K) return K.compressAndSave(mode);
 };
 
 /* ================= redaction ================= */
 async function flattenPageJpeg(p) {
-  const { W, H, R } = viewSize(p); const sc = 200 / 72;
-  const c = document.createElement('canvas'); c.width = Math.ceil(W * sc); c.height = Math.ceil(H * sc);
-  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
-  if (p.src >= 0) { const pg = await jsPage(p); await pg.render({ canvasContext: x, viewport: pg.getViewport({ scale: sc, rotation: R }), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise; }
-  x.fillStyle = '#000';
-  for (const o of p.objs) if (o.t === 'redact') x.fillRect(Math.floor(o.x * sc) - 1, Math.floor(o.y * sc) - 1, Math.ceil(o.w * sc) + 2, Math.ceil(o.h * sc) + 2);
-  return new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9))).arrayBuffer());
+  const K = await needKit(); if (!K) throw new Error('redaction needs Inkwell Pro');
+  return K.flattenPageJpeg(p);
 }
 
 /* ================= forms ================= */
@@ -3326,64 +3116,16 @@ function startForms(fromMenu) {
   const has = Object.keys(S.fields).length;
   if (!has) return toast('This PDF has no fillable form fields. Use Add text (T) to type anywhere on the page.', false, 5000);
   if (!requirePro('forms')) return;
+  if (!KIT) { needKit().then(K => { if (K) startForms(fromMenu); }); return; }
   S.formMode = true; $('#formBar').hidden = true; setTool('select');
   $$('.page', viewer).forEach(el => { if (el._vis) buildFormLayer(el); });
   toast('Click a field to type. Saved copies are filled in and flattened.', false, 4500); track('Pro tool', { tool: 'forms' });
 }
-async function buildFormLayer(el) {
-  const p = pageById(el.dataset.id); if (!p || p.src < 0) return;
-  let fl = el.querySelector('.fl'); if (!fl) { fl = div('fl'); el.append(fl); }
-  const key = `${p.src}:${p.idx}:${p.rot}:${S.zoom}`; if (fl._key === key) return; fl._key = key; fl.innerHTML = '';
-  const an = (S.fields[p.src] || {})[p.idx]; if (!an) return;
-  const pg = await jsPage(p); const { R } = viewSize(p); const vp = pg.getViewport({ scale: S.zoom, rotation: R });
-  const vals = S.forms[p.src] = S.forms[p.src] || {};
-  for (const a of an) {
-    const [x1, y1, x2, y2] = vp.convertToViewportRectangle(a.rect);
-    const L = Math.min(x1, x2), T = Math.min(y1, y2), Wd = Math.abs(x2 - x1), Ht = Math.abs(y2 - y1);
-    let inp;
-    if (a.fieldType === 'Tx') {
-      inp = document.createElement(a.multiLine ? 'textarea' : 'input'); if (!a.multiLine) inp.type = 'text';
-      inp.value = vals[a.fieldName] ?? (a.fieldValue || ''); if (a.maxLen) inp.maxLength = a.maxLen;
-      inp.style.fontSize = Math.max(8, Math.min(Ht * 0.72, a.textSize ? a.textSize * S.zoom : Ht * 0.62)) + 'px';
-      inp.oninput = () => { vals[a.fieldName] = inp.value; $$('.fld', viewer).forEach(x => { if (x !== inp && x.dataset.field === a.fieldName && x.tagName === inp.tagName) x.value = inp.value; }); setDirty(); };
-    } else if (a.fieldType === 'Btn' && a.checkBox) {
-      inp = document.createElement('input'); inp.type = 'checkbox';
-      const v = vals[a.fieldName]; inp.checked = v !== undefined ? !!v : !!(a.fieldValue && a.fieldValue !== 'Off');
-      inp.onchange = () => { vals[a.fieldName] = inp.checked; setDirty(); };
-    } else if (a.fieldType === 'Btn' && a.radioButton) {
-      inp = document.createElement('input'); inp.type = 'radio'; inp.name = `r${p.src}_${a.fieldName}`;
-      inp.checked = (vals[a.fieldName] ?? a.fieldValue) === a.buttonValue;
-      inp.onchange = () => { if (inp.checked) { vals[a.fieldName] = a.buttonValue; setDirty(); } };
-    } else if (a.fieldType === 'Ch') {
-      inp = document.createElement('select');
-      for (const o of a.options || []) { const op = document.createElement('option'); op.value = o.exportValue ?? o.displayValue; op.textContent = o.displayValue ?? o.exportValue; inp.append(op); }
-      const cur = vals[a.fieldName] ?? (Array.isArray(a.fieldValue) ? a.fieldValue[0] : a.fieldValue); if (cur != null) inp.value = cur;
-      inp.style.fontSize = Math.max(8, Ht * 0.6) + 'px';
-      inp.onchange = () => { vals[a.fieldName] = inp.value; setDirty(); };
-    } else continue;
-    inp.className = 'fld'; inp.dataset.field = a.fieldName; if (a.readOnly) inp.disabled = true;
-    inp.setAttribute('aria-label', a.alternativeText || a.fieldName);
-    Object.assign(inp.style, { left: L + 'px', top: T + 'px', width: Wd + 'px', height: Ht + 'px' });
-    if (inp.type === 'checkbox' || inp.type === 'radio') { const m = Math.min(Wd, Ht); Object.assign(inp.style, { width: m + 'px', height: m + 'px', left: L + (Wd - m) / 2 + 'px', top: T + (Ht - m) / 2 + 'px' }); }
-    ['pointerdown', 'mousedown', 'dblclick'].forEach(ev => inp.addEventListener(ev, e => e.stopPropagation()));
-    fl.append(inp);
-  }
-}
+function buildFormLayer(el) { if (KIT) KIT.buildFormLayer(el); }
 function applyFormValues(sd, src) {
   const vals = S.forms[src]; if (!vals || !Object.keys(vals).length) return;
-  try {
-    const form = sd.getForm();
-    for (const [name, v] of Object.entries(vals)) {
-      let f; try { f = form.getField(name); } catch { continue; }
-      try {
-        if (f instanceof PL.PDFTextField) f.setText(String(v ?? ''));
-        else if (f instanceof PL.PDFCheckBox) { if (v) f.check(); else f.uncheck(); }
-        else if (f instanceof PL.PDFRadioGroup) { if (v && v !== 'Off') f.select(String(v)); }
-        else if (f instanceof PL.PDFDropdown || f instanceof PL.PDFOptionList) { if (v != null && v !== '') f.select(String(v)); }
-      } catch (e) { console.warn('Form field', name, e); }
-    }
-    form.flatten();
-  } catch (e) { console.warn(e); toast('Some form fields could not be filled in the saved copy.', true, 5000); }
+  if (!KIT) throw new Error('filling forms needs Inkwell Pro');
+  return KIT.applyFormValues(sd, src);
 }
 
 /* ================= stamps & templates ================= */
@@ -3415,37 +3157,15 @@ function openStamps() {
   $('#stampGrid').innerHTML = STAMPS.map(([t, c], i) => `<button data-st="${i}" title="Place ${t}"><span class="sp" style="color:${c};border-color:${c};outline-color:${c}">${t}</span></button>`).join('');
   renderTemplates(); $('#dlgStamps').showModal();
 }
-function placeStamp(text, color) {
-  const p = curPage(); if (!p) return; const { W, H } = viewSize(p); const c = visibleCenter(p);
-  const sub = $('#stDate').checked ? new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '';
-  const h = sub ? 56 : 46; mctx.font = '700 100px Helvetica, Arial, sans-serif';
-  const fs = h * (sub ? 0.36 : 0.5); const w = clamp(mctx.measureText(text).width * 1.06 * fs / 100 / 0.84 + 8, 90, W * 0.8);
-  const o = { id: uid(), t: 'stamp', x: clamp(c.x - w / 2, 0, W - w), y: clamp(c.y - h / 2, 0, H - h), w, h, text, sub, color, op: 0.9 };
-  $('#dlgStamps').close(); if (S.tool !== 'select') setTool('select'); addObj(o, p); select(o, p); track('Pro tool', { tool: 'stamp' });
-}
+async function placeStamp(text, color) { const K = await needKit(); if (K) K.placeStamp(text, color); }
 $('#stampGrid').addEventListener('click', e => { const b = e.target.closest('[data-st]'); if (b) { const [t, c] = STAMPS[+b.dataset.st]; placeStamp(t, c); } });
 $('#stCustomGo').onclick = () => { const t = $('#stCustom').value.trim().toUpperCase(); if (!t) return toast('Type the stamp text first.', true); placeStamp(t, '#2a3fd1'); };
 function renderTemplates() {
   const list = ls.get(LS_TPL, []);
   $('#tplList').innerHTML = list.length ? list.map((t, i) => `<div class="tpl"><span>${esc(t.name)}</span><button class="btn" data-tpl="${i}">Insert</button><button class="btn icon ghost" data-tpldel="${i}" title="Delete"><svg class="i"><use href="#i-trash"/></svg></button></div>`).join('') : '<p class="hint">Select anything on a page (text, a signature, an image, a stamp) and choose <b>Save as template</b> in the panel to reuse it in any document.</p>';
 }
-function saveTemplate(o) {
-  if (!requirePro('templates')) return;
-  const name = o.t === 'text' ? o.text.split('\n')[0].slice(0, 40) : o.t === 'stamp' ? `Stamp: ${o.text}` : o.t === 'image' ? (o.kind === 'sign' ? 'Signature' : 'Image') + ' ' + new Date().toLocaleDateString() : TYPE_NAME[o.t] || 'Item';
-  const item = { id: uid(), name, obj: JSON.parse(JSON.stringify(o)), asset: o.t === 'image' ? S.assets[o.asset] : null };
-  const list = ls.get(LS_TPL, []); list.unshift(item);
-  if (!ls.set(LS_TPL, list.slice(0, 40))) return toast('Template storage on this device is full. Delete an old template first.', true, 5000);
-  toast(`Saved "${name}" to My templates.`); track('Pro tool', { tool: 'template' });
-}
-$('#tplList').addEventListener('click', e => {
-  const list = ls.get(LS_TPL, []);
-  const del = e.target.closest('[data-tpldel]'); if (del) { list.splice(+del.dataset.tpldel, 1); ls.set(LS_TPL, list); renderTemplates(); return; }
-  const b = e.target.closest('[data-tpl]'); if (!b) return; const t = list[+b.dataset.tpl]; const p = curPage(); if (!t || !p) return;
-  let o = JSON.parse(JSON.stringify(t.obj));
-  if (t.asset) { const aid = uid(); S.assets[aid] = t.asset; o.asset = aid; }
-  const bx = objBox(o), c = visibleCenter(p); o = cloneObj(o, c.x - (bx.x + bx.w / 2), c.y - (bx.y + bx.h / 2));
-  $('#dlgStamps').close(); if (S.tool !== 'select') setTool('select'); addObj(o, p); select(o, p);
-});
+async function saveTemplate(o) { if (!requirePro('templates')) return; const K = await needKit(); if (K) K.saveTemplate(o); }
+$('#tplList').addEventListener('click', async e => { const K = await needKit(); if (K) K.templateClick(e); });
 
 /* ================= batch ================= */
 let batchFiles = [];
@@ -3461,53 +3181,12 @@ const bDrop = $('#bDrop');
 bDrop.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); bDrop.classList.add('over'); });
 bDrop.addEventListener('dragleave', () => bDrop.classList.remove('over'));
 bDrop.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); bDrop.classList.remove('over'); dragDepth = 0; $('#dropVeil').hidden = true; batchFiles.push(...[...(e.dataTransfer?.files || [])].filter(isPdf)); renderBatch(); });
-function inViewSpace(page, fn) {
-  const R = ((page.getRotation().angle % 360) + 360) % 360; const cb = page.getCropBox();
-  const W = R % 180 ? cb.height : cb.width, H = R % 180 ? cb.width : cb.height, w = cb.width, h = cb.height, cx = cb.x, cy = cb.y;
-  const M = R === 90 ? [0, 1, -1, 0, w + cx, cy] : R === 180 ? [-1, 0, 0, -1, w + cx, h + cy] : R === 270 ? [0, -1, 1, 0, cx, h + cy] : [1, 0, 0, 1, cx, cy];
-  page.pushOperators(pushGraphicsState(), concatTransformationMatrix(...M)); fn(W, H); page.pushOperators(popGraphicsState());
-}
-$('#bGo').onclick = async () => {
-  if (!batchFiles.length) return toast('Add some PDFs first.', true);
-  const act = $('#bAct').value, pw = $('#bPw').value;
-  if (act === 'protect' && pw.length < 4) return toast('Use a password of at least 4 characters.', true);
-  $('#dlgBatch').close();
-  const zip = new JSZip(), skipped = [], used = new Set(); let merged = act === 'merge' ? await PDFDocument.create() : null, ok = 0, saved = 0;
-  const suffix = { compress: 'compressed', watermark: 'watermarked', numbers: 'numbered', protect: 'protected' }[act];
-  const nameFor = n => { let b = n.replace(/\.pdf$/i, '') + '-' + suffix, k = b, i = 2; while (used.has(k)) k = `${b}-${i++}`; used.add(k); return k + '.pdf'; };
-  try {
-    for (let i = 0; i < batchFiles.length; i++) {
-      const f = batchFiles[i]; busy(`Processing ${i + 1} of ${batchFiles.length}: ${f.name}`); await tick();
-      try {
-        const bytes = new Uint8Array(await f.arrayBuffer());
-        const doc = await PDFDocument.load(bytes, { updateMetadata: false });
-        if (merged) { (await merged.copyPages(doc, doc.getPageIndices())).forEach(pg => merged.addPage(pg)); ok++; continue; }
-        if (act === 'compress') await recompressImages(doc);
-        if (act === 'watermark' || act === 'numbers') {
-          const font = await doc.embedFont(act === 'watermark' ? StandardFonts.HelveticaBold : StandardFonts.Helvetica); const safeT = sanitizer(font); const N = doc.getPageCount();
-          doc.getPages().forEach((pg, k) => inViewSpace(pg, (W, H) => {
-            if (act === 'watermark') { const t = safeT($('#bWm').value || 'CONFIDENTIAL'); const size = Math.min(W, H) * 0.12, tw = font.widthOfTextAtSize(t, size), a = Math.PI / 4; pg.drawText(t, { x: W / 2 - (tw / 2) * Math.cos(a) + size * 0.35 * Math.sin(a), y: H / 2 - (tw / 2) * Math.sin(a) - size * 0.35 * Math.cos(a), size, font, color: rgb(0.49, 0.52, 0.58), opacity: 0.15, rotate: degrees(45) }); }
-            else { const fmt = $('#bPn').value, t = fmt === 'pageof' ? `Page ${k + 1} of ${N}` : fmt === 'slash' ? `${k + 1} / ${N}` : `${k + 1}`; const tw = font.widthOfTextAtSize(t, 9); pg.drawText(t, { x: (W - tw) / 2, y: 24, size: 9, font, color: rgb(0.27, 0.29, 0.34) }); }
-          }));
-        }
-        let out = await doc.save({ useObjectStreams: true });
-        if (act === 'protect') out = await encryptBytes(out, pw, { printing: true, copying: true, editing: false });
-        if (act === 'compress') { if (out.length >= bytes.length) out = bytes; saved += bytes.length - out.length; }
-        zip.file(nameFor(f.name), out); ok++;
-      } catch (e) { console.warn(e); skipped.push(`${f.name} (${/password|encrypt/i.test(e.message) ? 'password-protected or restricted' : 'could not be read'})`); }
-    }
-    if (!ok) { done(); return toast('None of the files could be processed. ' + skipped.join(', '), true, 8000); }
-    busy('Packaging…');
-    const saveOk = merged ? await download(await merged.save({ useObjectStreams: true }), 'Merged.pdf', 'application/pdf') : await download(await zip.generateAsync({ type: 'blob' }), `Inkwell-${suffix}.zip`);
-    if (saveOk) toast(`Processed ${ok} file${ok > 1 ? 's' : ''}${act === 'compress' && saved > 0 ? `, saving ${fmtSize(saved)}` : ''}.${skipped.length ? ' Skipped: ' + skipped.join(', ') : ''}`, !!skipped.length, 8000);
-    track('Pro tool', { tool: 'batch', action: act, files: bucket(batchFiles.length) });
-  } finally { done(); }
-};
+$('#bGo').onclick = async () => { const K = await needKit(); if (K) K.runBatch(); };
 
 initPro();
 
-// test hook
-window.__inkwell = { PRO, S, openPdf, makeSample, buildBytes, makeDocx, htmlToPdf, setTool, savePdf, refreshAll, select, renderOverlay, rotatePage, extractParas };
+// developer hook: only when running on this computer, never on the live site
+if (location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) window.__inkwell = { PRO, S, openPdf, makeSample, buildBytes, makeDocx, htmlToPdf, setTool, savePdf, refreshAll, select, renderOverlay, rotatePage, extractParas };
 })();
 </script>
 </body>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Security · Inkwell PDF Studio</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+:root{--bg:#e6e9ef;--panel:#fbfcfe;--ink:#141821;--muted:#5f6878;--line:#d7dbe4;--accent:#2a3fd1;--mark:#fff1a8;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#111419;--panel:#1a1e26;--ink:#e7eaf1;--muted:#98a0ae;--line:#2d3340;--accent:#8b98ff;--mark:#5a4a00;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans","Segoe UI",system-ui,sans-serif;padding:32px max(16px,env(safe-area-inset-left,0px)) 64px max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:clamp(22px,5vw,48px)}
+h1{font:700 clamp(28px,5vw,40px)/1.1 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 6px}
+h2{font:700 20px/1.25 "Bricolage Grotesque",system-ui,sans-serif;margin:32px 0 8px}
+p,li{max-width:66ch} .muted{color:var(--muted);font-size:14px} a{color:var(--accent)}
+mark{background:var(--mark);color:inherit;padding:0 3px;border-radius:3px}
+nav{max-width:760px;margin:0 auto 14px;display:flex;gap:16px;font-size:14px}
+</style></head><body>
+<!-- Before going live: replace every highlighted [placeholder] and have the text reviewed for your business. -->
+<nav><a href="./">← Back to Inkwell</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refund.html">Refunds</a><a href="security.html">Security</a></nav>
+<main>
+<h1>Security</h1>
+<p class="muted">How Inkwell PDF Studio protects you and your documents.</p>
+<h2>Your documents stay on your device</h2>
+<p>Inkwell opens, edits, signs and converts files entirely inside your web browser. Documents are never uploaded to our servers, so there is no copy of your files for anyone to leak or misuse. Close the tab and they are gone from Inkwell.</p>
+<h2>Protections built into the website</h2>
+<ul>
+<li><b>HTTPS everywhere</b> with HTTP Strict Transport Security, so connections cannot be downgraded.</li>
+<li><b>A strict Content Security Policy</b> that only allows code from Inkwell itself and one pinned library host (jsDelivr).</li>
+<li><b>Integrity-checked libraries:</b> each third-party library is pinned to an exact version with a cryptographic hash. If a file were ever altered, your browser would refuse to run it.</li>
+<li><b>No embedding:</b> other sites cannot frame Inkwell to trick you into clicking.</li>
+<li><b>No camera, microphone or location access</b>, and no advertising or tracking cookies.</li>
+<li><b>Converted Word documents are cleaned</b> of scripts and unsafe links before they are shown.</li>
+</ul>
+<h2>Payments and licences</h2>
+<ul>
+<li>Payments are handled by <a href="https://stripe.com/" target="_blank" rel="noopener">Stripe</a>. Your card details go directly to Stripe and never reach Inkwell.</li>
+<li>Licences are verified on our server with Stripe and issued as short-lived tokens signed with a private key, checked again each day.</li>
+<li>A licence can be active on a limited number of devices. You can remove a device or manage billing at any time from your Pro account.</li>
+</ul>
+<h2>Password-protected PDFs</h2>
+<p>Inkwell Pro encrypts PDFs with AES-256. Passwords are used only in your browser and are never sent anywhere. Inkwell cannot recover a forgotten password, and it does not remove protection from a PDF unless you enter its password.</p>
+<h2>Reporting a security issue</h2>
+<p>If you believe you have found a security problem, email <mark>[support email]</mark>. Please give us a reasonable time to fix it before sharing details publicly. We do not take legal action against good-faith research.</p>
+
+</main></body></html>

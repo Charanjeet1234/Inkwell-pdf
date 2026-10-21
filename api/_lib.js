@@ -62,6 +62,16 @@ function parseKey(key) {
 const b64u = buf => Buffer.from(buf).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 function privateKey() { return crypto.createPrivateKey(env('LICENSE_PRIVATE_KEY').replace(/\\n/g, '\n')); }
 function publicJwk() { const jwk = crypto.createPublicKey(privateKey()).export({ format: 'jwk' }); return { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y }; }
+function verifyToken(token) {
+  try {
+    const [body, sig] = String(token || '').split('.'); if (!body || !sig) return null;
+    const dec = x => Buffer.from(x.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+    const ok = crypto.verify('sha256', Buffer.from(body), { key: crypto.createPublicKey(privateKey()), dsaEncoding: 'ieee-p1363' }, dec(sig));
+    if (!ok) return null;
+    const p = JSON.parse(dec(body).toString('utf8'));
+    return p && p.exp * 1000 > Date.now() ? p : null;
+  } catch { return null; }
+}
 function signToken(payload) {
   const body = b64u(JSON.stringify(payload));
   const sig = crypto.sign('sha256', Buffer.from(body), { key: privateKey(), dsaEncoding: 'ieee-p1363' });
@@ -106,17 +116,18 @@ async function issueToken(cid, deviceId, ent, { register = true } = {}) {
   const dev = String(deviceId || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 16);
   if (dev.length < 8) throw httpError(400, 'bad_device', 'Missing device ID.');
   const md = ent.customer.metadata || {};
+  const limit = Math.max(1, Math.min(50, Number(md.inkwell_max_devices) || MAX_DEVICES));
   let devices = (md.inkwell_devices || '').split(',').filter(Boolean);
   if (!devices.includes(dev)) {
     if (!register) throw httpError(403, 'device_removed', 'Pro was moved to another device. Enter your licence key to use it here again.');
-    devices.push(dev); while (devices.length > MAX_DEVICES) devices.shift();
+    devices.push(dev); while (devices.length > limit) devices.shift();
     await stripe('POST', `/v1/customers/${cid}`, { metadata: { inkwell_devices: devices.join(',') } });
   }
   const now = Math.floor(Date.now() / 1000);
   let exp = now + TOKEN_DAYS * 86400;
   if (ent.until) exp = Math.min(exp, ent.until + GRACE_DAYS * 86400);
   const token = signToken({ v: 1, cid, plan: ent.plan, dev, iat: now, exp, until: ent.until || null, cancelAt: ent.cancelAt || null });
-  return { token, key: makeKey(cid), plan: ent.plan, until: ent.until || null, cancelAt: ent.cancelAt || null, exp, maxDevices: MAX_DEVICES };
+  return { token, key: makeKey(cid), plan: ent.plan, until: ent.until || null, cancelAt: ent.cancelAt || null, exp, maxDevices: limit };
 }
 
 function origin(req) {
@@ -131,6 +142,8 @@ function readBody(req) {
 function handler(fn, methods = ['POST']) {
   return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Robots-Tag', 'noindex');
     if (!methods.includes(req.method)) { res.status(405).json({ error: 'method_not_allowed' }); return; }
     try { await fn(req, res); }
     catch (e) {
@@ -141,4 +154,4 @@ function handler(fn, methods = ['POST']) {
   };
 }
 
-module.exports = { stripe, env, httpError, makeKey, parseKey, publicJwk, entitlement, issueToken, prices, origin, readBody, handler, MAX_DEVICES };
+module.exports = { stripe, env, httpError, makeKey, parseKey, publicJwk, verifyToken, entitlement, issueToken, prices, origin, readBody, handler, MAX_DEVICES };

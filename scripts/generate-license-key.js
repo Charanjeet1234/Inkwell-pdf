@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Creates the private key that signs Inkwell Pro licences.
+// Creates the private key that signs Inkwell Pro licences, and an admin token for /admin.html.
 // Run once:  node scripts/generate-license-key.js
 // Paste the output into Vercel -> Project -> Settings -> Environment Variables as LICENSE_PRIVATE_KEY.
 // Keep it secret and never commit it. If you lose or change it, existing licence keys stop working.
@@ -14,3 +14,6 @@ console.log('-'.repeat(64));
 console.log('\nSingle-line form, if your host needs one value per line:\n');
 console.log(pem.trim().replace(/\n/g, '\\n'));
 console.log('');
+const admin = crypto.randomBytes(32).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+console.log('ADMIN_TOKEN (password for your owner page at /admin.html; keep it secret):\n');
+console.log(admin + '\n');
