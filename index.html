@@ -158,6 +158,10 @@ button{cursor:pointer}
 .page .tl{display:none;z-index:1}
 .page .ov{z-index:2}
 .page .ov .cover{position:absolute;pointer-events:none}
+.page .ov .cover.outline,.page .ov .obj.white.outline{outline:1.5px dashed var(--accent);outline-offset:0}
+.page .ov .cover.flag,.page .ov .obj.white.flag{outline:2px solid var(--danger);outline-offset:0}
+.covbox{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.covbox h4{margin:0 0 2px}
 .page .tint{position:absolute;inset:0;pointer-events:none;z-index:4;mix-blend-mode:multiply}
 .viewer.tool-edittext .page .tl{display:block}
 .pnum{position:absolute;left:0;right:0;bottom:-22px;text-align:center;font:500 11px var(--f-mono);color:var(--muted)}
@@ -1884,6 +1888,7 @@ function renderOverlay(p, el = pageEl(p.id)) {
 function coverEl(o) {
   const c = o.cov, d = div('cover'); d.dataset.cov = o.id;
   Object.assign(d.style, { left: px(c.x), top: px(c.y), width: px(c.w), height: px(c.h), background: c.fill || '#fff' });
+  if (showCovers || (S.flagged && S.flagged.has(o.id))) d.classList.add(S.flagged && S.flagged.has(o.id) ? 'flag' : 'outline');
   const a = c.asset && S.assets[c.asset]; if (a) Object.assign(d.style, { backgroundImage: `url("${a.data}")`, backgroundSize: '100% 100%' });
   return d;
 }
@@ -1903,7 +1908,7 @@ function makeEl(o, p) {
   } else if (o.t === 'hl') {
     el = div('obj hl'); box(el, o); el.style.background = o.color; el.style.opacity = o.op ?? 0.4;
   } else if (o.t === 'white') {
-    el = div('obj white'); box(el, o); el.style.background = o.fill || '#fff'; el.style.opacity = o.op ?? 1; { const a = o.patch && S.assets[o.patch]; if (a) Object.assign(el.style, { backgroundImage: `url("${a.data}")`, backgroundSize: '100% 100%' }); }
+    el = div('obj white'); box(el, o); el.style.background = o.fill || '#fff'; el.style.opacity = o.op ?? 1; if (S.flagged && S.flagged.has(o.id)) el.classList.add('flag'); else if (showCovers) el.classList.add('outline'); { const a = o.patch && S.assets[o.patch]; if (a) Object.assign(el.style, { backgroundImage: `url("${a.data}")`, backgroundSize: '100% 100%' }); }
   } else if (o.t === 'redact') {
     el = div('obj redact'); box(el, o);
   } else if (o.t === 'stamp') {
@@ -2323,7 +2328,7 @@ function convertTbox(tb, p, pel) {
   // start editing straight away with a first guess; the exact font is applied a moment later
   const ph = Math.max(1.2, size * 0.2), pv = Math.max(0.8, size * 0.12);
   const cr = { x: b.x - ph, y: b.y - pv, w: b.w + ph * 2, h: b.h + pv * 2 }; const cov = makeCover(pel, cr);
-  const o = { id: uid(), t: 'text', x: b.x, y: 0, text: b.str, size, family: b.fam, fb: b.fam, weight: (!!b.bold || !!c.heavy) ? 700 : 400, bold: !!b.bold || !!c.heavy, italic: !!b.italic, color: c.ink, minW: b.w + 1, op: 1, fromPdf: true, cov: { ...cr, fill: cov.fill, asset: cov.asset } };
+  const o = { id: uid(), t: 'text', x: b.x, y: 0, text: b.str, size, family: b.fam, fb: b.fam, weight: (!!b.bold || !!c.heavy) ? 700 : 400, bold: !!b.bold || !!c.heavy, italic: !!b.italic, color: c.ink, minW: b.w + 1, op: 1, fromPdf: true, cov: { ...cr, fill: cov.fill, asset: cov.asset, base: { x: b.x, y: b.y, w: b.w, h: b.h }, ph, pv, pad: 0, mode: 'paper' } };
   o.y = b.base - baseK(o) * size;
   p.objs.push(o); tb.remove(); renderOverlay(p); select(o, p); startEdit(o, p, false, before);
   refineFont(o, p, pel, b, c);
@@ -2564,6 +2569,7 @@ function styleControls(t, v) {
     h += ui.row('Background', ui.sw('bg', v.bg, ['#ffffff', '#fff6c2', '#e2e6ff', '#e7f6ea', '#ffe3e3'], true));
     if (v.bg) h += ui.row('Background opacity', ui.rng('bgOp', v.bgOp ?? 1, 0, 1, 0.01, pct));
     if (S.sel) h += `<button class="btn wide" data-do="match" title="Copy the size, font, weight and colour of the closest PDF text"><svg class="i"><use href="#i-match"/></svg>Match nearby PDF text</button>`;
+    if (S.sel && v.cov) h += coverControls(v);
   } else if (t === 'rect' || t === 'ellipse' || t === 'shape') {
     h += ui.row('Outline', ui.sw('stroke', v.stroke, INKS, true));
     h += ui.row('Fill', ui.sw('fill', v.fill, ['#ffffff', '#fff6c2', '#e2e6ff', '#141821'], true));
@@ -2586,7 +2592,7 @@ function styleControls(t, v) {
   } else if (t === 'white') {
     h += ui.row('Colour', ui.sw('fill', v.fill, ['#ffffff', '#f5f1e8', '#141821']));
     h += ui.row('Opacity', ui.rng('op', v.op ?? 1, 0, 1, 0.01, pct));
-    if (S.sel) h += `<button class="btn wide" data-do="paper" title="Take the paper colour from around this box"><svg class="i"><use href="#i-dropper"/></svg>Match the paper colour</button>`;
+    if (S.sel) h += `<button class="btn wide" data-do="paper" title="Take the paper colour from around this box"><svg class="i"><use href="#i-dropper"/></svg>Match the paper colour</button><button class="btn wide" data-do="checkEdits" style="margin-top:8px"><svg class="i"><use href="#i-match"/></svg>Check nothing shows through</button>`;
     else h += ui.row('Paper', `<div class="seg"><button data-set="auto" data-val="1" class="${v.auto ? 'on' : ''}" title="Each new whiteout takes the paper colour around it">Match page</button><button data-set="auto" data-val="" class="${v.auto ? '' : 'on'}">Use colour</button></div>`);
     h += `<p class="hint" style="margin-top:10px">Whiteout hides content visually. The original text stays inside the file and can still be copied, so don't rely on it to remove confidential information.</p>`;
   } else if (t === 'image') {
@@ -2594,6 +2600,62 @@ function styleControls(t, v) {
     h += `<p class="hint">Drag a corner to resize. The aspect ratio is kept; hold Shift to stretch.</p>`;
   }
   return h;
+}
+/* ---------- covers: what hides the original text under an edit ---------- */
+function coverControls(o) {
+  const c = o.cov, pad = c.pad || 0;
+  return `<div class="covbox"><h4>Cover over the original</h4><p class="sub">Hides the old text. Make it bigger if any of it peeks out, smaller if it hides a nearby line.</p>
+    ${ui.row('Size', `<div class="rng"><input type="range" id="r-covPad" data-cov="pad" min="-3" max="8" step="0.5" value="${pad}"><output data-out="covPad">${pad > 0 ? '+' : ''}${r2(pad)} pt</output></div>`)}
+    ${ui.row('Look', `<div class="seg"><button data-covmode="paper" class="${c.mode !== 'solid' ? 'on' : ''}" title="Rebuilds the paper from its surroundings">Paper</button><button data-covmode="solid" class="${c.mode === 'solid' ? 'on' : ''}">Solid</button></div>`)}
+    ${c.mode === 'solid' ? ui.row('Colour', ui.cp('covFill', c.fill)) : ''}
+    <div class="acts" style="margin-top:8px"><button class="btn" data-do="covOutline"><svg class="i"><use href="#i-scan"/></svg>${showCovers ? 'Hide outline' : 'Show outline'}</button><button class="btn" data-do="checkEdits"><svg class="i"><use href="#i-match"/></svg>Check page</button></div></div>`;
+}
+let showCovers = false, covRaf = 0;
+function coverRect(c) {
+  const b = c.base || { x: c.x, y: c.y, w: c.w, h: c.h }, ph = c.base ? (c.ph || 0) : 0, pv = c.base ? (c.pv || 0) : 0, pad = c.pad || 0;
+  const hx = Math.max(-b.w / 2 + 0.5, ph + pad), hy = Math.max(-b.h / 2 + 0.5, pv + pad);
+  return { x: b.x - hx, y: b.y - hy, w: b.w + hx * 2, h: b.h + hy * 2 };
+}
+function rebuildCover(o, p) {
+  const c = o.cov; Object.assign(c, coverRect(c)); const pel = pageEl(p.id);
+  if (c.mode === 'solid') { c.asset = null; c.fill = c.solid || c.fill || '#ffffff'; }
+  else if (pel) { const m = makeCover(pel, c); c.fill = m.fill; c.asset = m.asset; }
+  const old = pel && pel.querySelector(`.cover[data-cov="${o.id}"]`); if (old) old.replaceWith(coverEl(o)); else renderOverlay(p);
+  setDirty();
+}
+/* Check: render the saved result with every added text hidden, and look for any dark
+   leftovers of the original inside each cover and whiteout. */
+async function checkEdits() {
+  if (!S.open) return; finishEdit();
+  const list = []; S.pages.forEach((p, i) => p.objs.forEach(o => { if (o.cov) list.push({ i, o, r: o.cov.base ? coverRect({ ...o.cov, pad: 0, ph: (o.cov.ph || 0) * 0.5, pv: (o.cov.pv || 0) * 0.5 }) : o.cov }); else if (o.t === 'white' && (o.op ?? 1) > 0.9) list.push({ i, o, r: o }); }));
+  if (!list.length) return toast('There are no edited lines or whiteout boxes to check yet.', false, 3500);
+  const hidden = []; S.pages.forEach(p => p.objs.forEach(o => { if (o.t !== 'white' && o.t !== 'redact') { hidden.push([o, o.op]); o.op = 0; } }));
+  const keepDoc = { wm: S.doc.wm, pn: S.doc.pn }; S.doc.wm = ''; S.doc.pn = 'off';
+  const restore = () => { hidden.forEach(([o, op]) => { if (op === undefined) delete o.op; else o.op = op; }); Object.assign(S.doc, keepDoc); };
+  const bad = new Set();
+  try {
+    const pages = [...new Set(list.map(l => l.i))];
+    const bytes = await buildBytes(pages, 'Checking edits');
+    const js = await pdfjsLib.getDocument({ data: bytes }).promise;
+    for (let n = 0; n < pages.length; n++) {
+      busy(`Checking edits · page ${n + 1} of ${pages.length}`);
+      const pg = await js.getPage(n + 1); const sc = 3; const vp = pg.getViewport({ scale: sc });
+      const cv = document.createElement('canvas'); cv.width = Math.ceil(vp.width); cv.height = Math.ceil(vp.height);
+      const ctx = cv.getContext('2d', { willReadFrequently: true }); await pg.render({ canvasContext: ctx, viewport: vp }).promise;
+      for (const l of list.filter(l => l.i === pages[n])) {
+        const r = l.r, X = Math.round(r.x * sc) + 2, Y = Math.round(r.y * sc) + 2, Wd = Math.round(r.w * sc) - 4, Hd = Math.round(r.h * sc) - 4;
+        if (Wd < 2 || Hd < 2) continue;
+        const d = ctx.getImageData(X, Y, Wd, Hd).data; const L = new Float32Array(Wd * Hd); let sum = 0;
+        for (let i = 0, j = 0; i < d.length; i += 4, j++) { L[j] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; sum += L[j]; }
+        const mean = sum / L.length; let dark = 0; for (const v of L) if (v < mean - 28) dark++;
+        if (dark / L.length > 0.004) bad.add(l.o.id);
+      }
+    }
+  } catch (e) { console.error(e); done(); restore(); return toast('Could not check the page: ' + (e.message || e), true); }
+  restore(); done();
+  S.flagged = bad; showCovers = bad.size > 0; refreshAll();
+  if (!bad.size) toast(`All clear: nothing from the original shows under ${list.length} edit${list.length > 1 ? 's' : ''} and whiteout box${list.length > 1 ? 'es' : ''}. Remember the original stays inside the file; use Redact to remove it for real.`, false, 7000);
+  else toast(`${bad.size} of ${list.length} covers may let some original text show. They're outlined in red: select one and make its cover bigger.`, true, 8000);
 }
 function renderProps() { renderPropsInner(); if (fontPickOpen) previewFonts(); }
 function renderPropsInner() {
@@ -2647,6 +2709,9 @@ function renderPropsInner() {
       <input class="inp" id="d-wm" data-doc="wm" placeholder="e.g. CONFIDENTIAL" value="${esc(S.doc.wm)}" style="margin-bottom:10px">
       ${ui.row('Strength', `<div class="rng"><input type="range" id="d-wmOp" data-doc="wmOp" min="0.05" max="0.5" step="0.01" value="${S.doc.wmOp}"><output data-out="wmOp">${pct(S.doc.wmOp)}</output></div>`)}
     </div>
+    <div class="ps"><h4>Check your edits</h4><p class="sub" style="margin-top:-4px">Looks under every edited line and whiteout box for any trace of the original.</p>
+      <div class="acts"><button class="btn" data-do="checkEdits" style="grid-column:1/-1"><svg class="i"><use href="#i-match"/></svg>Check nothing shows through</button><button class="btn" data-do="covOutline" style="grid-column:1/-1"><svg class="i"><use href="#i-scan"/></svg>${showCovers ? 'Hide cover outlines' : 'Show cover outlines'}</button></div>
+    </div>
     <div class="ps"><h4>Page background</h4><p class="sub" style="margin-top:-4px">Tints every page, including your whiteout, text fills and edits, so they all match.</p>
       ${ui.row('Colour', `<div class="sw"><button class="none ${!S.doc.tint ? 'on' : ''}" data-docset="tint" data-val="" title="None"></button>${['#fff6dc', '#f3ecdc', '#e8f1ff', '#eaf6ec', '#ececec'].map(c => `<button style="background:${c}" class="${S.doc.tint === c ? 'on' : ''}" data-docset="tint" data-val="${c}" title="${c}"></button>`).join('')}</div>${ui.cp('tint', S.doc.tint, true)}`)}
       ${S.doc.tint ? ui.row('Strength', `<div class="rng"><input type="range" id="d-tintOp" data-doc="tintOp" min="0" max="1" step="0.01" value="${S.doc.tintOp ?? 0.5}"><output data-out="tintOp">${pct(S.doc.tintOp ?? 0.5)}</output></div>`) : ''}
@@ -2673,6 +2738,7 @@ function applyProp(k, raw, live) {
   else if (k === 'weight') { target.weight = v; target.bold = v >= 600; }
   else if (k === 'family') { target.family = v; const ws = weightsFor(target); if (ws) { target.weight = nearestW(ws, wOf(target)); target.bold = target.weight >= 600; } if (wfId(target) && !(FONTS[wfId(target)] || {}).it) target.italic = false; delete target.detected; fontPickOpen = false; }
   else if ((k === 'bg') && !v) delete target.bg;
+  else if (k === 'covFill') { if (s && s.o.cov) { s.o.cov.mode = 'solid'; s.o.cov.solid = v; s.o.cov.fill = v; rebuildCover(s.o, s.p); } }
   else if (k === 'fill' && !s && target === S.style.white) { target.fill = v; target.auto = ''; }
   else if (k === 'fill' && s && s.o.t === 'white') { target.fill = v; delete target.patch; delete target.auto; }
   else target[k] = v;
@@ -2718,11 +2784,13 @@ P.addEventListener('input', e => {
     syncPicker(t.closest('.cpick'), h, true); return;
   }
   if (t.type === 'color') syncPicker(t.closest('.cpick'), t.value);
+  if (t.dataset.cov === 'pad') { const sx = getSel(); if (sx && sx.o.cov) { snapCo('cov' + sx.o.id); sx.o.cov.pad = +t.value; const out = P.querySelector('[data-out="covPad"]'); if (out) out.textContent = (+t.value > 0 ? '+' : '') + r2(+t.value) + ' pt'; cancelAnimationFrame(covRaf); covRaf = requestAnimationFrame(() => rebuildCover(sx.o, sx.p)); } return; }
   if (t.dataset.prop) applyProp(t.dataset.prop, t.value, true);
   if (t.dataset.prop === 'text' || t.dataset.prop === 'sub') return;
   if (t.dataset.doc) { S.doc[t.dataset.doc] = t.type === 'range' ? +t.value : t.value; setDirty(); if (t.dataset.doc === 'wmOp' || t.dataset.doc === 'tintOp') { const o = P.querySelector(`[data-out="${t.dataset.doc}"]`); if (o) o.textContent = pct(+t.value); } S.pages.forEach(p => renderOverlay(p)); if (t.dataset.doc === 'tint' && !P.querySelector('#d-tintOp')) renderProps(); }
 });
 P.addEventListener('change', e => { if (e.target.type === 'color' || e.target.dataset.hex || e.target.dataset.hexdoc) renderProps(); });
+P.addEventListener('pointerdown', e => { const cm = e.target.closest('[data-covmode]'); if (cm) { e.preventDefault(); const sx = getSel(); if (sx && sx.o.cov) { snap(); sx.o.cov.mode = cm.dataset.covmode; if (cm.dataset.covmode === 'solid' && !sx.o.cov.solid) sx.o.cov.solid = sx.o.cov.fill; rebuildCover(sx.o, sx.p); renderProps(); } } });
 P.addEventListener('keydown', e => { if ((e.target.dataset.hex || e.target.dataset.hexdoc) && e.key === 'Enter') e.target.blur(); });
 function syncPicker(cp, h, fromHex) { if (!cp) return; const i = cp.querySelector('.cp-sw i'); if (i) i.style.background = h || 'transparent'; const c = cp.querySelector('input[type=color]'); if (c && h) c.value = h; const x = cp.querySelector('.cp-hex'); if (x && !fromHex) { x.value = (h || '').toUpperCase(); x.classList.remove('bad'); } }
 function setDocColor(k, col, live) { S.doc[k] = col; setDirty(); S.pages.forEach(p => renderOverlay(p)); if (!live || (k === 'tint' && !P.querySelector('#d-tintOp'))) renderProps(); }
@@ -2744,12 +2812,16 @@ function doAction(a) {
     else if (a === 'back') { snap(); p.objs = [o].concat(p.objs.filter(x => x !== o)); renderOverlay(p); }
     else if (a === 'edit') startEdit(o, p, true);
     else if (a === 'match') matchText(o, p);
+    else if (a === 'checkEdits') checkEdits();
+    else if (a === 'covOutline') { showCovers = !showCovers; if (!showCovers) S.flagged = null; S.pages.forEach(q => renderOverlay(q)); renderProps(); }
     else if (a === 'paper') { const pel = pageEl(p.id); if (pel) { snapCo('fill' + o.id); const c = makeCover(pel, o); o.fill = c.fill; o.patch = c.asset; o.auto = 1; refreshObj(o, p); drawSel(); renderProps(); setDirty(); toast('Matched the paper: ' + o.fill, false, 1800); } }
     else if (a === 'fontpick') { fontPickOpen = !fontPickOpen; fontQuery = ''; renderProps(); if (fontPickOpen) setTimeout(() => { const q = P.querySelector('#fp-q'); if (q) q.focus(); const on = P.querySelector('.fp-item.on'); if (on) on.scrollIntoView({ block: 'nearest' }); }, 0); }
     else if (a === 'all') { snap(); let n = 0; S.pages.forEach(q => { if (q !== p) { q.objs.push(cloneObj(o)); n++; renderOverlay(q); } }); toast(`Copied to ${n} other page${n === 1 ? '' : 's'}`); updateStatus(); }
     return;
   }
   if (a === 'fontpick') { fontPickOpen = !fontPickOpen; fontQuery = ''; renderProps(); if (fontPickOpen) setTimeout(() => { const q = P.querySelector('#fp-q'); if (q) q.focus(); }, 0); return; }
+  if (a === 'checkEdits') return checkEdits();
+  if (a === 'covOutline') { showCovers = !showCovers; if (!showCovers) S.flagged = null; S.pages.forEach(q => renderOverlay(q)); renderProps(); return; }
   const i = S.cur;
   if (a === 'rotl') rotatePage(i, -1); else if (a === 'rotr') rotatePage(i, 1); else if (a === 'dupPage') dupPage(i); else if (a === 'delPage') deletePage(i);
 }
