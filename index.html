@@ -225,6 +225,17 @@ svg.vec .hit,svg.vec .head{pointer-events:none}
 .sw button.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--accent)}
 .sw button.none{background:linear-gradient(135deg,transparent 45%,var(--danger) 45% 55%,transparent 55%),var(--panel)}
 .sw input[type=color]{width:26px;height:26px;border:0;padding:0;background:none;cursor:pointer}
+.cwrap{min-width:0}
+.cpick{display:flex;gap:6px;align-items:center;margin-top:8px}
+.cp-sw{position:relative;flex:none;width:44px;height:30px;border-radius:8px;border:1px solid var(--line);cursor:pointer;overflow:hidden;background-image:linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%);background-size:10px 10px;background-position:0 0,5px 5px}
+.cp-sw i{position:absolute;inset:0}
+.cp-sw svg{position:absolute;right:3px;bottom:3px;width:11px;height:11px;color:#fff;filter:drop-shadow(0 0 1px rgba(0,0,0,.7))}
+.cp-sw input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.cp-hex{height:30px;flex:1;font:500 12.5px var(--f-mono);text-transform:uppercase;letter-spacing:.02em}
+.cp-hex.bad{border-color:var(--danger)}
+.cpick .pick{flex:none;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);display:grid;place-items:center;color:var(--ink)}
+.cpick .pick .i{width:15px;height:15px}
+.cpick .pick.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .rng{display:flex;align-items:center;gap:8px}
 .rng input{flex:1;accent-color:var(--accent);min-width:0}
 .rng output{font:500 12px var(--f-mono);min-width:38px;text-align:right;color:var(--muted)}
@@ -1995,7 +2006,7 @@ async function actImage() { if (!S.open) return; const [f] = await pickFiles('im
 function actDate() {
   const p = curPage(); if (!p) return; const st = S.style.text; const c = visibleCenter(p);
   const text = new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
-  const o = { id: uid(), t: 'text', x: c.x - 40, y: c.y - st.size * 0.6, text, family: st.family, size: st.size, color: st.color, bold: st.bold, italic: st.italic, weight: st.weight, boost: st.boost, op: 1 };
+  const o = { id: uid(), t: 'text', x: c.x - 40, y: c.y - st.size * 0.6, text, family: st.family, size: st.size, color: st.color, bold: st.bold, italic: st.italic, weight: st.weight, boost: st.boost, op: 1, ...(st.bg ? { bg: st.bg, bgOp: st.bgOp ?? 1 } : {}) };
   if (S.tool !== 'select') setTool('select'); addObj(o, p); select(o, p);
 }
 
@@ -2017,7 +2028,7 @@ function onDown(e) {
     e.preventDefault(); const cv = pel.querySelector('canvas.pg'); const { W } = viewSize(p); const sc = cv.width / W;
     let col = '#ffffff';
     try { const dd = cv.getContext('2d').getImageData(clamp(Math.round(pt.x * sc), 0, cv.width - 1), clamp(Math.round(pt.y * sc), 0, cv.height - 1), 1, 1).data; col = toHex(dd[0], dd[1], dd[2]); } catch {}
-    const k = S.picking; S.picking = null; viewer.classList.remove('picking'); applyProp(k, col, false); toast('Colour ' + col + ' applied.', false, 1800); return;
+    const k = S.picking; S.picking = null; viewer.classList.remove('picking'); if (k.startsWith('doc:')) setDocColor(k.slice(4), col); else applyProp(k, col, false); toast('Colour ' + col + ' applied.', false, 1800); return;
   }
   if (editing && e.target.closest('.obj.text.editing')) return;
   finishEdit();
@@ -2040,7 +2051,7 @@ function onDown(e) {
     if (t === 'edittext') { const tb = e.target.closest('.tbox'); if (tb) { e.preventDefault(); convertTbox(tb, p, pel); } return; }
     e.preventDefault();
     const st = S.style.text; const before = JSON.stringify(S.pages);
-    const no = { id: uid(), t: 'text', x: pt.x, y: pt.y - st.size * 0.6, text: '', family: st.family, size: st.size, color: st.color, bold: st.bold, italic: st.italic, weight: st.weight, boost: st.boost, op: 1 };
+    const no = { id: uid(), t: 'text', x: pt.x, y: pt.y - st.size * 0.6, text: '', family: st.family, size: st.size, color: st.color, bold: st.bold, italic: st.italic, weight: st.weight, boost: st.boost, op: 1, ...(st.bg ? { bg: st.bg, bgOp: st.bgOp ?? 1 } : {}) };
     p.objs.push(no); renderOverlay(p); select(no, p); startEdit(no, p, false, before);
     return;
   }
@@ -2399,7 +2410,9 @@ const hexA = (h, a) => { const n = parseInt(String(h).slice(1), 16); return a >=
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const ui = {
   seg: (k, opts, cur) => `<div class="seg">${opts.map(([v, l]) => `<button data-set="${k}" data-val="${esc(v)}" class="${String(cur) === String(v) ? 'on' : ''}">${l}</button>`).join('')}</div>`,
-  sw: (k, cur, colors, none) => `<div class="sw">${none ? `<button class="none ${!cur ? 'on' : ''}" data-set="${k}" data-val="" title="None"></button>` : ''}${colors.map(c => `<button style="background:${c}" class="${(cur || '').toLowerCase() === c ? 'on' : ''}" data-set="${k}" data-val="${c}" title="${c}"></button>`).join('')}<input type="color" data-prop="${k}" value="${cur && cur.length === 7 ? cur : '#141821'}" title="Custom colour">${S.sel ? `<button class="pick ${S.picking === k ? 'on' : ''}" data-pick="${k}" title="Pick a colour from the page"><svg class="i"><use href="#i-dropper"/></svg></button>` : ''}</div>`,
+  /* Colour picker: preset swatches, a full colour picker, a hex box and an eyedropper for the page. */
+  cp: (k, cur, doc) => { const val = cur && /^#[0-9a-f]{6}$/i.test(cur) ? cur : ''; const a = doc ? `data-doc="${k}"` : `data-prop="${k}"`, pk = doc ? 'doc:' + k : k; return `<div class="cpick"><label class="cp-sw" title="Open the colour picker"><i style="background:${val || 'transparent'}"></i><svg class="i"><use href="#i-chev"/></svg><input type="color" ${a} value="${val || '#141821'}"></label><input class="inp cp-hex" ${doc ? `data-hexdoc="${k}"` : `data-hex="${k}"`} value="${val ? val.toUpperCase() : ''}" placeholder="${val ? '' : 'None'}" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Hex colour"><button class="pick ${S.picking === pk ? 'on' : ''}" data-pick="${pk}" title="Pick a colour from the page"><svg class="i"><use href="#i-dropper"/></svg></button></div>`; },
+  sw: (k, cur, colors, none) => `<div class="cwrap"><div class="sw">${none ? `<button class="none ${!cur ? 'on' : ''}" data-set="${k}" data-val="" title="None"></button>` : ''}${colors.map(c => `<button style="background:${c}" class="${(cur || '').toLowerCase() === c ? 'on' : ''}" data-set="${k}" data-val="${c}" title="${c}"></button>`).join('')}</div>${ui.cp(k, cur)}</div>`,
   rng: (k, cur, min, max, step, fmt) => `<div class="rng"><input type="range" id="r-${k}" data-prop="${k}" min="${min}" max="${max}" step="${step}" value="${cur}"><output data-out="${k}">${fmt(cur)}</output></div>`,
   row: (label, html) => `<div class="row"><label>${label}</label>${html}</div>`
 };
@@ -2456,10 +2469,10 @@ function styleControls(t, v) {
     const canIt = v.family !== 'pdf' && (!wfId(v) || (FONTS[wfId(v)] || {}).it);
     h += ui.row('Style', `<div class="seg"><button data-set="bold" class="${wOf(v) >= 600 ? 'on' : ''}" style="font-weight:700" ${ws ? '' : 'disabled'}>Bold</button><button data-set="italic" class="${v.italic ? 'on' : ''}" style="font-style:italic" ${canIt ? '' : 'disabled'}>Italic</button></div>`);
     h += ui.row('Align', `<div class="iconrow">${[['left', 'l'], ['center', 'c'], ['right', 'r']].map(([a, k]) => `<button data-set="align" data-val="${a}" class="${(v.align || 'left') === a ? 'on' : ''}" title="Align text ${a}"><svg class="i"><use href="#i-ta-${k}"/></svg></button>`).join('')}</div>`);
-    h += ui.row('Colour', ui.sw('color', v.color, INKS));
+    h += ui.row('Font colour', ui.sw('color', v.color, INKS));
     h += ui.row('Opacity', ui.rng('op', v.op ?? 1, 0, 1, 0.01, pct));
-    if (v.bg !== undefined || S.sel) h += ui.row('Fill', ui.sw('bg', v.bg, ['#ffffff', '#fff6c2', '#e2e6ff'], true));
-    if (v.bg) h += ui.row('Fill opacity', ui.rng('bgOp', v.bgOp ?? 1, 0, 1, 0.01, pct));
+    h += ui.row('Background', ui.sw('bg', v.bg, ['#ffffff', '#fff6c2', '#e2e6ff', '#e7f6ea', '#ffe3e3'], true));
+    if (v.bg) h += ui.row('Background opacity', ui.rng('bgOp', v.bgOp ?? 1, 0, 1, 0.01, pct));
     if (S.sel) h += `<button class="btn wide" data-do="match" title="Copy the size, font, weight and colour of the closest PDF text"><svg class="i"><use href="#i-match"/></svg>Match nearby PDF text</button>`;
   } else if (t === 'rect' || t === 'ellipse' || t === 'shape') {
     h += ui.row('Outline', ui.sw('stroke', v.stroke, INKS, true));
@@ -2545,7 +2558,7 @@ function renderPropsInner() {
       ${ui.row('Strength', `<div class="rng"><input type="range" id="d-wmOp" data-doc="wmOp" min="0.05" max="0.5" step="0.01" value="${S.doc.wmOp}"><output data-out="wmOp">${pct(S.doc.wmOp)}</output></div>`)}
     </div>
     <div class="ps"><h4>Page background</h4><p class="sub" style="margin-top:-4px">Tints every page, including your whiteout, text fills and edits, so they all match.</p>
-      ${ui.row('Colour', `<div class="sw"><button class="none ${!S.doc.tint ? 'on' : ''}" data-docset="tint" data-val="" title="None"></button>${['#fff6dc', '#f3ecdc', '#e8f1ff', '#eaf6ec', '#ececec'].map(c => `<button style="background:${c}" class="${S.doc.tint === c ? 'on' : ''}" data-docset="tint" data-val="${c}" title="${c}"></button>`).join('')}<input type="color" id="d-tint" data-doc="tint" value="${S.doc.tint || '#fff6dc'}" title="Custom colour"></div>`)}
+      ${ui.row('Colour', `<div class="sw"><button class="none ${!S.doc.tint ? 'on' : ''}" data-docset="tint" data-val="" title="None"></button>${['#fff6dc', '#f3ecdc', '#e8f1ff', '#eaf6ec', '#ececec'].map(c => `<button style="background:${c}" class="${S.doc.tint === c ? 'on' : ''}" data-docset="tint" data-val="${c}" title="${c}"></button>`).join('')}</div>${ui.cp('tint', S.doc.tint, true)}`)}
       ${S.doc.tint ? ui.row('Strength', `<div class="rng"><input type="range" id="d-tintOp" data-doc="tintOp" min="0" max="1" step="0.01" value="${S.doc.tintOp ?? 0.5}"><output data-out="tintOp">${pct(S.doc.tintOp ?? 0.5)}</output></div>`) : ''}
     </div>
     <div class="ps"><h4>Page numbers</h4>
@@ -2607,11 +2620,21 @@ P.addEventListener('keydown', e => { if (e.target.dataset && e.target.dataset.po
 P.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'fp-q') { fontQuery = t.value; if (fontQuery.trim() && fontCat !== 'All') { fontCat = 'All'; P.querySelectorAll('[data-fcat]').forEach(b => b.classList.toggle('on', b.dataset.fcat === 'All')); } const list = P.querySelector('.fp-list'); if (list) { const tmp = document.createElement('div'); const s0 = getSel(); tmp.innerHTML = fontPickerHtml(s0 ? s0.o : S.style.text); list.replaceWith(tmp.querySelector('.fp-list')); previewFonts(); } return; }
+  if (t.dataset.hex || t.dataset.hexdoc) {
+    let h = t.value.trim(); if (h && h[0] !== '#') h = '#' + h; const ok = /^#[0-9a-f]{6}$/i.test(h) || (h === '' && t.dataset.hex === 'bg');
+    t.classList.toggle('bad', !ok); if (!ok) return; h = h.toLowerCase();
+    if (t.dataset.hexdoc) setDocColor(t.dataset.hexdoc, h, true); else applyProp(t.dataset.hex, h, true);
+    syncPicker(t.closest('.cpick'), h, true); return;
+  }
+  if (t.type === 'color') syncPicker(t.closest('.cpick'), t.value);
   if (t.dataset.prop) applyProp(t.dataset.prop, t.value, true);
   if (t.dataset.prop === 'text' || t.dataset.prop === 'sub') return;
   if (t.dataset.doc) { S.doc[t.dataset.doc] = t.type === 'range' ? +t.value : t.value; setDirty(); if (t.dataset.doc === 'wmOp' || t.dataset.doc === 'tintOp') { const o = P.querySelector(`[data-out="${t.dataset.doc}"]`); if (o) o.textContent = pct(+t.value); } S.pages.forEach(p => renderOverlay(p)); if (t.dataset.doc === 'tint' && !P.querySelector('#d-tintOp')) renderProps(); }
 });
-P.addEventListener('change', e => { if (e.target.type === 'color' && !getSel()) renderProps(); });
+P.addEventListener('change', e => { if (e.target.type === 'color' || e.target.dataset.hex || e.target.dataset.hexdoc) renderProps(); });
+P.addEventListener('keydown', e => { if ((e.target.dataset.hex || e.target.dataset.hexdoc) && e.key === 'Enter') e.target.blur(); });
+function syncPicker(cp, h, fromHex) { if (!cp) return; const i = cp.querySelector('.cp-sw i'); if (i) i.style.background = h || 'transparent'; const c = cp.querySelector('input[type=color]'); if (c && h) c.value = h; const x = cp.querySelector('.cp-hex'); if (x && !fromHex) { x.value = (h || '').toUpperCase(); x.classList.remove('bad'); } }
+function setDocColor(k, col, live) { S.doc[k] = col; setDirty(); S.pages.forEach(p => renderOverlay(p)); if (!live || (k === 'tint' && !P.querySelector('#d-tintOp'))) renderProps(); }
 function cloneObj(o, dx = 0, dy = 0) {
   const c = JSON.parse(JSON.stringify(o)); c.id = uid();
   if (c.t === 'line' || c.t === 'arrow') { c.x1 += dx; c.x2 += dx; c.y1 += dy; c.y2 += dy; }
