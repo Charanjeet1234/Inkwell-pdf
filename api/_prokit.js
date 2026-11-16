@@ -7,12 +7,44 @@ module.exports = function inkwellProKit(K) {
   'use strict';
   const { $, $$, FAMILY_CSS, FONTS, LS_TPL, PDFDocument, PL, S, StandardFonts, TYPE_NAME, TextRenderingMode, addObj, allIdx, askPassword, baseName, bucket, buildBytes, buildPdfDoc, busy, clamp, cloneObj, concatTransformationMatrix, curPage, degrees, div, done, download, finishEdit, fmtSize, inViewer, insertPdfPages, jsPage, loadWebFont, ls, mctx, nearestW, objBox, openPdf, pageById, pageChars, popGraphicsState, pushGraphicsState, r2, renderTemplates, requirePro, rgb, sanitizer, select, setCharacterSqueeze, setDirty, setTextRenderingMode, setTool, tick, toast, track, uid, viewSize, viewer, visibleCenter, getBatchFiles } = K;
 
-  const MATCH_FONTS = ['roboto', 'open-sans', 'merriweather', 'roboto-slab', 'arvo', 'courier-prime', 'roboto-condensed'];
+  // Carlito and Caladea share the metrics of Calibri and Cambria, the fonts of most Word and Office documents.
+  const MATCH_FONTS = ['carlito', 'caladea', 'roboto', 'open-sans', 'merriweather', 'roboto-slab', 'arvo', 'courier-prime', 'roboto-condensed'];
   function preloadMatchFonts() { return Promise.race([Promise.allSettled(MATCH_FONTS.flatMap(id => [400, 700].map(w => loadWebFont(id, w, false)))), new Promise(r => setTimeout(r, 4000))]); }
   /* Guess the typeface of text that has no usable font (scans): draw the same words in each
      standard style, scaled to the original box, and keep the style whose letter shapes overlap
      the original pixels best. */
+  // Documents use few fonts: each detection nudges later lines of the same document toward it.
+  let docVotes = { key: '', n: {} };
+  const votesFor = () => { const k = S.name + '|' + (S.sources && S.sources.length) + '|' + S.pages.length; if (docVotes.key !== k) docVotes = { key: k, n: {} }; return docVotes.n; };
+  // A page is usually set in one or two fonts. Score the candidates on several other long lines
+  // of the same page once, and use that as a prior, so one short or blurry line can't pick an odd font.
+  const priors = new Map();
+  async function pagePrior(pel, b, c) {
+    const key = pel.dataset.id + '|' + S.zoom; if (priors.has(key)) return priors.get(key);
+    const job = (async () => {
+      const others = [...pel.querySelectorAll('.tbox')].map(t => t._b).filter(x => x !== b && x.str && x.str.trim().length >= 8 && Math.abs(x.size - b.size) < b.size * 0.35)
+        .sort((x, y) => y.str.length - x.str.length).slice(0, 6);
+      if (others.length < 2) return null;
+      const sum = {}, cnt = {}, sizes = {}; const t0 = performance.now();
+      for (const o of others) {
+        if (performance.now() - t0 > 4000) break;
+        const m = await scoreFonts(pel, o, c, { collect: true }); if (!m) continue;
+        for (const [f, v] of Object.entries(m)) { if (f[0] === '@') { (sizes[f.slice(1)] = sizes[f.slice(1)] || []).push(v); continue; } sum[f] = (sum[f] || 0) + v; cnt[f] = (cnt[f] || 0) + 1; }
+      }
+      const avg = {}; let top = -9; for (const f in sum) { avg[f] = sum[f] / cnt[f]; if (avg[f] > top) top = avg[f]; }
+      if (top < -1) return null;
+      const prior = {}; for (const f in avg) prior[f] = 0.6 * (avg[f] - top);
+      const med = a => { const t = a.slice().sort((x, y) => x - y); return t[t.length >> 1]; };
+      prior.__size = {}; for (const f in sizes) if (sizes[f].length >= 2) prior.__size[f] = med(sizes[f]);
+      return prior;
+    })();
+    priors.set(key, job); return job;
+  }
   async function guessFontFromPixels(pel, b, c) {
+    let prior = null; try { prior = await pagePrior(pel, b, c); } catch (e) { console.warn(e); }
+    return scoreFonts(pel, b, c, { prior });
+  }
+  async function scoreFonts(pel, b, c, opt = {}) {
     try {
       if (!b.str || b.str.trim().length < 2) return null;
       const p = pageById(pel.dataset.id); if (!p || p.src < 0) return null; const { R } = viewSize(p);
@@ -24,12 +56,19 @@ module.exports = function inkwellProKit(K) {
       const pg = await jsPage(p); const rc = document.createElement('canvas'); rc.width = w; rc.height = h;
       const rctx = rc.getContext('2d'); rctx.fillStyle = '#fff'; rctx.fillRect(0, 0, w, h);
       await pg.render({ canvasContext: rctx, viewport: pg.getViewport({ scale: s, rotation: R, offsetX: -X, offsetY: -Y }) }).promise;
-      const src = rctx.getImageData(0, 0, w, h).data;
+      const src = rctx.getImageData(0, 0, w, h).data; let underline = false;
       { // keep only this line's band of ink, so lines above or below can't interfere
         const lumR = i => 0.299 * src[i] + 0.587 * src[i + 1] + 0.114 * src[i + 2];
         const hx0 = v => [1, 3, 5].map(k => parseInt(v.slice(k, k + 2), 16)); const bgc = hx0(c.bg), inc = hx0(c.ink);
         const t0 = ((0.299 * bgc[0] + 0.587 * bgc[1] + 0.114 * bgc[2]) + (0.299 * inc[0] + 0.587 * inc[1] + 0.114 * inc[2])) / 2;
         const rows = new Float32Array(h); for (let y = 0; y < h; y++) { let n = 0; for (let x = 0; x < w; x++) if (lumR((y * w + x) * 4) < t0) n++; rows[y] = n; }
+        // underlines and table rules: rows inked across most of the width are lines, not letters
+        { const r0 = Math.round((b.size * 1.7 - b.size * 0.3) * s); const ruled = []; for (let y = 0; y < h; y++) if (rows[y] > w * 0.6) ruled.push(y);
+          if (ruled.length && ruled.length < h * 0.25) {
+            underline = ruled.some(y => y > r0 && y < (b.size * 1.7 + b.size * 0.45) * s);
+            const pad = Math.ceil(1 + s * 0.35); for (const y0 of ruled) for (let y = Math.max(0, y0 - pad); y <= Math.min(h - 1, y0 + pad); y++) { for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; src[i] = bgc[0]; src[i + 1] = bgc[1]; src[i + 2] = bgc[2]; } let n = 0; rows[y] = n; }
+            rctx.putImageData(new ImageData(src, w, h), 0, 0);
+          } }
         const minInk = Math.max(1, w * 0.004);
         let r = Math.round((b.size * 1.7 - b.size * 0.3) * s); // inside the x-height of this line
         let best = -1; for (let d = 0; d < h; d++) { for (const rr of [r - d, r + d]) if (rr >= 0 && rr < h && rows[rr] >= minInk) { best = rr; break; } if (best >= 0) break; }
@@ -67,6 +106,7 @@ module.exports = function inkwellProKit(K) {
       const cands = [];
       for (const fam of ['sans', 'serif', 'mono']) for (const w of [400, 700]) cands.push({ fam, w, css: FAMILY_CSS[fam], std: true });
       for (const id of MATCH_FONTS) { const lib = FONTS[id]; for (const w0 of [400, 700]) { const w = nearestW(lib.w, w0); if (document.fonts.check(`${w} 20px "ink-wf-${id}"`) && !cands.some(c0 => c0.fam === 'wf:' + id && c0.w === w)) cands.push({ fam: 'wf:' + id, w, css: `"ink-wf-${id}"` }); } }
+      const collected = {}, own = {};
       for (const cand of cands) {
         const fam = cand.fam, bold = cand.w >= 600;
         const font = `${cand.w} ${b.size * s}px ${cand.css}`;
@@ -86,10 +126,22 @@ module.exports = function inkwellProKit(K) {
         const ratio = (mw * sy) / w;
         let inkCand = 0; for (let j = 0; j < w * h; j++) if (B0[j]) inkCand++;
         const weight = inkScan && inkCand ? Math.abs(Math.log(inkCand / inkScan)) : 1;
-        const score = shape - 2 * Math.abs(Math.log(ratio)) - 0.8 * weight + (cand.std ? 0.03 : 0);
+        const vt = votesFor()[fam] || 0;
+        let score = shape - 2 * Math.abs(Math.log(ratio)) - 0.8 * weight + (cand.std ? 0.03 : 0);
+        own[fam + '|' + cand.w] = score;
+        if (opt.collect) { if (score > (collected[fam] ?? -9)) { collected[fam] = score; collected['@' + fam] = r2(b.size * sy); } continue; }
+        score += 0.025 * Math.min(vt, 4) + (opt.prior ? (opt.prior[fam] ?? -0.3) : 0);
         if (!best || score > best.score) best = { fam, bold, w: cand.w, font, score, size: r2(b.size * sy), tf: [kx, slope, 0, sy, 0, sA.bot - s2.bot], inkCand };
       }
-      if (best) { // extra stroke thickness for heavy or ink-bled print
+      if (opt.collect) return collected;
+      // a poor fit (blurry, very short or decorated line): fall back to the page's main font at the measured size
+      if (best && best.score < 0.25 && opt.prior) {
+        const top = Object.entries(opt.prior).filter(([k]) => k !== '__size').sort((x, y) => y[1] - x[1])[0];
+        if (top && top[0] !== best.fam) { const fam = top[0], lib = fam.startsWith('wf:') ? FONTS[fam.slice(3)] : null; const ws = Object.entries(own).filter(([k]) => k.startsWith(fam + '|')).sort((x, y) => y[1] - x[1]); const w0 = ws.length ? +ws[0][0].split('|')[1] : lib ? nearestW(lib.w, best.w) : (best.w >= 600 ? 700 : 400); return { fam, bold: w0 >= 600, w: w0, size: (opt.prior.__size && opt.prior.__size[fam]) || r2(b.size), boost: 0, underline, score: best.score, fallback: true }; }
+      }
+      if (best) best.underline = underline;
+      // body text shares one size: snap to the size measured on the page's other lines when close
+      if (best && opt.prior && opt.prior.__size) { const ps = opt.prior.__size[best.fam]; if (ps && Math.abs(best.size / ps - 1) < 0.12) best.size = ps; }      if (best) { // extra stroke thickness for heavy or ink-bled print
         let bestB = 0, bestD = Math.abs(Math.log((best.inkCand || 1) / inkScan));
         for (const bo of [0.25, 0.5, 0.75, 1]) {
           ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, w, h); ctx.setTransform(...best.tf); ctx.font = best.font; ctx.fillStyle = '#000'; ctx.strokeStyle = '#000';
@@ -99,6 +151,7 @@ module.exports = function inkwellProKit(K) {
         }
         best.boost = bestB;
       }
+      if (best) { const v = votesFor(); v[best.fam] = (v[best.fam] || 0) + 1; }
       return best;
     } catch (e) { console.warn(e); return null; }
   }

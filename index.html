@@ -1423,7 +1423,7 @@ function makeEl(o, p) {
     el = div('obj text'); el.textContent = o.text; const pf = pdfFontOf(o); const wid = wfId(o);
     if (wid && FONTS[wid] && !document.fonts.check(`${o.italic && FONTS[wid].it ? 'italic ' : ''}${nearestW(FONTS[wid].w, wOf(o))} 20px "ink-wf-${wid}"`)) loadWebFont(wid, wOf(o), o.italic).then(() => { const p2 = S.pages.find(q => q.objs.includes(o)); if (p2 && !(editing && editing.o === o)) refreshObj(o, p2); if (S.sel === o.id) drawSel(); }).catch(() => {});
     if (o.boost > 0) { el.style.webkitTextStroke = `${o.boost * o.size * 0.06 * S.zoom}px ${o.color}`; el.style.paintOrder = 'stroke fill'; }
-    Object.assign(el.style, { left: px(o.x), top: px(o.y), fontSize: px(o.size), fontFamily: cssFamily(o), fontWeight: String(wid ? nearestW(FONTS[wid].w, wOf(o)) : wOf(o)), fontStyle: o.italic && !pf ? 'italic' : 'normal', fontSynthesis: pf ? 'none' : '', color: o.color, background: o.bg ? hexA(o.bg, o.bgOp ?? 1) : 'transparent', minWidth: o.minW ? px(o.minW) : '', opacity: o.op ?? 1, textAlign: o.align || 'left' });
+    Object.assign(el.style, { left: px(o.x), top: px(o.y), fontSize: px(o.size), fontFamily: cssFamily(o), fontWeight: String(wid ? nearestW(FONTS[wid].w, wOf(o)) : wOf(o)), fontStyle: o.italic && !pf ? 'italic' : 'normal', fontSynthesis: pf ? 'none' : '', textDecoration: o.underline ? 'underline' : 'none', textDecorationThickness: o.underline ? Math.max(0.5, o.size * 0.06) * S.zoom + 'px' : '', textUnderlineOffset: o.underline ? o.size * 0.1 * S.zoom + 'px' : '', color: o.color, background: o.bg ? hexA(o.bg, o.bgOp ?? 1) : 'transparent', minWidth: o.minW ? px(o.minW) : '', opacity: o.op ?? 1, textAlign: o.align || 'left' });
   } else if (o.t === 'image') {
     el = div('obj image'); const img = new Image(); img.src = (S.assets[o.asset] || {}).data || ''; img.draggable = false; img.alt = ''; el.append(img); box(el, o); el.style.opacity = o.op ?? 1;
   } else if (o.t === 'rect' || o.t === 'ellipse') {
@@ -1884,6 +1884,7 @@ async function refineFont(o, p, pel, b, c) {
   else {
     const K = await needKit(); const g = K ? (await K.preloadMatchFonts(), await K.guessFontFromPixels(pel, b, c)) : null;
     if (g) {
+      if (g.underline) o.underline = true;
       o.family = g.fam; o.fb = g.fam.startsWith('wf:') ? GROUP_FALLBACK[FONTS[g.fam.slice(3)].group] : g.fam; o.weight = g.w; o.bold = g.w >= 600; o.boost = g.boost || 0;
       if (g.size > 3 && Math.abs(g.size / o.size - 1) < 0.35) o.size = g.size;
       o.detected = `${fontLabel(o)} ${W_NAMES[g.w] || g.w}${o.boost ? ' + ' + Math.round(o.boost * 100) + '% thickness' : ''}, ${r2(o.size)} pt`;
@@ -2087,7 +2088,7 @@ function styleControls(t, v) {
     }
     h += ui.row(PRO.active ? 'Thickness' : 'Thickness<span class="pro-pill">Pro</span>', `<div class="rng"><input type="range" id="r-boost" data-prop="boost" min="0" max="1" step="0.05" value="${v.boost || 0}" ${PRO.active ? '' : 'disabled title="Inkwell Pro"'}><output data-out="boost">${v.boost ? '+' + Math.round(v.boost * 100) + '%' : 'None'}</output></div>`);
     const canIt = v.family !== 'pdf' && (!wfId(v) || (FONTS[wfId(v)] || {}).it);
-    h += ui.row('Style', `<div class="seg"><button data-set="bold" class="${wOf(v) >= 600 ? 'on' : ''}" style="font-weight:700" ${ws ? '' : 'disabled'}>Bold</button><button data-set="italic" class="${v.italic ? 'on' : ''}" style="font-style:italic" ${canIt ? '' : 'disabled'}>Italic</button></div>`);
+    h += ui.row('Style', `<div class="seg"><button data-set="bold" class="${wOf(v) >= 600 ? 'on' : ''}" style="font-weight:700" ${ws ? '' : 'disabled'}>Bold</button><button data-set="italic" class="${v.italic ? 'on' : ''}" style="font-style:italic" ${canIt ? '' : 'disabled'}>Italic</button><button data-set="underline" class="${v.underline ? 'on' : ''}" style="text-decoration:underline" title="Underline">Underline</button></div>`);
     h += ui.row('Align', `<div class="iconrow">${[['left', 'l'], ['center', 'c'], ['right', 'r']].map(([a, k]) => `<button data-set="align" data-val="${a}" class="${(v.align || 'left') === a ? 'on' : ''}" title="Align text ${a}"><svg class="i"><use href="#i-ta-${k}"/></svg></button>`).join('')}</div>`);
     h += ui.row('Font colour', ui.sw('color', v.color, INKS));
     h += ui.row('Opacity', ui.rng('op', v.op ?? 1, 0, 1, 0.01, pct));
@@ -2260,6 +2261,7 @@ function applyProp(k, raw, live) {
   const baseBefore = s && s.o.t === 'text' && ['family', 'weight', 'bold', 'italic'].includes(k) ? s.o.y + baseK(s.o) * s.o.size : null;
   if (k === 'bold') { const ws = weightsFor(target) || [400, 700]; const now = wOf(target); target.weight = now >= 600 ? nearestW(ws, 400) : nearestW(ws, 700); target.bold = target.weight >= 600; }
   else if (k === 'italic') target.italic = !target.italic;
+  else if (k === 'underline') { if (target.underline) delete target.underline; else target.underline = true; }
   else if (k === 'weight') { target.weight = v; target.bold = v >= 600; }
   else if (k === 'family') { target.family = v; const ws = weightsFor(target); if (ws) { target.weight = nearestW(ws, wOf(target)); target.bold = target.weight >= 600; } if (wfId(target) && !(FONTS[wfId(target)] || {}).it) target.italic = false; delete target.detected; fontPickOpen = false; }
   else if ((k === 'bg') && !v) delete target.bg;
@@ -2608,6 +2610,7 @@ async function drawObj(out, page, o, W, H, F, imgs, safe) {
     }
     if (op > 0) lr.forEach((rs, i) => { let x = o.x + (bw - lw[i]) * fa; const y = H - (o.y + i * lh + o.size * bk); for (const r of rs) { if (r.s) page.drawText(r.s, { x, y, size: o.size, font: r.f, color: hexToRgb(o.color), opacity: op }); x += r.f.widthOfTextAtSize(r.s, o.size); } });
     if (boost) page.pushOperators(popGraphicsState());
+    if (o.underline && op > 0) lr.forEach((rs, i) => { if (!lw[i]) return; const x = o.x + (bw - lw[i]) * fa; const y = H - (o.y + i * lh + o.size * bk) - o.size * 0.16; page.drawLine({ start: { x, y }, end: { x: x + lw[i], y }, thickness: Math.max(0.5, o.size * 0.06), color: hexToRgb(o.color), opacity: op }); });
   } else if (o.t === 'image') {
     const a = S.assets[o.asset]; if (!a) return;
     let img = imgs[o.asset]; if (!img) { const bytes = dataURLtoBytes(a.data); img = imgs[o.asset] = a.type === 'jpg' ? await out.embedJpg(bytes) : await out.embedPng(bytes); }
