@@ -157,6 +157,7 @@ button{cursor:pointer}
 .page .tl,.page .ov{position:absolute;inset:0;pointer-events:none}
 .page .tl{display:none;z-index:1}
 .page .ov{z-index:2}
+.page .ov .cover{position:absolute;pointer-events:none}
 .page .tint{position:absolute;inset:0;pointer-events:none;z-index:4;mix-blend-mode:multiply}
 .viewer.tool-edittext .page .tl{display:block}
 .pnum{position:absolute;left:0;right:0;bottom:-22px;text-align:center;font:500 11px var(--f-mono);color:var(--muted)}
@@ -1400,9 +1401,16 @@ const px = v => v * S.zoom + 'px';
 function div(cls) { const d = document.createElement('div'); d.className = cls; return d; }
 function renderOverlay(p, el = pageEl(p.id)) {
   if (!el) return; const ov = el.querySelector('.ov'); ov.innerHTML = '';
+  for (const o of p.objs) if (o.cov) ov.append(coverEl(o));
   for (const o of p.objs) ov.append(makeEl(o, p));
   addDecor(p, ov);
   if (S.sel && S.selPage === p.id) drawSel();
+}
+function coverEl(o) {
+  const c = o.cov, d = div('cover'); d.dataset.cov = o.id;
+  Object.assign(d.style, { left: px(c.x), top: px(c.y), width: px(c.w), height: px(c.h), background: c.fill || '#fff' });
+  const a = c.asset && S.assets[c.asset]; if (a) Object.assign(d.style, { backgroundImage: `url("${a.data}")`, backgroundSize: '100% 100%' });
+  return d;
 }
 function makeEl(o, p) {
   let el;
@@ -1420,7 +1428,7 @@ function makeEl(o, p) {
   } else if (o.t === 'hl') {
     el = div('obj hl'); box(el, o); el.style.background = o.color; el.style.opacity = o.op ?? 0.4;
   } else if (o.t === 'white') {
-    el = div('obj white'); box(el, o); el.style.background = o.fill || '#fff'; el.style.opacity = o.op ?? 1;
+    el = div('obj white'); box(el, o); el.style.background = o.fill || '#fff'; el.style.opacity = o.op ?? 1; { const a = o.patch && S.assets[o.patch]; if (a) Object.assign(el.style, { backgroundImage: `url("${a.data}")`, backgroundSize: '100% 100%' }); }
   } else if (o.t === 'redact') {
     el = div('obj redact'); box(el, o);
   } else if (o.t === 'stamp') {
@@ -1671,13 +1679,13 @@ function onUp() {
       if (o.t === 'line' || o.t === 'arrow') { o.x2 = o.x1 + 120; o.y2 = o.y1; } else { o.w = 140; o.h = 90; }
       refreshObj(o, p);
     }
-    if (o.t === 'white' && S.style.white.auto) { const pel = pageEl(p.id); if (pel) o.fill = paperColor(pel, o); }
+    if (o.t === 'white' && S.style.white.auto) { const pel = pageEl(p.id); if (pel) { const c = makeCover(pel, o); o.fill = c.fill; o.patch = c.asset; o.auto = 1; } }
     if (o.t === 'hl' || o.t === 'white' || o.t === 'redact') { renderOverlay(p); updateStatus(); return; }
     setTool('select'); select(o, p); updateStatus();
   } else if (d.mode === 'ink') {
     if (o.pts.length === 1) o.pts.push([o.pts[0][0] + 0.3, o.pts[0][1] + 0.3]);
     o.pts = simplify(o.pts, 0.35 / Math.max(0.5, S.zoom)); refreshObj(o, p); updateStatus();
-  } else if (d.mode === 'move' || d.mode === 'resize') { if (d.moved) renderProps(); }
+  } else if (d.mode === 'move' || d.mode === 'resize') { if (d.moved && o.t === 'white' && o.auto) { const pel = pageEl(p.id); if (pel) { const c = makeCover(pel, o); o.fill = c.fill; o.patch = c.asset; refreshObj(o, p); } } if (d.moved) renderProps(); }
 }
 function simplify(pts, eps) {
   if (pts.length < 4) return pts;
@@ -1773,6 +1781,42 @@ async function buildTextLayer(el) {
     tl.append(d);
   }
 }
+/* Seamless cover for a box on the page: rebuilds the paper under the box from the pixels just
+   around it (a Coons patch of its four edges), so shadows, gradients and photo backgrounds carry
+   straight through. Returns { fill, asset } — asset is null when the paper is one flat colour. */
+function makeCover(pel, r) {
+  const fill = paperColor(pel, r);
+  try {
+    const cv = pel.querySelector('canvas.pg'); if (!cv || !cv.width) return { fill, asset: null };
+    const p = pageById(pel.dataset.id); const { W } = viewSize(p); const s = cv.width / W;
+    const X0 = Math.max(0, Math.floor(r.x * s)), Y0 = Math.max(0, Math.floor(r.y * s)), X1 = Math.min(cv.width - 1, Math.ceil((r.x + r.w) * s)), Y1 = Math.min(cv.height - 1, Math.ceil((r.y + r.h) * s));
+    const w = X1 - X0 + 1, h = Y1 - Y0 + 1; if (w < 2 || h < 2) return { fill, asset: null };
+    const B = 5, ctx = cv.getContext('2d', { willReadFrequently: true });
+    const gx = Math.max(0, X0 - B), gy = Math.max(0, Y0 - B), gw = Math.min(cv.width, X1 + B + 1) - gx, gh = Math.min(cv.height, Y1 + B + 1) - gy;
+    const d = ctx.getImageData(gx, gy, gw, gh).data;
+    const at = (x, y) => { x = clamp(x, gx, gx + gw - 1); y = clamp(y, gy, gy + gh - 1); const i = ((y - gy) * gw + (x - gx)) * 4; return [d[i], d[i + 1], d[i + 2]]; };
+    const lum = c => c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114;
+    // the second-brightest pixel in a short band outside the edge: paper, not neighbouring ink
+    const band = pts => { const cs = pts.map(([x, y]) => at(x, y)).sort((a, b) => lum(b) - lum(a)); return cs[Math.min(1, cs.length - 1)]; };
+    const smooth = (arr, k) => { const n = arr.length, out = []; for (let i = 0; i < n; i++) { const win = []; for (let j = Math.max(0, i - k); j <= Math.min(n - 1, i + k); j++) win.push(arr[j]); win.sort((a, b) => lum(b) - lum(a)); const mid = win.slice(0, Math.max(1, Math.ceil(win.length * 0.6))); out.push([0, 1, 2].map(c => mid.reduce((t, v) => t + v[c], 0) / mid.length)); } return out; };
+    const off = [1, 2, 3, 4, 5];
+    const k = Math.max(2, Math.round(Math.min(w, h) * 0.6));
+    const T = smooth(Array.from({ length: w }, (_, i) => band(off.map(o => [X0 + i, Y0 - o]))), k);
+    const Bt = smooth(Array.from({ length: w }, (_, i) => band(off.map(o => [X0 + i, Y1 + o]))), k);
+    const L = smooth(Array.from({ length: h }, (_, j) => band(off.map(o => [X0 - o, Y0 + j]))), k);
+    const R = smooth(Array.from({ length: h }, (_, j) => band(off.map(o => [X1 + o, Y0 + j]))), k);
+    const all = [...T, ...Bt, ...L, ...R]; let lo = 999, hi = -1; for (const c of all) { const l = lum(c); if (l < lo) lo = l; if (l > hi) hi = l; }
+    if (hi - lo < 6) { const m = [0, 1, 2].map(c => Math.round(all.reduce((t, v) => t + v[c], 0) / all.length)); return { fill: toHex(m[0], m[1], m[2]), asset: null }; }
+    const c00 = T[0].map((v, c) => (v + L[0][c]) / 2), c10 = T[w - 1].map((v, c) => (v + R[0][c]) / 2), c01 = Bt[0].map((v, c) => (v + L[h - 1][c]) / 2), c11 = Bt[w - 1].map((v, c) => (v + R[h - 1][c]) / 2);
+    const oc = document.createElement('canvas'); oc.width = w; oc.height = h; const octx = oc.getContext('2d'); const img = octx.createImageData(w, h);
+    for (let j = 0; j < h; j++) { const v = h > 1 ? j / (h - 1) : 0; for (let i = 0; i < w; i++) { const u = w > 1 ? i / (w - 1) : 0, q = (j * w + i) * 4;
+      for (let c = 0; c < 3; c++) img.data[q + c] = (1 - v) * T[i][c] + v * Bt[i][c] + (1 - u) * L[j][c] + u * R[j][c] - ((1 - u) * (1 - v) * c00[c] + u * (1 - v) * c10[c] + (1 - u) * v * c01[c] + u * v * c11[c]);
+      img.data[q + 3] = 255; } }
+    octx.putImageData(img, 0, 0);
+    const id = uid(); S.assets[id] = { data: oc.toDataURL('image/png'), type: 'png', w, h, cover: true };
+    return { fill, asset: id };
+  } catch (e) { console.warn(e); return { fill, asset: null }; }
+}
 /* The paper colour right around a box, so whiteout blends into tinted, cream or scanned pages. */
 function paperColor(pel, b) { try { return sampleColors(pel, b).bg; } catch { return '#ffffff'; } }
 function sampleColors(pel, b) {
@@ -1802,12 +1846,31 @@ function convertTbox(tb, p, pel) {
   const b = tb._b; const before = JSON.stringify(S.pages); const c = sampleColors(pel, b);
   const size = r2(b.size);
   // start editing straight away with a first guess; the exact font is applied a moment later
-  const o = { id: uid(), t: 'text', x: b.x, y: 0, text: b.str, size, family: b.fam, fb: b.fam, weight: (!!b.bold || !!c.heavy) ? 700 : 400, bold: !!b.bold || !!c.heavy, italic: !!b.italic, color: c.ink, bg: c.bg, minW: b.w + 1, op: 1, fromPdf: true };
+  const ph = Math.max(1.2, size * 0.2), pv = Math.max(0.8, size * 0.12);
+  const cr = { x: b.x - ph, y: b.y - pv, w: b.w + ph * 2, h: b.h + pv * 2 }; const cov = makeCover(pel, cr);
+  const o = { id: uid(), t: 'text', x: b.x, y: 0, text: b.str, size, family: b.fam, fb: b.fam, weight: (!!b.bold || !!c.heavy) ? 700 : 400, bold: !!b.bold || !!c.heavy, italic: !!b.italic, color: c.ink, minW: b.w + 1, op: 1, fromPdf: true, cov: { ...cr, fill: cov.fill, asset: cov.asset } };
   o.y = b.base - baseK(o) * size;
   p.objs.push(o); tb.remove(); renderOverlay(p); select(o, p); startEdit(o, p, false, before);
   refineFont(o, p, pel, b, c);
 }
+/* Ink colour from a sharp, high-resolution render of the line: on blurry scans the on-screen
+   picture makes thin strokes look lighter than they really are. */
+async function inkHiRes(p, b) {
+  try {
+    if (p.src < 0) return null; const pg = await jsPage(p); const { R } = viewSize(p); const sc = 4;
+    const vp = pg.getViewport({ scale: sc, rotation: R, offsetX: -b.x * sc, offsetY: -b.y * sc });
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(b.w * sc)); c.height = Math.max(1, Math.ceil(b.h * sc));
+    const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    await pg.render({ canvasContext: ctx, viewport: vp }).promise;
+    const d = ctx.getImageData(0, 0, c.width, c.height).data; const lum = i => 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    let min = 999, max = 0; for (let i = 0; i < d.length; i += 4) { const l = lum(i); if (l < min) min = l; if (l > max) max = l; }
+    if (max - min < 60) return null;
+    let r = 0, g = 0, bb = 0, n = 0; for (let i = 0; i < d.length; i += 4) if (lum(i) < min + 30) { r += d[i]; g += d[i + 1]; bb += d[i + 2]; n++; }
+    return n ? toHex(r / n, g / n, bb / n) : null;
+  } catch { return null; }
+}
 async function refineFont(o, p, pel, b, c) {
+  inkHiRes(p, b).then(ink => { if (ink && o.color === c.ink) { o.color = ink; c.ink = ink; if (!(editing && editing.o === o)) refreshObj(o, p); else { const el = objEl(o.id); if (el) el.style.color = ink; } if (S.sel === o.id) renderProps(); } });
   const key = await captureFont(p, b.fontName);
   if (key) { o.family = 'pdf'; o.pdfFont = key; o.bold = !!b.bold; o.weight = b.bold ? 700 : 400; o.detected = `${fontStore[key].name || 'Original font'}, ${r2(o.size)} pt (from this PDF)`; }
   else if (!PRO.active) {
@@ -2136,6 +2199,7 @@ function applyProp(k, raw, live) {
   else if (k === 'family') { target.family = v; const ws = weightsFor(target); if (ws) { target.weight = nearestW(ws, wOf(target)); target.bold = target.weight >= 600; } if (wfId(target) && !(FONTS[wfId(target)] || {}).it) target.italic = false; delete target.detected; fontPickOpen = false; }
   else if ((k === 'bg') && !v) delete target.bg;
   else if (k === 'fill' && !s && target === S.style.white) { target.fill = v; target.auto = ''; }
+  else if (k === 'fill' && s && s.o.t === 'white') { target.fill = v; delete target.patch; delete target.auto; }
   else target[k] = v;
   if (s) {
     const g = groupOf(s.o.t); if (g && S.style[g] && k in S.style[g] && k !== 'bg') S.style[g][k] = target[k];
@@ -2205,7 +2269,7 @@ function doAction(a) {
     else if (a === 'back') { snap(); p.objs = [o].concat(p.objs.filter(x => x !== o)); renderOverlay(p); }
     else if (a === 'edit') startEdit(o, p, true);
     else if (a === 'match') matchText(o, p);
-    else if (a === 'paper') { const pel = pageEl(p.id); if (pel) { snapCo('fill' + o.id); o.fill = paperColor(pel, o); refreshObj(o, p); drawSel(); renderProps(); setDirty(); toast('Matched the paper: ' + o.fill, false, 1800); } }
+    else if (a === 'paper') { const pel = pageEl(p.id); if (pel) { snapCo('fill' + o.id); const c = makeCover(pel, o); o.fill = c.fill; o.patch = c.asset; o.auto = 1; refreshObj(o, p); drawSel(); renderProps(); setDirty(); toast('Matched the paper: ' + o.fill, false, 1800); } }
     else if (a === 'fontpick') { fontPickOpen = !fontPickOpen; fontQuery = ''; renderProps(); if (fontPickOpen) setTimeout(() => { const q = P.querySelector('#fp-q'); if (q) q.focus(); const on = P.querySelector('.fp-item.on'); if (on) on.scrollIntoView({ block: 'nearest' }); }, 0); }
     else if (a === 'all') { snap(); let n = 0; S.pages.forEach(q => { if (q !== p) { q.objs.push(cloneObj(o)); n++; renderOverlay(q); } }); toast(`Copied to ${n} other page${n === 1 ? '' : 's'}`); updateStatus(); }
     return;
@@ -2443,6 +2507,7 @@ async function buildPdfDoc(indices, progress, extra) {
     } else { page = out.addPage([W, H]); }
     const M = Rr === 90 ? [0, 1, -1, 0, w + cx, cy] : Rr === 180 ? [-1, 0, 0, -1, w + cx, h + cy] : Rr === 270 ? [0, -1, 1, 0, cx, h + cy] : [1, 0, 0, 1, cx, cy];
     page.pushOperators(pushGraphicsState(), concatTransformationMatrix(...M));
+    for (const o of p.objs) if (o.cov) await drawCover(out, page, o.cov, H, imgs);
     for (const o of p.objs) await drawObj(out, page, o, W, H, F, imgs, safe);
     await drawDecor(page, n, indices.length, W, H, F, safe);
     if (extra) await extra(indices[n], page, W, H, F, safe);
@@ -2484,7 +2549,7 @@ async function drawObj(out, page, o, W, H, F, imgs, safe) {
   } else if (o.t === 'hl') {
     page.drawRectangle({ x: o.x, y: H - o.y - o.h, width: o.w, height: o.h, color: hexToRgb(o.color), opacity: o.op ?? 0.4, blendMode: BlendMode.Multiply });
   } else if (o.t === 'white') {
-    page.drawRectangle({ x: o.x, y: H - o.y - o.h, width: o.w, height: o.h, color: hexToRgb(o.fill || '#ffffff'), opacity: o.op ?? 1 });
+    await drawCover(out, page, { x: o.x, y: o.y, w: o.w, h: o.h, fill: o.fill, asset: o.patch }, H, imgs, o.op ?? 1);
   } else if (o.t === 'redact') {
     page.drawRectangle({ x: o.x, y: H - o.y - o.h, width: o.w, height: o.h, color: rgb(0, 0, 0) });
   } else if (o.t === 'stamp') {
@@ -2497,6 +2562,11 @@ async function drawObj(out, page, o, W, H, F, imgs, safe) {
     page.drawLine({ start: { x: o.x1, y: H - o.y1 }, end: { x: x2, y: H - y2 }, thickness: o.sw, color: hexToRgb(o.color), opacity: op, lineCap: LineCapStyle.Round });
     if (o.t === 'arrow') { const pts = arrowHead(o); page.drawSvgPath(`M${pts[0].join(' ')}L${pts[1].join(' ')}L${pts[2].join(' ')}Z`, { x: 0, y: H, color: hexToRgb(o.color), opacity: op }); }
   }
+}
+async function drawCover(out, page, c, H, imgs, op = 1) {
+  const a = c.asset && S.assets[c.asset];
+  if (a) { let img = imgs[c.asset]; if (!img) img = imgs[c.asset] = await out.embedPng(dataURLtoBytes(a.data)); page.drawImage(img, { x: c.x, y: H - c.y - c.h, width: c.w, height: c.h, opacity: op }); }
+  else page.drawRectangle({ x: c.x, y: H - c.y - c.h, width: c.w, height: c.h, color: hexToRgb(c.fill || '#ffffff'), opacity: op });
 }
 async function drawDecor(page, i, N, W, H, F, safe) {
   if (S.doc.tint && (S.doc.tintOp ?? 0.5) > 0) page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: hexToRgb(S.doc.tint), opacity: S.doc.tintOp ?? 0.5, blendMode: BlendMode.Multiply });
@@ -2549,6 +2619,7 @@ async function pageItems(p) {
   const { W, H, R } = viewSize(p); const items = [];
   const covers = [];
   for (const o of p.objs) {
+    if (o.cov) covers.push(o.cov);
     if (o.t === 'redact' || (o.t === 'white' && (o.op ?? 1) > 0.9)) covers.push(o);
     else if ((o.t === 'rect' || o.t === 'ellipse') && o.fill && (o.op ?? 1) > 0.9) covers.push(o);
     else if (o.t === 'text' && o.bg && (o.bgOp ?? 1) > 0.9) { const ls = o.text.split('\n'); covers.push({ x: o.x, y: o.y, w: Math.max(o.minW || 0, ...ls.map(l => textW(o, l))), h: ls.length * o.size * 1.2 }); }

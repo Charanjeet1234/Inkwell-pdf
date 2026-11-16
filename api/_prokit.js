@@ -115,6 +115,25 @@ module.exports = function inkwellProKit(K) {
     if (!ocrWorker) { window.__ocrLog = onProg; ocrWorker = await Tesseract.createWorker('eng', 1, { ...OCR_CFG, logger: m => window.__ocrLog && window.__ocrLog(m) }); }
     window.__ocrLog = onProg; return ocrWorker;
   }
+  // Divide each pixel by the local paper brightness, so shadows and grey photo backgrounds turn white.
+  function flattenLight(src) {
+    const W = src.width, H = src.height, d = src.getContext('2d').getImageData(0, 0, W, H).data;
+    const g = new Uint8ClampedArray(W * H); for (let i = 0, j = 0; i < g.length; i++, j += 4) g[i] = (d[j] * 299 + d[j + 1] * 587 + d[j + 2] * 114) / 1000;
+    const B = 16, bw = Math.ceil(W / B), bh = Math.ceil(H / B); let sm = new Float32Array(bw * bh);
+    for (let y = 0; y < H; y++) { const by = (y / B) | 0; for (let x = 0; x < W; x++) { const k = by * bw + ((x / B) | 0), v = g[y * W + x]; if (v > sm[k]) sm[k] = v; } }
+    const pass = (f) => { const o = new Float32Array(sm.length); for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) { let acc = f === 'max' ? 0 : 0, n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const yy = y + dy, xx = x + dx; if (yy < 0 || xx < 0 || yy >= bh || xx >= bw) continue; const v = sm[yy * bw + xx]; if (f === 'max') { if (v > acc) acc = v; } else { acc += v; n++; } } o[y * bw + x] = f === 'max' ? acc : acc / n; } sm = o; };
+    pass('max'); pass('blur'); pass('blur'); pass('blur');
+    const out = document.createElement('canvas'); out.width = W; out.height = H; const octx = out.getContext('2d'); const img = octx.createImageData(W, H), od = img.data;
+    for (let y = 0; y < H; y++) {
+      const fy = clamp(y / B - 0.5, 0, bh - 1), y0 = Math.floor(fy), y1 = Math.min(bh - 1, y0 + 1), ty = fy - y0;
+      for (let x = 0; x < W; x++) {
+        const fx = clamp(x / B - 0.5, 0, bw - 1), x0 = Math.floor(fx), x1 = Math.min(bw - 1, x0 + 1), tx = fx - x0;
+        const bg = (sm[y0 * bw + x0] * (1 - tx) + sm[y0 * bw + x1] * tx) * (1 - ty) + (sm[y1 * bw + x0] * (1 - tx) + sm[y1 * bw + x1] * tx) * ty;
+        const v = Math.min(255, g[y * W + x] * 255 / Math.max(bg, 1)), j = (y * W + x) * 4; od[j] = od[j + 1] = od[j + 2] = v; od[j + 3] = 255;
+      }
+    }
+    octx.putImageData(img, 0, 0); return out;
+  }
   function chunksToItems(data, sc) {
     const items = [];
     for (const b of data.blocks || []) for (const par of b.paragraphs || []) for (const ln of par.lines || []) {
@@ -161,7 +180,15 @@ module.exports = function inkwellProKit(K) {
         const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
         await pg.render({ canvasContext: ctx, viewport: vp }).promise;
         const { data } = await worker.recognize(c, {}, { blocks: true, text: false, hocr: false, tsv: false });
-        results[i] = chunksToItems(data, sc);
+        let items = chunksToItems(data, sc);
+        // Phone photos and uneven scans: when little text is found, even out the lighting and try again.
+        if (items.length < 15) {
+          busy(`Recognising text · page ${pageNo} of ${todo.length} · improving the scan`);
+          const { data: d2 } = await worker.recognize(flattenLight(c), {}, { blocks: true, text: false, hocr: false, tsv: false });
+          const alt = chunksToItems(d2, sc); const good = a => a.reduce((n, it) => n + (it.conf > 60 ? it.text.length : 0), 0);
+          if (good(alt) > good(items)) items = alt;
+        }
+        results[i] = items;
       }
     } catch (e) {
       console.error(e); done();
