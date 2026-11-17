@@ -158,6 +158,7 @@ button{cursor:pointer}
 .page .tl{display:none;z-index:1}
 .page .ov{z-index:2}
 .page .ov .cover{position:absolute;pointer-events:none}
+.page .ov .pborder{position:absolute;pointer-events:none;box-sizing:border-box}
 .page .ov .cover.outline,.page .ov .obj.white.outline{outline:1.5px dashed var(--accent);outline-offset:0}
 .page .ov .cover.flag,.page .ov .obj.white.flag{outline:2px solid var(--danger);outline-offset:0}
 .covbox{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
@@ -280,6 +281,7 @@ svg.vec .hit,svg.vec .head{pointer-events:none}
 .fp-item small{font:400 11px var(--f-body);color:var(--muted);white-space:nowrap}
 .wrow{display:flex;align-items:center;gap:8px}
 .wrow input{flex:1;min-width:0;accent-color:var(--accent)}
+.wrow .wnum{width:66px;flex:none;text-align:right}
 .wrow output{font:500 11.5px var(--f-mono);color:var(--muted);min-width:92px;text-align:right}
 .viewer.picking .page,.viewer.picking .obj{cursor:crosshair!important}
 .kbd{display:grid;grid-template-columns:1fr auto;gap:5px 10px;font-size:12.5px;color:var(--muted)}
@@ -1492,8 +1494,18 @@ const GROUP_FALLBACK = { Sans: 'sans', Serif: 'serif', Slab: 'serif', Typewriter
 const STD_NAMES = { sans: 'Helvetica', serif: 'Times', mono: 'Courier' };
 const wfId = o => (o.family || '').startsWith('wf:') ? o.family.slice(3) : null;
 const nearestW = (list, w) => list.reduce((a, b) => (Math.abs(b - w) < Math.abs(a - w) ? b : a), list[0]);
-const weightsFor = o => { const id = wfId(o); if (id && FONTS[id]) return FONTS[id].w; if (o.family === 'pdf') return null; return [400, 700]; };
+const weightsFor = o => { const id = wfId(o); if (id && FONTS[id]) return FONTS[id].w; if (o.family === 'pdf') return [o.pdfW || 400]; return [400, 700]; };
 const wOf = o => o.weight || (o.bold ? 700 : 400);
+/* The heaviest real weight of the font at or below the chosen weight. Values in between are
+   drawn by thickening the strokes, so every weight from 100 to 900 can be picked one by one. */
+function realW(o) {
+  const want = wOf(o); const id = wfId(o);
+  const ws = id && FONTS[id] ? FONTS[id].w : o.family === 'pdf' ? [o.pdfW || 400] : [400, 700];
+  let r = ws[0]; for (const w of ws) if (w <= want + 0.5) r = w; return r;
+}
+const synthBoost = o => Math.max(0, wOf(o) - realW(o)) / 300 * 0.5;
+const totalBoost = o => (o.boost > 0 ? o.boost : 0) + synthBoost(o);
+const wName = w => { const n = W_NAMES[Math.round(w / 100) * 100] || ''; return W_NAMES[w] ? W_NAMES[w] : n ? '≈ ' + n : ''; };
 const W_NAMES = { 100: 'Thin', 200: 'Extra light', 300: 'Light', 400: 'Regular', 500: 'Medium', 600: 'Semibold', 700: 'Bold', 800: 'Extra bold', 900: 'Black' };
 const wfFiles = {}; let wfWarned = false;
 function wfKey(id, w, it) { const f = FONTS[id]; return `${id}|${nearestW(f.w, w)}|${it && f.it ? 1 : 0}`; }
@@ -1586,7 +1598,7 @@ const pdfFontOf = o => (o.t === 'text' && o.family === 'pdf' && o.pdfFont && fon
 const cssFamily = o => { const pf = pdfFontOf(o); if (pf) return `"${pf.fam}", ${FAMILY_CSS[o.fb] || FAMILY_CSS.sans}`; const id = wfId(o); if (id && FONTS[id]) return `"ink-wf-${id}", ${FAMILY_CSS[GROUP_FALLBACK[FONTS[id].group]]}`; return FAMILY_CSS[o.family] || FAMILY_CSS[o.fb] || FAMILY_CSS.sans; };
 const baseCache = new Map();
 function baseK(o) {
-  const fam = cssFamily(o), w = wOf(o), st = o.italic && !pdfFontOf(o) ? 'italic' : 'normal';
+  const fam = cssFamily(o), w = realW(o), st = o.italic && !pdfFontOf(o) ? 'italic' : 'normal';
   const k = fam + '|' + w + '|' + st; if (baseCache.has(k)) return baseCache.get(k);
   const id = wfId(o); const ready = !id || document.fonts.check(`${st} ${w} 20px "ink-wf-${id}"`);
   const d = document.createElement('div');
@@ -1612,7 +1624,7 @@ const S = {
     white: { fill: '#ffffff', op: 1, auto: '1' },
     stamp: { color: '#1c8656', op: 0.9 }
   },
-  doc: { wm: '', wmOp: 0.15, pn: 'off', pnPos: 'center', tint: '', tintOp: 0.5 },
+  doc: { wm: '', wmOp: 0.15, pn: 'off', pnPos: 'center', tint: '', tintOp: 0.5, pbStyle: '', pbColor: '#141821', pbW: 1.5, pbM: 24, pbR: 0 },
   forms: {}, fields: {}, formMode: false
 };
 /* Edition: the free build sets window.__INKWELL_ALL_FREE and ships the tools inline. */
@@ -1764,7 +1776,7 @@ async function openPdf(bytes, name) {
 function resetDoc() {
   S.sources.forEach(s => { try { s.js.destroy(); } catch {} });
   S.sources = []; S.pages = []; S.assets = {}; S.undo = []; S.redo = []; S.sel = null; S.selPage = null; S.cur = 0;
-  S.doc = { wm: '', wmOp: 0.15, pn: 'off', pnPos: 'center', tint: '', tintOp: 0.5 }; S.forms = {}; S.fields = {}; S.formMode = false;
+  S.doc = { wm: '', wmOp: 0.15, pn: 'off', pnPos: 'center', tint: '', tintOp: 0.5, pbStyle: '', pbColor: '#141821', pbW: 1.5, pbM: 24, pbR: 0 }; S.forms = {}; S.fields = {}; S.formMode = false;
   if ($('#formBar')) { $('#formBar').hidden = true; }
   canvasCache.clear(); thumbCache.clear(); updUndo();
 }
@@ -1938,6 +1950,10 @@ function renderOverlay(p, el = pageEl(p.id)) {
   addDecor(p, ov);
   if (S.sel && S.selPage === p.id) drawSel();
 }
+function applyBorderCss(el, o) {
+  const b = o.border; if (!b || !b.style) return;
+  Object.assign(el.style, { outline: `${b.w * S.zoom}px ${b.style} ${b.color}`, outlineOffset: (b.pad || 0) * S.zoom + 'px', borderRadius: (b.r || 0) * S.zoom + 'px' });
+}
 function coverEl(o) {
   const c = o.cov, d = div('cover'); d.dataset.cov = o.id;
   Object.assign(d.style, { left: px(c.x), top: px(c.y), width: px(c.w), height: px(c.h), background: c.fill || '#fff' });
@@ -1949,11 +1965,12 @@ function makeEl(o, p) {
   let el;
   if (o.t === 'text') {
     el = div('obj text'); el.textContent = o.text; const pf = pdfFontOf(o); const wid = wfId(o);
-    if (wid && FONTS[wid] && !document.fonts.check(`${o.italic && FONTS[wid].it ? 'italic ' : ''}${nearestW(FONTS[wid].w, wOf(o))} 20px "ink-wf-${wid}"`)) loadWebFont(wid, wOf(o), o.italic).then(() => { const p2 = S.pages.find(q => q.objs.includes(o)); if (p2 && !(editing && editing.o === o)) refreshObj(o, p2); if (S.sel === o.id) drawSel(); }).catch(() => {});
-    if (o.boost > 0) { el.style.webkitTextStroke = `${o.boost * o.size * 0.06 * S.zoom}px ${o.color}`; el.style.paintOrder = 'stroke fill'; }
-    Object.assign(el.style, { left: px(o.x), top: px(o.y), fontSize: px(o.size), fontFamily: cssFamily(o), fontWeight: String(wid ? nearestW(FONTS[wid].w, wOf(o)) : wOf(o)), fontStyle: o.italic && !pf ? 'italic' : 'normal', fontSynthesis: pf ? 'none' : '', textDecoration: o.underline ? 'underline' : 'none', textDecorationThickness: o.underline ? Math.max(0.5, o.size * 0.06) * S.zoom + 'px' : '', textUnderlineOffset: o.underline ? o.size * 0.1 * S.zoom + 'px' : '', color: o.color, background: o.bg ? hexA(o.bg, o.bgOp ?? 1) : 'transparent', minWidth: o.minW ? px(o.minW) : '', opacity: o.op ?? 1, textAlign: o.align || 'left' });
+    if (wid && FONTS[wid] && !document.fonts.check(`${o.italic && FONTS[wid].it ? 'italic ' : ''}${realW(o)} 20px "ink-wf-${wid}"`)) loadWebFont(wid, realW(o), o.italic).then(() => { const p2 = S.pages.find(q => q.objs.includes(o)); if (p2 && !(editing && editing.o === o)) refreshObj(o, p2); if (S.sel === o.id) drawSel(); }).catch(() => {});
+    { const tb = totalBoost(o); if (tb > 0) { el.style.webkitTextStroke = `${tb * o.size * 0.06 * S.zoom}px ${o.color}`; el.style.paintOrder = 'stroke fill'; } }
+    Object.assign(el.style, { left: px(o.x), top: px(o.y), fontSize: px(o.size), fontFamily: cssFamily(o), fontWeight: String(realW(o)), fontStyle: o.italic && !pf ? 'italic' : 'normal', fontSynthesis: pf ? 'none' : '', textDecoration: o.underline ? 'underline' : 'none', textDecorationThickness: o.underline ? Math.max(0.5, o.size * 0.06) * S.zoom + 'px' : '', textUnderlineOffset: o.underline ? o.size * 0.1 * S.zoom + 'px' : '', color: o.color, background: o.bg ? hexA(o.bg, o.bgOp ?? 1) : 'transparent', minWidth: o.minW ? px(o.minW) : '', opacity: o.op ?? 1, textAlign: o.align || 'left' });
+    applyBorderCss(el, o);
   } else if (o.t === 'image') {
-    el = div('obj image'); const img = new Image(); img.src = (S.assets[o.asset] || {}).data || ''; img.draggable = false; img.alt = ''; el.append(img); box(el, o); el.style.opacity = o.op ?? 1;
+    el = div('obj image'); const img = new Image(); img.src = (S.assets[o.asset] || {}).data || ''; img.draggable = false; img.alt = ''; el.append(img); box(el, o); el.style.opacity = o.op ?? 1; applyBorderCss(el, o);
   } else if (o.t === 'rect' || o.t === 'ellipse') {
     el = div('obj shape'); box(el, o);
     el.style.border = o.sw > 0 && o.stroke ? `${o.sw * S.zoom}px solid ${o.stroke}` : 'none';
@@ -2010,6 +2027,7 @@ function refreshObj(o, p) {
 }
 function addDecor(p, ov) {
   const { W, H } = viewSize(p); const i = S.pages.indexOf(p), N = S.pages.length;
+  if (S.doc.pbStyle) { const d = div('pborder'); const m = S.doc.pbM ?? 24; Object.assign(d.style, { left: px(m), top: px(m), right: px(m), bottom: px(m), border: `${(S.doc.pbW || 1) * S.zoom}px ${S.doc.pbStyle} ${S.doc.pbColor || '#141821'}`, borderRadius: (S.doc.pbR || 0) * S.zoom + 'px' }); ov.append(d); }
   const pel = ov.parentElement; if (pel) { const old = pel.querySelector(':scope > .tint'); if (old) old.remove(); if (S.doc.tint) { const t = div('tint'); t.style.background = S.doc.tint; t.style.opacity = S.doc.tintOp ?? 0.5; pel.append(t); } }
   if (S.doc.wm.trim()) {
     const d = div('deco'); const size = Math.min(W, H) * 0.12;
@@ -2099,7 +2117,7 @@ async function actImage() { if (!S.open) return; const [f] = await pickFiles('im
 function actDate() {
   const p = curPage(); if (!p) return; const st = S.style.text; const c = visibleCenter(p);
   const text = new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
-  const o = { id: uid(), t: 'text', x: c.x - 40, y: c.y - st.size * 0.6, text, family: st.family, size: st.size, color: st.color, bold: st.bold, italic: st.italic, weight: st.weight, boost: st.boost, op: 1, ...(st.bg ? { bg: st.bg, bgOp: st.bgOp ?? 1 } : {}) };
+  const o = { id: uid(), t: 'text', x: c.x - 40, y: c.y - st.size * 0.6, text, family: st.family, size: st.size, color: st.color, bold: st.bold, italic: st.italic, weight: st.weight, boost: st.boost, op: 1, ...(st.bg ? { bg: st.bg, bgOp: st.bgOp ?? 1 } : {}), ...(st.border ? { border: { ...st.border } } : {}) };
   if (S.tool !== 'select') setTool('select'); addObj(o, p); select(o, p);
 }
 
@@ -2144,7 +2162,7 @@ function onDown(e) {
     if (t === 'edittext') { const tb = e.target.closest('.tbox'); if (tb) { e.preventDefault(); convertTbox(tb, p, pel); } return; }
     e.preventDefault();
     const st = S.style.text; const before = JSON.stringify(S.pages);
-    const no = { id: uid(), t: 'text', x: pt.x, y: pt.y - st.size * 0.6, text: '', family: st.family, size: st.size, color: st.color, bold: st.bold, italic: st.italic, weight: st.weight, boost: st.boost, op: 1, ...(st.bg ? { bg: st.bg, bgOp: st.bgOp ?? 1 } : {}) };
+    const no = { id: uid(), t: 'text', x: pt.x, y: pt.y - st.size * 0.6, text: '', family: st.family, size: st.size, color: st.color, bold: st.bold, italic: st.italic, weight: st.weight, boost: st.boost, op: 1, ...(st.bg ? { bg: st.bg, bgOp: st.bgOp ?? 1 } : {}), ...(st.border ? { border: { ...st.border } } : {}) };
     p.objs.push(no); renderOverlay(p); select(no, p); startEdit(no, p, false, before);
     return;
   }
@@ -2405,7 +2423,7 @@ async function inkHiRes(p, b) {
 async function refineFont(o, p, pel, b, c) {
   inkHiRes(p, b).then(ink => { if (ink && o.color === c.ink) { o.color = ink; c.ink = ink; if (!(editing && editing.o === o)) refreshObj(o, p); else { const el = objEl(o.id); if (el) el.style.color = ink; } if (S.sel === o.id) renderProps(); } });
   const key = await captureFont(p, b.fontName);
-  if (key) { o.family = 'pdf'; o.pdfFont = key; o.bold = !!b.bold; o.weight = b.bold ? 700 : 400; o.detected = `${fontStore[key].name || 'Original font'}, ${r2(o.size)} pt (from this PDF)`; }
+  if (key) { o.family = 'pdf'; o.pdfFont = key; o.bold = !!b.bold; o.weight = o.pdfW = b.bold ? 700 : 400; o.detected = `${fontStore[key].name || 'Original font'}, ${r2(o.size)} pt (from this PDF)`; }
   else if (!PRO.active) {
     if (!refineFont.freeHint) { refineFont.freeHint = true; toast('Inkwell Pro detects the exact font, weight and size of this text automatically.', false, 4500); }
   }
@@ -2611,18 +2629,20 @@ function styleControls(t, v) {
     h += ui.row('Size', `<input class="inp" type="number" id="p-size" data-prop="size" min="4" max="200" step="0.5" value="${r2(v.size)}">`);
     const ws = weightsFor(v);
     if (ws) {
-      const cw = nearestW(ws, wOf(v));
-      h += ui.row('Weight', `<div class="wrow"><input type="range" id="p-weight" data-prop="weight" min="${ws[0]}" max="${ws[ws.length - 1]}" step="100" value="${cw}" ${ws.length < 2 ? 'disabled' : ''}><output data-out="weight">${W_NAMES[cw] || cw} · ${cw}</output></div>`);
+      const cw = Math.round(wOf(v));
+      h += ui.row('Weight', `<div class="wrow"><input type="range" id="p-weight" data-prop="weight" min="100" max="900" step="1" value="${cw}"><input class="inp wnum" type="number" id="p-wnum" data-prop="weight" min="100" max="900" step="1" value="${cw}" aria-label="Weight"></div>`);
+      h += `<p class="hint whint" id="p-whint" style="margin:-4px 0 10px">${weightHint(v)}</p>`;
     }
     h += ui.row(PRO.active ? 'Thickness' : 'Thickness<span class="pro-pill">Pro</span>', `<div class="rng"><input type="range" id="r-boost" data-prop="boost" min="0" max="1" step="0.05" value="${v.boost || 0}" ${PRO.active ? '' : 'disabled title="Inkwell Pro"'}><output data-out="boost">${v.boost ? '+' + Math.round(v.boost * 100) + '%' : 'None'}</output></div>`);
     const canIt = v.family !== 'pdf' && (!wfId(v) || (FONTS[wfId(v)] || {}).it);
-    h += ui.row('Style', `<div class="seg"><button data-set="bold" class="${wOf(v) >= 600 ? 'on' : ''}" style="font-weight:700" ${ws ? '' : 'disabled'}>Bold</button><button data-set="italic" class="${v.italic ? 'on' : ''}" style="font-style:italic" ${canIt ? '' : 'disabled'}>Italic</button><button data-set="underline" class="${v.underline ? 'on' : ''}" style="text-decoration:underline" title="Underline">Underline</button></div>`);
+    h += ui.row('Style', `<div class="seg"><button data-set="bold" class="${wOf(v) >= 600 ? 'on' : ''}" style="font-weight:700" title="Bold" ${ws ? '' : 'disabled'}>B</button><button data-set="italic" class="${v.italic ? 'on' : ''}" style="font-style:italic;font-family:Georgia,serif" title="Italic" ${canIt ? '' : 'disabled'}>I</button><button data-set="underline" class="${v.underline ? 'on' : ''}" style="text-decoration:underline" title="Underline">U</button></div>`);
     h += ui.row('Align', `<div class="iconrow">${[['left', 'l'], ['center', 'c'], ['right', 'r']].map(([a, k]) => `<button data-set="align" data-val="${a}" class="${(v.align || 'left') === a ? 'on' : ''}" title="Align text ${a}"><svg class="i"><use href="#i-ta-${k}"/></svg></button>`).join('')}</div>`);
     h += ui.row('Font colour', ui.sw('color', v.color, INKS));
     h += ui.row('Opacity', ui.rng('op', v.op ?? 1, 0, 1, 0.01, pct));
     h += ui.row('Background', ui.sw('bg', v.bg, ['#ffffff', '#fff6c2', '#e2e6ff', '#e7f6ea', '#ffe3e3'], true));
     if (v.bg) h += ui.row('Background opacity', ui.rng('bgOp', v.bgOp ?? 1, 0, 1, 0.01, pct));
     if (S.sel) h += `<button class="btn wide" data-do="match" title="Copy the size, font, weight and colour of the closest PDF text"><svg class="i"><use href="#i-match"/></svg>Match nearby PDF text</button>`;
+    h += borderControls(v, true);
     if (S.sel && v.cov) h += coverControls(v);
   } else if (t === 'rect' || t === 'ellipse' || t === 'shape') {
     h += ui.row('Outline', ui.sw('stroke', v.stroke, INKS, true));
@@ -2651,6 +2671,7 @@ function styleControls(t, v) {
     h += `<p class="hint" style="margin-top:10px">Whiteout hides content visually. The original text stays inside the file and can still be copied, so don't rely on it to remove confidential information.</p>`;
   } else if (t === 'image') {
     h += ui.row('Opacity', ui.rng('op', v.op ?? 1, 0.1, 1, 0.05, pct));
+    h += borderControls(v, false);
     h += `<p class="hint">Drag a corner to resize. The aspect ratio is kept; hold Shift to stretch.</p>`;
   }
   return h;
@@ -2711,6 +2732,23 @@ async function checkEdits() {
   if (!bad.size) toast(`All clear: nothing from the original shows under ${list.length} edit${list.length > 1 ? 's' : ''} and whiteout box${list.length > 1 ? 'es' : ''}. Remember the original stays inside the file; use Redact to remove it for real.`, false, 7000);
   else toast(`${bad.size} of ${list.length} covers may let some original text show. They're outlined in red: select one and make its cover bigger.`, true, 8000);
 }
+const BSTYLES = [['', 'None'], ['solid', 'Solid'], ['dashed', 'Dash'], ['dotted', 'Dot']];
+function borderControls(v, isText) {
+  const b = v.border; let h = ui.row('Border', `<div class="seg">${BSTYLES.map(([k, l]) => `<button data-set="bstyle" data-val="${k}" class="${(b ? b.style : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div>`);
+  if (b) {
+    h += ui.row('Border colour', ui.cp('bcolor', b.color));
+    h += ui.row('Border width', ui.rng('bw', b.w, 0.25, 8, 0.25, ptf));
+    h += ui.row(isText ? 'Space inside' : 'Space around', ui.rng('bpad', b.pad || 0, 0, 24, 0.5, ptf));
+    h += ui.row('Corners', ui.rng('brad', b.r || 0, 0, 24, 0.5, ptf));
+  }
+  return h;
+}
+function weightHint(o) {
+  const ws = weightsFor(o) || [400, 700], w = Math.round(wOf(o)), r = realW(o);
+  const nm = wName(w); const real = ws.length > 1 ? `This font has ${ws.length} weights (${ws.join(', ')}).` : `This font has one weight (${ws[0]}).`;
+  if (w < ws[0]) return `${nm ? nm + ' · ' : ''}${real} It can't be drawn lighter than ${ws[0]}.`;
+  return `${nm ? nm + ' · ' : ''}${real}${w !== r ? ` ${w} uses the ${r} weight drawn ${w - r} units thicker.` : ''}`;
+}
 function renderProps() { renderPropsInner(); if (fontPickOpen) previewFonts(); }
 function renderPropsInner() {
   if (!P) return; const s = getSel();
@@ -2766,6 +2804,10 @@ function renderPropsInner() {
     <div class="ps"><h4>Check your edits</h4><p class="sub" style="margin-top:-4px">Looks under every edited line and whiteout box for any trace of the original.</p>
       <div class="acts"><button class="btn" data-do="checkEdits" style="grid-column:1/-1"><svg class="i"><use href="#i-match"/></svg>Check nothing shows through</button><button class="btn" data-do="covOutline" style="grid-column:1/-1"><svg class="i"><use href="#i-scan"/></svg>${showCovers ? 'Hide cover outlines' : 'Show cover outlines'}</button></div>
     </div>
+    <div class="ps"><h4>Page border</h4>
+      ${ui.row('Style', `<div class="seg">${BSTYLES.map(([k, l]) => `<button data-docset="pbStyle" data-val="${k}" class="${(S.doc.pbStyle || '') === k ? 'on' : ''}">${l}</button>`).join('')}</div>`)}
+      ${S.doc.pbStyle ? ui.row('Colour', ui.cp('pbColor', S.doc.pbColor || '#141821', true)) + ui.row('Width', `<div class="rng"><input type="range" id="d-pbW" data-doc="pbW" min="0.25" max="12" step="0.25" value="${S.doc.pbW}"><output data-out="pbW">${ptf(S.doc.pbW)}</output></div>`) + ui.row('Margin', `<div class="rng"><input type="range" id="d-pbM" data-doc="pbM" min="0" max="96" step="1" value="${S.doc.pbM}"><output data-out="pbM">${ptf(S.doc.pbM)}</output></div>`) + ui.row('Corners', `<div class="rng"><input type="range" id="d-pbR" data-doc="pbR" min="0" max="36" step="0.5" value="${S.doc.pbR || 0}"><output data-out="pbR">${ptf(S.doc.pbR || 0)}</output></div>`) : ''}
+    </div>
     <div class="ps"><h4>Page background</h4><p class="sub" style="margin-top:-4px">Tints every page, including your whiteout, text fills and edits, so they all match.</p>
       ${ui.row('Colour', `<div class="sw"><button class="none ${!S.doc.tint ? 'on' : ''}" data-docset="tint" data-val="" title="None"></button>${['#fff6dc', '#f3ecdc', '#e8f1ff', '#eaf6ec', '#ececec'].map(c => `<button style="background:${c}" class="${S.doc.tint === c ? 'on' : ''}" data-docset="tint" data-val="${c}" title="${c}"></button>`).join('')}</div>${ui.cp('tint', S.doc.tint, true)}`)}
       ${S.doc.tint ? ui.row('Strength', `<div class="rng"><input type="range" id="d-tintOp" data-doc="tintOp" min="0" max="1" step="0.01" value="${S.doc.tintOp ?? 0.5}"><output data-out="tintOp">${pct(S.doc.tintOp ?? 0.5)}</output></div>`) : ''}
@@ -2784,14 +2826,19 @@ function applyProp(k, raw, live) {
   const s = getSel();
   const target = s ? s.o : S.style[toolGroup(S.tool)]; if (!target) return;
   let v = raw;
-  if (k === 'size' || k === 'sw' || k === 'op' || k === 'bgOp' || k === 'boost' || k === 'weight') { v = parseFloat(raw); if (!isFinite(v)) return; if (k === 'size') v = clamp(v, 4, 200); if (k === 'weight') { const ws = weightsFor(target) || [400, 700]; v = nearestW(ws, v); } }
+  if (k === 'size' || k === 'sw' || k === 'op' || k === 'bgOp' || k === 'boost' || k === 'weight' || k === 'bw' || k === 'bpad' || k === 'brad') { v = parseFloat(raw); if (!isFinite(v)) return; if (k === 'size') v = clamp(v, 4, 200); if (k === 'weight') v = clamp(Math.round(v), 100, 900); }
   if (s) snapCo(k + s.o.id);
   const baseBefore = s && s.o.t === 'text' && ['family', 'weight', 'bold', 'italic'].includes(k) ? s.o.y + baseK(s.o) * s.o.size : null;
-  if (k === 'bold') { const ws = weightsFor(target) || [400, 700]; const now = wOf(target); target.weight = now >= 600 ? nearestW(ws, 400) : nearestW(ws, 700); target.bold = target.weight >= 600; }
+  if (k === 'bold') { const now = wOf(target); target.weight = now >= 600 ? 400 : 700; target.bold = target.weight >= 600; }
   else if (k === 'italic') target.italic = !target.italic;
+  else if (['bstyle', 'bcolor', 'bw', 'bpad', 'brad'].includes(k)) {
+    if (k === 'bstyle' && !v) delete target.border;
+    else { const b = target.border = target.border || { style: 'solid', color: target.color || '#141821', w: 1, pad: target.t === 'image' ? 0 : 3, r: 0 }; if (k === 'bstyle') b.style = v; else if (k === 'bcolor') b.color = v; else b[{ bw: 'w', bpad: 'pad', brad: 'r' }[k]] = v; }
+    if (S.style.text === target && target.border) target.border = { ...target.border };
+  }
   else if (k === 'underline') { if (target.underline) delete target.underline; else target.underline = true; }
   else if (k === 'weight') { target.weight = v; target.bold = v >= 600; }
-  else if (k === 'family') { target.family = v; const ws = weightsFor(target); if (ws) { target.weight = nearestW(ws, wOf(target)); target.bold = target.weight >= 600; } if (wfId(target) && !(FONTS[wfId(target)] || {}).it) target.italic = false; delete target.detected; fontPickOpen = false; }
+  else if (k === 'family') { target.family = v; target.bold = wOf(target) >= 600; if (wfId(target) && !(FONTS[wfId(target)] || {}).it) target.italic = false; delete target.detected; fontPickOpen = false; }
   else if ((k === 'bg') && !v) delete target.bg;
   else if (k === 'covFill') { if (s && s.o.cov) { s.o.cov.mode = 'solid'; s.o.cov.solid = v; s.o.cov.fill = v; rebuildCover(s.o, s.p); } }
   else if (k === 'fill' && !s && target === S.style.white) { target.fill = v; target.auto = ''; }
@@ -2802,7 +2849,7 @@ function applyProp(k, raw, live) {
     if (baseBefore != null) { const fix = () => { s.o.y = baseBefore - baseK(s.o) * s.o.size; refreshObj(s.o, s.p); drawSel(); }; fix(); const id = wfId(s.o); if (id) loadWebFont(id, wOf(s.o), s.o.italic).then(fix).catch(() => {}); }
     refreshObj(s.o, s.p); drawSel();
   }
-  if (live) { const out = P.querySelector(`[data-out="${k}"]`); if (out) out.textContent = k === 'op' || k === 'bgOp' ? pct(v) : k === 'boost' ? (v ? '+' + Math.round(v * 100) + '%' : 'None') : k === 'weight' ? `${W_NAMES[v] || v} · ${v}` : ptf(v); if (k === 'weight') { const r = P.querySelector('#p-weight'); if (r && +r.value !== v) r.value = v; } }
+  if (live) { const out = P.querySelector(`[data-out="${k}"]`); if (out) out.textContent = k === 'op' || k === 'bgOp' ? pct(v) : k === 'boost' ? (v ? '+' + Math.round(v * 100) + '%' : 'None') : k === 'weight' ? `${v}` : k === 'bw' || k === 'bpad' || k === 'brad' ? ptf(v) : ptf(v); if (k === 'weight') { for (const id of ['#p-weight', '#p-wnum']) { const r = P.querySelector(id); if (r && +r.value !== v && document.activeElement !== r) r.value = v; } const hn = P.querySelector('#p-whint'); const sx = getSel(); if (hn) hn.textContent = weightHint(sx ? sx.o : S.style.text); } }
   else renderProps();
 }
 P.addEventListener('click', e => {
@@ -2840,9 +2887,10 @@ P.addEventListener('input', e => {
   }
   if (t.type === 'color') syncPicker(t.closest('.cpick'), t.value);
   if (t.dataset.cov === 'pad') { const sx = getSel(); if (sx && sx.o.cov) { snapCo('cov' + sx.o.id); sx.o.cov.pad = +t.value; const out = P.querySelector('[data-out="covPad"]'); if (out) out.textContent = (+t.value > 0 ? '+' : '') + r2(+t.value) + ' pt'; cancelAnimationFrame(covRaf); covRaf = requestAnimationFrame(() => rebuildCover(sx.o, sx.p)); } return; }
+  if (t.id === 'p-wnum' && !(+t.value >= 100 && +t.value <= 900)) return;
   if (t.dataset.prop) applyProp(t.dataset.prop, t.value, true);
   if (t.dataset.prop === 'text' || t.dataset.prop === 'sub') return;
-  if (t.dataset.doc) { S.doc[t.dataset.doc] = t.type === 'range' ? +t.value : t.value; setDirty(); if (t.dataset.doc === 'wmOp' || t.dataset.doc === 'tintOp') { const o = P.querySelector(`[data-out="${t.dataset.doc}"]`); if (o) o.textContent = pct(+t.value); } S.pages.forEach(p => renderOverlay(p)); if (t.dataset.doc === 'tint' && !P.querySelector('#d-tintOp')) renderProps(); }
+  if (t.dataset.doc) { S.doc[t.dataset.doc] = t.type === 'range' ? +t.value : t.value; setDirty(); if (['wmOp', 'tintOp', 'pbW', 'pbM', 'pbR'].includes(t.dataset.doc)) { const o = P.querySelector(`[data-out="${t.dataset.doc}"]`); if (o) o.textContent = /Op$/.test(t.dataset.doc) ? pct(+t.value) : ptf(+t.value); } S.pages.forEach(p => renderOverlay(p)); if (t.dataset.doc === 'tint' && !P.querySelector('#d-tintOp')) renderProps(); }
 });
 P.addEventListener('change', e => { if (e.target.type === 'color' || e.target.dataset.hex || e.target.dataset.hexdoc) renderProps(); });
 P.addEventListener('pointerdown', e => { const cm = e.target.closest('[data-covmode]'); if (cm) { e.preventDefault(); const sx = getSel(); if (sx && sx.o.cov) { snap(); sx.o.cov.mode = cm.dataset.covmode; if (cm.dataset.covmode === 'solid' && !sx.o.cov.solid) sx.o.cov.solid = sx.o.cov.fill; rebuildCover(sx.o, sx.p); renderProps(); } } });
@@ -3123,26 +3171,28 @@ async function drawObj(out, page, o, W, H, F, imgs, safe) {
   const op = o.op ?? 1;
   if (o.t === 'text') {
     const pf = pdfFontOf(o); const wid = wfId(o); const lib = wid && FONTS[wid];
-    const std = await F(stdKey(pf ? (o.fb || 'sans') : lib ? GROUP_FALLBACK[lib.group] : o.family, wOf(o) >= 600, o.italic));
+    const std = await F(stdKey(pf ? (o.fb || 'sans') : lib ? GROUP_FALLBACK[lib.group] : o.family, realW(o) >= 600, o.italic));
     let emb = pf ? await F_PDF(o.pdfFont) : null, has = ch => pf.chars.has(ch);
-    if (lib) { try { emb = await F_WF(wid, wOf(o), o.italic); const fk = emb && emb.embedder && emb.embedder.font; has = ch => !fk || fk.hasGlyphForCodePoint(ch.codePointAt(0)); } catch { emb = null; } }
+    if (lib) { try { emb = await F_WF(wid, realW(o), o.italic); const fk = emb && emb.embedder && emb.embedder.font; has = ch => !fk || fk.hasGlyphForCodePoint(ch.codePointAt(0)); } catch { emb = null; } }
     const runsOf = l => { if (!emb) return [{ s: safe(l), f: std }]; const out = []; for (const ch of l) { const useP = has(ch); const sch = useP ? ch : safe(ch); const fnt = useP ? emb : std; const last = out[out.length - 1]; if (last && last.f === fnt) last.s += sch; else out.push({ s: sch, f: fnt }); } return out; };
     const lines = o.text.split('\n'); const lh = o.size * 1.2; const bk = baseK(o);
     const lr = lines.map(runsOf); const lw = lr.map(rs => rs.reduce((t, r) => t + r.f.widthOfTextAtSize(r.s, o.size), 0)); const bw = Math.max(0, ...lw, o.minW || 0);
     if (o.bg) { const bh = lines.length * lh; page.drawRectangle({ x: o.x, y: H - o.y - bh, width: bw, height: bh, color: hexToRgb(o.bg), opacity: op * (o.bgOp ?? 1) }); }
     const fa = o.align === 'center' ? 0.5 : o.align === 'right' ? 1 : 0;
-    const boost = o.boost > 0 ? o.boost * o.size * 0.06 : 0;
+    const boost = totalBoost(o) > 0 ? totalBoost(o) * o.size * 0.06 : 0;
     if (boost) {
       page.pushOperators(pushGraphicsState(), setTextRenderingMode(TextRenderingMode.FillAndOutline), setLineWidth(boost), setStrokingColor(hexToRgb(o.color)));
       if (op < 1) { const gs = page.node.newExtGState('GS', out.context.obj({ Type: 'ExtGState', CA: op })); page.pushOperators(setGraphicsState(gs)); }
     }
     if (op > 0) lr.forEach((rs, i) => { let x = o.x + (bw - lw[i]) * fa; const y = H - (o.y + i * lh + o.size * bk); for (const r of rs) { if (r.s) page.drawText(r.s, { x, y, size: o.size, font: r.f, color: hexToRgb(o.color), opacity: op }); x += r.f.widthOfTextAtSize(r.s, o.size); } });
     if (boost) page.pushOperators(popGraphicsState());
+    if (o.border && op > 0) drawBorderBox(page, H, o.x, o.y, bw, lines.length * lh, o.border, op);
     if (o.underline && op > 0) lr.forEach((rs, i) => { if (!lw[i]) return; const x = o.x + (bw - lw[i]) * fa; const y = H - (o.y + i * lh + o.size * bk) - o.size * 0.16; page.drawLine({ start: { x, y }, end: { x: x + lw[i], y }, thickness: Math.max(0.5, o.size * 0.06), color: hexToRgb(o.color), opacity: op }); });
   } else if (o.t === 'image') {
     const a = S.assets[o.asset]; if (!a) return;
     let img = imgs[o.asset]; if (!img) { const bytes = dataURLtoBytes(a.data); img = imgs[o.asset] = a.type === 'jpg' ? await out.embedJpg(bytes) : await out.embedPng(bytes); }
     page.drawImage(img, { x: o.x, y: H - o.y - o.h, width: o.w, height: o.h, opacity: op });
+    if (o.border) drawBorderBox(page, H, o.x, o.y, o.w, o.h, o.border, op);
   } else if (o.t === 'rect') {
     const sw = o.stroke ? o.sw : 0;
     page.drawRectangle({ x: o.x + sw / 2, y: H - o.y - o.h + sw / 2, width: Math.max(0.1, o.w - sw), height: Math.max(0.1, o.h - sw), color: o.fill ? hexToRgb(o.fill) : undefined, opacity: o.fill ? op : undefined, borderColor: sw ? hexToRgb(o.stroke) : undefined, borderWidth: sw, borderOpacity: op });
@@ -3166,12 +3216,23 @@ async function drawObj(out, page, o, W, H, F, imgs, safe) {
     if (o.t === 'arrow') { const pts = arrowHead(o); page.drawSvgPath(`M${pts[0].join(' ')}L${pts[1].join(' ')}L${pts[2].join(' ')}Z`, { x: 0, y: H, color: hexToRgb(o.color), opacity: op }); }
   }
 }
+/* A border path around a box (top-left page coordinates), matching the on-screen outline. */
+function drawBorderBox(page, H, x, y, w, h, b, op = 1, inset = false) {
+  if (!b || !b.style || !(b.w > 0)) return;
+  const d = inset ? -b.w / 2 : (b.pad || 0) + b.w / 2; const X = x - d, Y = y - d, Wd = w + 2 * d, Hd = h + 2 * d; if (Wd <= 0 || Hd <= 0) return;
+  const r = Math.min(b.r > 0 ? b.r + (inset ? 0 : (b.pad || 0) + b.w / 2) : 0, Wd / 2, Hd / 2), k = 0.5523 * r;
+  const path = r > 0 ? `M${X + r} ${Y} L${X + Wd - r} ${Y} C${X + Wd - r + k} ${Y} ${X + Wd} ${Y + r - k} ${X + Wd} ${Y + r} L${X + Wd} ${Y + Hd - r} C${X + Wd} ${Y + Hd - r + k} ${X + Wd - r + k} ${Y + Hd} ${X + Wd - r} ${Y + Hd} L${X + r} ${Y + Hd} C${X + r - k} ${Y + Hd} ${X} ${Y + Hd - r + k} ${X} ${Y + Hd - r} L${X} ${Y + r} C${X} ${Y + r - k} ${X + r - k} ${Y} ${X + r} ${Y} Z`
+    : `M${X} ${Y} L${X + Wd} ${Y} L${X + Wd} ${Y + Hd} L${X} ${Y + Hd} Z`;
+  const dash = b.style === 'dashed' ? [b.w * 3, b.w * 2] : b.style === 'dotted' ? [0.001, b.w * 2] : undefined;
+  page.drawSvgPath(path, { x: 0, y: H, borderColor: hexToRgb(b.color || '#141821'), borderWidth: b.w, borderOpacity: op, borderDashArray: dash, borderLineCap: b.style === 'dotted' ? LineCapStyle.Round : LineCapStyle.Butt });
+}
 async function drawCover(out, page, c, H, imgs, op = 1) {
   const a = c.asset && S.assets[c.asset];
   if (a) { let img = imgs[c.asset]; if (!img) img = imgs[c.asset] = await out.embedPng(dataURLtoBytes(a.data)); page.drawImage(img, { x: c.x, y: H - c.y - c.h, width: c.w, height: c.h, opacity: op }); }
   else page.drawRectangle({ x: c.x, y: H - c.y - c.h, width: c.w, height: c.h, color: hexToRgb(c.fill || '#ffffff'), opacity: op });
 }
 async function drawDecor(page, i, N, W, H, F, safe) {
+  if (S.doc.pbStyle) { const m = S.doc.pbM ?? 24; drawBorderBox(page, H, m, m, W - 2 * m, H - 2 * m, { style: S.doc.pbStyle, color: S.doc.pbColor, w: S.doc.pbW || 1, r: S.doc.pbR || 0 }, 1, true); }
   if (S.doc.tint && (S.doc.tintOp ?? 0.5) > 0) page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: hexToRgb(S.doc.tint), opacity: S.doc.tintOp ?? 0.5, blendMode: BlendMode.Multiply });
   if (S.doc.wm.trim()) {
     const f = await F('HelveticaBold'); const t = safe(S.doc.wm); const size = Math.min(W, H) * 0.12; const tw = f.widthOfTextAtSize(t, size);
@@ -3217,7 +3278,7 @@ async function renderPagePng(pg, scale) {
   const blob = await new Promise(r => c.toBlob(r, 'image/png')); return { bytes: new Uint8Array(await blob.arrayBuffer()), w: c.width, h: c.height };
 }
 const mctx = document.createElement('canvas').getContext('2d');
-function textW(o, line) { mctx.font = `${o.italic && !pdfFontOf(o) ? 'italic ' : ''}${wOf(o)} ${o.size}px ${cssFamily(o)}`; return mctx.measureText(line).width; }
+function textW(o, line) { mctx.font = `${o.italic && !pdfFontOf(o) ? 'italic ' : ''}${realW(o)} ${o.size}px ${cssFamily(o)}`; return mctx.measureText(line).width; }
 async function pageItems(p) {
   const { W, H, R } = viewSize(p); const items = [];
   const covers = [];
