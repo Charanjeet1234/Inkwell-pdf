@@ -452,12 +452,13 @@ module.exports = function inkwellProKit(K) {
   }
 
 
-  function placeStamp(text, color) {
+  function placeStamp(text, color, opts = {}) {
     const p = curPage(); if (!p) return; const { W, H } = viewSize(p); const c = visibleCenter(p);
-    const sub = $('#stDate').checked ? new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '';
-    const h = sub ? 56 : 46; mctx.font = '700 100px Helvetica, Arial, sans-serif';
-    const fs = h * (sub ? 0.36 : 0.5); const w = clamp(mctx.measureText(text).width * 1.06 * fs / 100 / 0.84 + 8, 90, W * 0.8);
-    const o = { id: uid(), t: 'stamp', x: clamp(c.x - w / 2, 0, W - w), y: clamp(c.y - h / 2, 0, H - h), w, h, text, sub, color, op: 0.9 };
+    const sub = opts.sub !== undefined ? opts.sub : $('#stDate').checked ? new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+    const shape = opts.shape || 'box', circ = shape === 'circle';
+    const h = circ ? 96 : sub ? 56 : 46; mctx.font = '700 100px Helvetica, Arial, sans-serif';
+    const fs = h * (circ ? (sub ? 0.24 : 0.3) : (sub ? 0.36 : 0.5)); const w = clamp(mctx.measureText(text).width * 1.06 * fs / 100 / (circ ? 0.66 : 0.84) + 8, circ ? 96 : 90, W * 0.8);
+    const o = { id: uid(), t: 'stamp', x: clamp(c.x - w / 2, 0, W - w), y: clamp(c.y - h / 2, 0, H - h), w, h, text, sub, color, op: 0.9, ...(shape !== 'box' ? { shape } : {}) };
     $('#dlgStamps').close(); if (S.tool !== 'select') setTool('select'); addObj(o, p); select(o, p); track('Pro tool', { tool: 'stamp' });
   }
 

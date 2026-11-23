@@ -18,6 +18,9 @@ Edit, sign and convert PDFs in the browser. Everything runs on the user's own de
 - **Match the document** — one click copies the font, size, weight and colour of the nearest PDF text. Every colour (font colour, text background, whiteout, shapes and page background) has preset swatches, a full colour picker, a hex box and an eyedropper that takes any colour from the page.
 - **Whiteout and backgrounds that match** — new whiteout boxes take the paper colour around them automatically (cream, grey or scanned paper, not just white), can be faded from 0 to 100%, and can be re-matched with one click. Text fills fade the same way. **Page background** tints every page, including your whiteout, text fills and edits, so everything looks the same in the saved PDF.
 - **Annotate** — text boxes, freehand drawing, highlights, whiteout, rectangles, ellipses, lines, arrows, images and dates. Everything can be moved, resized, restyled, duplicated or copied to all pages, with full undo/redo.
+- **Line styles** — lines, arrows, rectangles, ellipses and freehand drawings can be solid, dashed, dotted, dash-dot, long dash or fine dots, and lines can have an arrow at the end, the start, both ends or neither.
+- **Stamps** — ready-made stamps, or create your own: text, a second line (or today's date), any colour and a box, rounded or circle shape, with a live preview. Save them to **My stamps** for next time, or upload a picture of your own stamp or seal (its background is removed).
+- **Turn to any angle** — stamps, signatures and images can be rotated through a full 360°: drag the round handle above them (hold Shift for 15° steps), type an exact angle, or use the 90° buttons.
 - **Sign** — draw, type or upload a signature and drag it into place. Signatures can be remembered on the device.
 - **Pages** — rotate, delete, duplicate, reorder by drag and drop, add blank pages, merge other PDFs, extract or split pages.
 - **Convert**
@@ -110,7 +113,7 @@ Open `https://<your-site>/admin.html`, paste your `ADMIN_TOKEN`, enter your emai
 
 ### Website security
 
-`vercel.json` sets a strict Content Security Policy, HSTS, `X-Frame-Options: DENY`, `nosniff`, a referrer policy and a permissions policy. Third-party libraries load only from jsDelivr, pinned to exact versions with Subresource Integrity hashes. If you change a library version, update its `integrity` value too, or it will not load.
+`vercel.json` sets a strict Content Security Policy, HSTS, `X-Frame-Options: DENY`, `nosniff`, a referrer policy and a permissions policy. Third-party libraries are served from this site's own `vendor/` folder (so the app keeps working when jsDelivr is slow or blocked), pinned to exact versions with Subresource Integrity hashes, with the same files on jsDelivr as a fallback. If you change a library version, update its `integrity` value too, or it will not load.
 
 Pro needs the website: the downloaded single file, `localhost` and the Claude preview always run the free version.
 
