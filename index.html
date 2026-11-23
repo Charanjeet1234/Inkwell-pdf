@@ -190,6 +190,9 @@ svg.vec .hit,svg.vec .head{pointer-events:none}
 .handle[data-h=nw],.handle[data-h=se]{cursor:nwse-resize}
 .handle[data-h=ne],.handle[data-h=sw]{cursor:nesw-resize}
 .handle[data-h=p1],.handle[data-h=p2]{cursor:move}
+.handle[data-h=rot]{cursor:grab;background:var(--accent);border-color:#fff;box-shadow:0 0 0 1px var(--accent)}
+.rotstick{position:absolute;width:1.5px;margin-left:-.75px;background:var(--accent);pointer-events:none;z-index:5}
+.viewer.rotating,.viewer.rotating *{cursor:grabbing!important}
 .tbox{position:absolute;pointer-events:auto;cursor:text;border-radius:2px;background:var(--hit);box-shadow:inset 0 0 0 1px var(--hit-line)}
 .tbox:hover{background:rgba(42,63,209,.18)}
 
@@ -281,6 +284,10 @@ svg.vec .hit,svg.vec .head{pointer-events:none}
 .fp-item small{font:400 11px var(--f-body);color:var(--muted);white-space:nowrap}
 .wrow{display:flex;align-items:center;gap:8px}
 .wrow input{flex:1;min-width:0;accent-color:var(--accent)}
+.dashpick{display:flex;flex-wrap:wrap;gap:5px}
+.dashpick button{height:30px;min-width:52px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);color:var(--ink);display:grid;place-items:center;padding:0 4px}
+.dashpick button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.rotacts{grid-template-columns:1fr 1fr 1fr!important;margin:-2px 0 0}
 .wrow .wnum{width:66px;flex:none;text-align:right}
 .wrow output{font:500 11.5px var(--f-mono);color:var(--muted);min-width:92px;text-align:right}
 .viewer.picking .page,.viewer.picking .obj{cursor:crosshair!important}
@@ -400,6 +407,19 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
 .obj.redact{background:#000}
 .obj.stamp{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Helvetica,Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.06em;line-height:1.05;box-sizing:border-box;white-space:nowrap;overflow:hidden}
 .obj.stamp small{font-weight:600;letter-spacing:.04em}
+.sth{font:600 11px var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 8px}
+.stmake{display:grid;grid-template-columns:1fr 200px;gap:14px;align-items:center}
+.stform{display:grid;gap:8px}
+.stprev{height:110px;border:1px dashed var(--line);border-radius:12px;background:#fff;display:grid;place-items:center;padding:8px}
+.stprev svg{max-width:100%;max-height:100%}
+.stacts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}
+.stampgrid.mine:empty::before{content:"Stamps you save or upload appear here.";color:var(--muted);font-size:13px}
+.stampgrid .mst{position:relative}
+.stampgrid .mst img{max-width:100%;max-height:46px}
+.stampgrid .mst svg{max-width:100%;max-height:50px}
+.stampgrid .mst .del{position:absolute;top:3px;right:5px;border:0;background:none;color:var(--muted);font-size:15px;line-height:1;padding:2px 4px;cursor:pointer}
+.stampgrid .mst .del:hover{color:var(--danger)}
+@media (max-width:620px){.stmake{grid-template-columns:1fr}}
 .stampgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .stampgrid button{height:62px;border:1px solid var(--line);border-radius:12px;background:#fff;display:grid;place-items:center;padding:8px}
 .stampgrid button:hover{border-color:var(--accent)}
@@ -853,11 +873,24 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
   <div class="dh"><div><h2>Stamps &amp; templates</h2><p>Click one to place it, then drag it into position.</p></div><button class="btn icon ghost" data-close><svg class="i"><use href="#i-x"/></svg></button></div>
   <div class="db">
     <div class="stampgrid" id="stampGrid"></div>
-    <div class="row" style="grid-template-columns:auto 1fr auto;margin-top:14px">
-      <label class="check"><input type="checkbox" id="stDate" checked> Add today's date</label>
-      <input class="inp" id="stCustom" placeholder="Custom stamp text, e.g. SHIPPED" maxlength="28">
-      <button class="btn" id="stCustomGo">Add</button>
+    <label class="check" style="margin-top:10px"><input type="checkbox" id="stDate" checked> Add today's date</label>
+    <h4 class="sth">Create your own</h4>
+    <div class="stmake">
+      <div class="stform">
+        <input class="inp" id="stCustom" placeholder="Stamp text, e.g. SHIPPED" maxlength="28">
+        <input class="inp" id="stSub" placeholder="Second line (optional) — leave empty for today's date" maxlength="40">
+        <div class="sw" id="stColors"></div>
+        <div class="seg" id="stShapes"><button data-stshape="box" class="on">Box</button><button data-stshape="round">Rounded</button><button data-stshape="circle">Circle</button></div>
+      </div>
+      <div class="stprev" id="stPrev" aria-label="Preview"></div>
     </div>
+    <div class="stacts">
+      <button class="btn ghost" id="stUpload" title="Use a picture of your own stamp or seal; its background is removed"><svg class="i"><use href="#i-image"/></svg>Upload stamp image</button>
+      <button class="btn" id="stSave"><svg class="i"><use href="#i-stamp"/></svg>Save to my stamps</button>
+      <button class="btn primary" id="stCustomGo">Place stamp</button>
+    </div>
+    <h4 class="sth">My stamps</h4>
+    <div class="stampgrid mine" id="myStamps"></div>
     <h4 style="font:600 11px var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 8px">My templates</h4>
     <div class="tpls" id="tplList"></div>
   </div>
@@ -894,13 +927,20 @@ dialog.wide{width:min(1000px,calc(100vw - 24px))}
 <div class="dropveil" id="dropVeil" hidden>Drop to open</div>
 
 <!-- Libraries are pinned to exact versions and checked with Subresource Integrity: a modified file will not run. -->
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js" integrity="sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js" integrity="sha384-nFoSjZIoH3CCp8W639jJyQkuPHinJ2NHe7on1xvlUA7SuGfJAfvMldrsoAVm6ECz" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js" integrity="sha384-2p6U+1mmqF10USehFeRiyG2ESG9FwIqN+jxULn5w9jjQIihSn9Pt13dVCn/Hawjn" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js" integrity="sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F" crossorigin="anonymous"></script>
+<script src="vendor/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e"></script>
+<script>window.pdfjsLib||(window.__inkCdn=1,document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"><\/script>'))</script>
+<script src="vendor/pdf-lib.min.js" integrity="sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI"></script>
+<script>window.PDFLib||(window.__inkCdn=1,document.write('<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js" integrity="sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI" crossorigin="anonymous"><\/script>'))</script>
+<script src="vendor/jszip.min.js" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG"></script>
+<script>window.JSZip||(window.__inkCdn=1,document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG" crossorigin="anonymous"><\/script>'))</script>
+<script src="vendor/mammoth.browser.min.js" integrity="sha384-nFoSjZIoH3CCp8W639jJyQkuPHinJ2NHe7on1xvlUA7SuGfJAfvMldrsoAVm6ECz"></script>
+<script>window.mammoth||(window.__inkCdn=1,document.write('<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js" integrity="sha384-nFoSjZIoH3CCp8W639jJyQkuPHinJ2NHe7on1xvlUA7SuGfJAfvMldrsoAVm6ECz" crossorigin="anonymous"><\/script>'))</script>
+<script src="vendor/fontkit.umd.min.js" integrity="sha384-2p6U+1mmqF10USehFeRiyG2ESG9FwIqN+jxULn5w9jjQIihSn9Pt13dVCn/Hawjn"></script>
+<script>window.fontkit||(window.__inkCdn=1,document.write('<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js" integrity="sha384-2p6U+1mmqF10USehFeRiyG2ESG9FwIqN+jxULn5w9jjQIihSn9Pt13dVCn/Hawjn" crossorigin="anonymous"><\/script>'))</script>
+<script src="vendor/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok"></script>
+<script>window.supabase||(window.__inkCdn=1,document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"><\/script>'))</script>
+<script src="vendor/tesseract.min.js" integrity="sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F"></script>
+<script>window.Tesseract||(window.__inkCdn=1,document.write('<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js" integrity="sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F" crossorigin="anonymous"><\/script>'))</script>
 <script>
 /* Free edition: every tool is included and free. */
 window.__INKWELL_ALL_FREE = true;
@@ -1353,12 +1393,13 @@ window.__inkwellKitFactory = function inkwellProKit(K) {
   }
 
 
-  function placeStamp(text, color) {
+  function placeStamp(text, color, opts = {}) {
     const p = curPage(); if (!p) return; const { W, H } = viewSize(p); const c = visibleCenter(p);
-    const sub = $('#stDate').checked ? new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '';
-    const h = sub ? 56 : 46; mctx.font = '700 100px Helvetica, Arial, sans-serif';
-    const fs = h * (sub ? 0.36 : 0.5); const w = clamp(mctx.measureText(text).width * 1.06 * fs / 100 / 0.84 + 8, 90, W * 0.8);
-    const o = { id: uid(), t: 'stamp', x: clamp(c.x - w / 2, 0, W - w), y: clamp(c.y - h / 2, 0, H - h), w, h, text, sub, color, op: 0.9 };
+    const sub = opts.sub !== undefined ? opts.sub : $('#stDate').checked ? new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+    const shape = opts.shape || 'box', circ = shape === 'circle';
+    const h = circ ? 96 : sub ? 56 : 46; mctx.font = '700 100px Helvetica, Arial, sans-serif';
+    const fs = h * (circ ? (sub ? 0.24 : 0.3) : (sub ? 0.36 : 0.5)); const w = clamp(mctx.measureText(text).width * 1.06 * fs / 100 / (circ ? 0.66 : 0.84) + 8, circ ? 96 : 90, W * 0.8);
+    const o = { id: uid(), t: 'stamp', x: clamp(c.x - w / 2, 0, W - w), y: clamp(c.y - h / 2, 0, H - h), w, h, text, sub, color, op: 0.9, ...(shape !== 'box' ? { shape } : {}) };
     $('#dlgStamps').close(); if (S.tool !== 'select') setTool('select'); addObj(o, p); select(o, p); track('Pro tool', { tool: 'stamp' });
   }
 
@@ -1445,7 +1486,9 @@ const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == nu
 const LIBS_OK = typeof pdfjsLib !== 'undefined' && typeof PDFLib !== 'undefined';
 if (!LIBS_OK) $('#libWarn').hidden = false;
 const { PDFDocument, rgb, StandardFonts, degrees, BlendMode, LineCapStyle, pushGraphicsState, popGraphicsState, concatTransformationMatrix, setTextRenderingMode, setCharacterSqueeze, TextRenderingMode, setLineWidth, setStrokingColor, setGraphicsState, PDFName } = window.PDFLib || {};
-if (LIBS_OK) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+/* The PDF libraries load from this site's own vendor/ folder, and from jsDelivr only when that copy isn't there
+   (opened as a single file, or inside the Claude preview). The worker follows whichever copy loaded. */
+if (LIBS_OK) pdfjsLib.GlobalWorkerOptions.workerSrc = window.__inkCdn || location.protocol === 'file:' ? 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js' : new URL('vendor/pdf.worker.min.js', location.href).href;
 
 const FAMILY_CSS = {
   sans: 'Helvetica, Arial, "Liberation Sans", sans-serif',
@@ -1617,9 +1660,9 @@ const S = {
   name: 'Untitled.pdf', undo: [], redo: [], dirty: false, open: false,
   style: {
     text: { family: 'sans', size: 14, color: '#141821', bold: false, italic: false, weight: 400, boost: 0 },
-    ink: { color: '#2a3fd1', sw: 2, op: 1 },
-    shape: { stroke: '#2a3fd1', fill: '', sw: 2, op: 1 },
-    line: { color: '#141821', sw: 2, op: 1 },
+    ink: { color: '#2a3fd1', sw: 2, op: 1, dash: '' },
+    shape: { stroke: '#2a3fd1', fill: '', sw: 2, op: 1, dash: '' },
+    line: { color: '#141821', sw: 2, op: 1, dash: '' },
     hl: { color: '#ffe14d', op: 0.4 },
     white: { fill: '#ffffff', op: 1, auto: '1' },
     stamp: { color: '#1c8656', op: 0.9 }
@@ -1643,7 +1686,13 @@ function busy(msg) { $('#busyMsg').textContent = msg; $('#busy').hidden = false;
 function done() { $('#busy').hidden = true; }
 const tick = () => new Promise(r => setTimeout(r, 0));
 function pickFiles(accept, multiple = false) {
-  return new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.multiple = multiple; i.onchange = () => res([...i.files]); i.click(); });
+  return new Promise(res => {
+    const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.multiple = multiple;
+    Object.assign(i.style, { position: 'fixed', left: '-9999px', width: '1px', height: '1px', opacity: '0' }); document.body.append(i);
+    let done = false; const fin = list => { if (done) return; done = true; res(list); setTimeout(() => i.remove(), 0); };
+    i.addEventListener('change', () => fin([...i.files])); i.addEventListener('cancel', () => fin([]));
+    i.click();
+  });
 }
 function ask(title, msg, buttons) {
   return new Promise(res => {
@@ -1684,9 +1733,19 @@ const readDataURL = f => new Promise((res, rej) => { const r = new FileReader();
 const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Could not read that image')); i.src = src; });
 const hexToRgb = h => { h = (h || '#000').replace('#', ''); if (h.length === 3) h = [...h].map(c => c + c).join(''); const n = parseInt(h, 16); return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255); };
 const toHex = (r, g, b) => '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
-const isPdf = f => /\.pdf$/i.test(f.name) || f.type === 'application/pdf';
-const isDocx = f => /\.docx$/i.test(f.name);
-const isImg = f => /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name);
+const isPdf = f => /\.pdf$/i.test(f.name) || f.type === 'application/pdf' || f._kind === 'pdf';
+const isDocx = f => /\.docx$/i.test(f.name) || f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || f._kind === 'docx';
+const isImg = f => /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name) || f._kind === 'img';
+/* Phones often hand over files without a .pdf name or type, so look at the first bytes too. */
+async function sniffFiles(files) {
+  for (const f of files) {
+    if (isPdf(f) || isDocx(f) || isImg(f)) continue;
+    try { const b = new Uint8Array(await f.slice(0, 1024).arrayBuffer()); const t = String.fromCharCode(...b);
+      if (t.includes('%PDF-')) f._kind = 'pdf'; else if (b[0] === 0x50 && b[1] === 0x4B && t.includes('word/')) f._kind = 'docx';
+      else if ((b[0] === 0xFF && b[1] === 0xD8) || (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E) || t.startsWith('RIFF')) f._kind = 'img'; } catch {}
+  }
+  return files;
+}
 
 /* Keep only safe formatting from converted Word files (no scripts, handlers or unsafe links). */
 function sanitizeHtml(html) {
@@ -1972,9 +2031,11 @@ function makeEl(o, p) {
   } else if (o.t === 'image') {
     el = div('obj image'); const img = new Image(); img.src = (S.assets[o.asset] || {}).data || ''; img.draggable = false; img.alt = ''; el.append(img); box(el, o); el.style.opacity = o.op ?? 1; applyBorderCss(el, o);
   } else if (o.t === 'rect' || o.t === 'ellipse') {
-    el = div('obj shape'); box(el, o);
-    el.style.border = o.sw > 0 && o.stroke ? `${o.sw * S.zoom}px solid ${o.stroke}` : 'none';
+    el = div('obj shape'); box(el, o); const da = o.sw > 0 && o.stroke ? dashArr(o) : null;
+    el.style.border = o.sw > 0 && o.stroke && !da ? `${o.sw * S.zoom}px solid ${o.stroke}` : 'none';
     el.style.background = o.fill || 'transparent'; el.style.opacity = o.op ?? 1; if (o.t === 'ellipse') el.style.borderRadius = '50%';
+    if (da) { const w = Math.max(o.w, 0.1), h = Math.max(o.h, 0.1), sw = o.sw, c = esc(o.stroke);
+      el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="100%" height="100%" style="position:absolute;inset:0;overflow:visible" aria-hidden="true">${o.t === 'ellipse' ? `<ellipse cx="${w / 2}" cy="${h / 2}" rx="${Math.max(0.1, w / 2 - sw / 2)}" ry="${Math.max(0.1, h / 2 - sw / 2)}"` : `<rect x="${sw / 2}" y="${sw / 2}" width="${Math.max(0.1, w - sw)}" height="${Math.max(0.1, h - sw)}"`} fill="none" stroke="${c}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${da.join(' ')}"/></svg>`; }
   } else if (o.t === 'hl') {
     el = div('obj hl'); box(el, o); el.style.background = o.color; el.style.opacity = o.op ?? 0.4;
   } else if (o.t === 'white') {
@@ -1983,16 +2044,11 @@ function makeEl(o, p) {
     el = div('obj redact'); box(el, o);
   } else if (o.t === 'stamp') {
     el = div('obj stamp'); box(el, o); el.style.opacity = o.op ?? 0.9;
-    const g = stampGeom(o), c = esc(o.color || '#1c8656');
-    el.innerHTML = `<svg viewBox="0 0 ${o.w} ${o.h}" preserveAspectRatio="none" width="100%" height="100%" style="display:block;overflow:visible" aria-hidden="true">`
-      + `<rect x="${g.bw / 2}" y="${g.bw / 2}" width="${o.w - g.bw}" height="${o.h - g.bw}" fill="none" stroke="${c}" stroke-width="${g.bw}"/>`
-      + `<rect x="${g.ins}" y="${g.ins}" width="${Math.max(1, o.w - 2 * g.ins)}" height="${Math.max(1, o.h - 2 * g.ins)}" fill="none" stroke="${c}" stroke-width="${g.ib}"/>`
-      + `<text x="${o.w / 2}" y="${g.tBase}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="${g.fs}" letter-spacing="${g.sp}" fill="${c}">${esc(String(o.text || '').toUpperCase())}</text>`
-      + (o.sub ? `<text x="${o.w / 2}" y="${g.sBase}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="${g.ss}" fill="${c}">${esc(String(o.sub).toUpperCase())}</text>` : '')
-      + '</svg>';
+    el.innerHTML = stampSvg(o);
   } else {
     el = vecEl(o, p);
   }
+  if (rotatable(o) && o.rot) Object.assign(el.style, { transform: `rotate(${o.rot}deg)`, transformOrigin: '50% 50%' });
   el.dataset.oid = o.id; return el;
 }
 function box(el, o) { Object.assign(el.style, { left: px(o.x), top: px(o.y), width: px(o.w), height: px(o.h) }); }
@@ -2003,6 +2059,20 @@ function inkPath(pts) {
   for (let i = 1; i < pts.length - 1; i++) { const [x, y] = pts[i], [nx, ny] = pts[i + 1]; d += `Q${r2(x)} ${r2(y)} ${r2((x + nx) / 2)} ${r2((y + ny) / 2)}`; }
   const l = pts[pts.length - 1]; return d + `L${r2(l[0])} ${r2(l[1])}`;
 }
+const DASHES = [['', 'Solid', ''], ['dash', 'Dashed', '2.2 3.2'], ['dot', 'Dotted', '0.01 2.2'], ['dashdot', 'Dash-dot', '3.2 2.6 0.01 2.6'], ['long', 'Long dash', '7 3.4'], ['dense', 'Fine dots', '0.01 1.5']];
+function dashArr(o) { const d = DASHES.find(x => x[0] === (o.dash || '')); if (!d || !d[2]) return null; const w = Math.max(0.5, o.sw || 1); return d[2].split(' ').map(v => +(v * w).toFixed(3)); }
+function ends(o) { if (o.heads) return { s: o.heads === 'start' || o.heads === 'both', e: o.heads === 'end' || o.heads === 'both' }; return { s: false, e: o.t === 'arrow' }; }
+function headAt(o, atStart) { const f = atStart ? { x1: o.x2, y1: o.y2, x2: o.x1, y2: o.y1, sw: o.sw } : o; return arrowHead(f); }
+function trimmedLine(o) {
+  const a = Math.atan2(o.y2 - o.y1, o.x2 - o.x1), back = Math.max(9, o.sw * 4) * 0.7, en = ends(o);
+  return { x1: o.x1 + (en.s ? back * Math.cos(a) : 0), y1: o.y1 + (en.s ? back * Math.sin(a) : 0), x2: o.x2 - (en.e ? back * Math.cos(a) : 0), y2: o.y2 - (en.e ? back * Math.sin(a) : 0) };
+}
+function dashPreview(k, w = 2) { const d = DASHES.find(x => x[0] === k); return `<svg viewBox="0 0 44 10" width="44" height="10" aria-hidden="true"><line x1="3" y1="5" x2="41" y2="5" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" ${d && d[2] ? `stroke-dasharray="${d[2].split(' ').map(v => v * w).join(' ')}"` : ''}/></svg>`; }
+function lineStyleRow(v) { return ui.row('Line style', `<div class="dashpick">${DASHES.map(([k, l]) => `<button data-set="dash" data-val="${k}" class="${(v.dash || '') === k ? 'on' : ''}" title="${l}">${dashPreview(k)}</button>`).join('')}</div>`); }
+function arrowArrowRow(v) {
+  const cur = v.heads || (v.t === 'arrow' ? 'end' : 'none'); const ic = { none: '<line x1="4" y1="7" x2="36" y2="7"/>', end: '<line x1="4" y1="7" x2="30" y2="7"/><path d="M28 2 L37 7 L28 12Z" fill="currentColor" stroke="none"/>', start: '<line x1="10" y1="7" x2="36" y2="7"/><path d="M12 2 L3 7 L12 12Z" fill="currentColor" stroke="none"/>', both: '<line x1="10" y1="7" x2="30" y2="7"/><path d="M12 2 L3 7 L12 12Z M28 2 L37 7 L28 12Z" fill="currentColor" stroke="none"/>' };
+  return ui.row('Arrows', `<div class="dashpick">${['none', 'end', 'start', 'both'].map(k => `<button data-set="heads" data-val="${k}" class="${cur === k ? 'on' : ''}" title="${{ none: 'No arrow', end: 'Arrow at the end', start: 'Arrow at the start', both: 'Arrows at both ends' }[k]}"><svg viewBox="0 0 40 14" width="40" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">${ic[k]}</svg></button>`).join('')}</div>`);
+}
 function arrowHead(o) {
   const a = Math.atan2(o.y2 - o.y1, o.x2 - o.x1), L = Math.max(9, o.sw * 4), sp = 0.42;
   return [[o.x2, o.y2], [o.x2 - L * Math.cos(a - sp), o.y2 - L * Math.sin(a - sp)], [o.x2 - L * Math.cos(a + sp), o.y2 - L * Math.sin(a + sp)]];
@@ -2012,11 +2082,10 @@ function vecEl(o, p) {
   const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'obj vec'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio', 'none');
   let d;
   if (o.t === 'ink') d = inkPath(o.pts);
-  else if (o.t === 'arrow') { const a = Math.atan2(o.y2 - o.y1, o.x2 - o.x1), back = Math.max(9, o.sw * 4) * 0.7; d = `M${o.x1} ${o.y1}L${o.x2 - back * Math.cos(a)} ${o.y2 - back * Math.sin(a)}`; }
-  else d = `M${o.x1} ${o.y1}L${o.x2} ${o.y2}`;
+  else { const t2 = trimmedLine(o); d = `M${t2.x1} ${t2.y1}L${t2.x2} ${t2.y2}`; }
   const mk = (cls, w, stroke) => { const pa = document.createElementNS(NS, 'path'); pa.setAttribute('d', d); pa.setAttribute('class', cls); pa.setAttribute('fill', 'none'); pa.setAttribute('stroke', stroke); pa.setAttribute('stroke-width', w); pa.setAttribute('stroke-linecap', 'round'); pa.setAttribute('stroke-linejoin', 'round'); return pa; };
-  const vis = mk('vis', o.sw, o.color); vis.setAttribute('opacity', o.op ?? 1); svg.append(vis);
-  if (o.t === 'arrow') { const pl = document.createElementNS(NS, 'polygon'); pl.setAttribute('points', arrowHead(o).map(q => q.join(',')).join(' ')); pl.setAttribute('fill', o.color); pl.setAttribute('opacity', o.op ?? 1); pl.setAttribute('class', 'head'); svg.append(pl); }
+  const vis = mk('vis', o.sw, o.color); vis.setAttribute('opacity', o.op ?? 1); const da = dashArr(o); if (da) vis.setAttribute('stroke-dasharray', da.join(' ')); svg.append(vis);
+  if (o.t === 'line' || o.t === 'arrow') { const en = ends(o); for (const [on, st] of [[en.e, false], [en.s, true]]) if (on) { const pl = document.createElementNS(NS, 'polygon'); pl.setAttribute('points', headAt(o, st).map(q => q.join(',')).join(' ')); pl.setAttribute('fill', o.color); pl.setAttribute('opacity', o.op ?? 1); pl.setAttribute('class', 'head'); svg.append(pl); } }
   svg.append(mk('hit', o.sw + 12 / S.zoom, 'transparent'));
   return svg;
 }
@@ -2046,6 +2115,9 @@ const pnText = (i, N) => S.doc.pn === 'pageof' ? `Page ${i + 1} of ${N}` : S.doc
 /* ================= selection ================= */
 function getSel() { if (!S.sel) return null; const p = pageById(S.selPage); const o = p && p.objs.find(x => x.id === S.sel); return o ? { o, p } : null; }
 function select(o, p) { if ((o ? o.id : null) !== S.sel) fontPickOpen = false; if (!o && S.picking) { S.picking = null; viewer.classList.remove('picking'); } S.sel = o ? o.id : null; S.selPage = o ? p.id : null; drawSel(); renderProps(); autoProps(!!o); }
+/* Stamps and pictures (signatures, uploaded stamps, images) can be turned to any angle. */
+const rotatable = o => o.t === 'stamp' || o.t === 'image';
+const normDeg = d => { d = ((d % 360) + 360) % 360; return d > 180 ? d - 360 : d; };
 function objBox(o) {
   if (o.t === 'text') { const el = objEl(o.id); const w = el ? el.offsetWidth / S.zoom : o.size * Math.max(1, o.text.length) * 0.5; const h = el ? el.offsetHeight / S.zoom : o.size * 1.2 * (o.text.split('\n').length); return { x: o.x, y: o.y, w, h }; }
   if (o.t === 'line' || o.t === 'arrow') return { x: Math.min(o.x1, o.x2), y: Math.min(o.y1, o.y2), w: Math.abs(o.x2 - o.x1), h: Math.abs(o.y2 - o.y1) };
@@ -2053,7 +2125,7 @@ function objBox(o) {
   return { x: o.x, y: o.y, w: o.w, h: o.h };
 }
 function drawSel() {
-  $$('.selbox, .handle', viewer).forEach(e => e.remove());
+  $$('.selbox, .handle, .rotstick', viewer).forEach(e => e.remove());
   const s = getSel(); if (!s) return;
   const { o, p } = s; const el = pageEl(p.id); if (!el) return; const ov = el.querySelector('.ov');
   const b = objBox(o); const pad = o.t === 'ink' || o.t === 'line' || o.t === 'arrow' ? o.sw / 2 + 3 : 2;
@@ -2063,6 +2135,16 @@ function drawSel() {
   if (editing && editing.o === o) return;
   const H = (name, x, y) => { const h = div('handle'); h.dataset.h = name; h.style.left = x * S.zoom + 'px'; h.style.top = y * S.zoom + 'px'; ov.append(h); };
   if (o.t === 'line' || o.t === 'arrow') { H('p1', o.x1, o.y1); H('p2', o.x2, o.y2); }
+  else if (rotatable(o)) {
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2, a = (o.rot || 0) * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+    const R = (x, y) => [cx + (x - cx) * ca - (y - cy) * sa, cy + (x - cx) * sa + (y - cy) * ca];
+    if (o.rot) Object.assign(sb.style, { transform: `rotate(${o.rot}deg)`, transformOrigin: '50% 50%' });
+    const x0 = b.x - pad, y0 = b.y - pad, x1 = b.x + b.w + pad, y1 = b.y + b.h + pad;
+    H('nw', ...R(x0, y0)); H('ne', ...R(x1, y0)); H('sw', ...R(x0, y1)); H('se', ...R(x1, y1));
+    const L = 26 / S.zoom, st = div('rotstick');
+    Object.assign(st.style, { left: cx * S.zoom + 'px', top: (y0 - L) * S.zoom + 'px', height: L * S.zoom + 'px', transformOrigin: `0 ${(cy - (y0 - L)) * S.zoom}px`, transform: `rotate(${o.rot || 0}deg)` }); ov.append(st);
+    H('rot', ...R(cx, y0 - L));
+  }
   else { const x0 = b.x - pad, y0 = b.y - pad, x1 = b.x + b.w + pad, y1 = b.y + b.h + pad; H('nw', x0, y0); H('ne', x1, y0); H('sw', x0, y1); H('se', x1, y1); }
 }
 
@@ -2149,6 +2231,7 @@ function onDown(e) {
   const o = oel ? p.objs.find(x => x.id === oel.dataset.oid) : null;
   if (handle) {
     const s = getSel(); if (!s) return; e.preventDefault();
+    if (handle.dataset.h === 'rot') { const b = objBox(s.o); drag = { mode: 'rotate', o: s.o, p, pel, c: { x: b.x + b.w / 2, y: b.y + b.h / 2 }, moved: false }; viewer.classList.add('rotating'); return; }
     drag = { mode: 'resize', h: handle.dataset.h, o: s.o, p, pel, orig: JSON.parse(JSON.stringify(s.o)), b0: objBox(s.o), moved: false }; return;
   }
   const t = S.tool;
@@ -2169,15 +2252,15 @@ function onDown(e) {
   e.preventDefault();
   snap();
   if (t === 'draw') {
-    const st = S.style.ink; const no = { id: uid(), t: 'ink', pts: [[pt.x, pt.y]], color: st.color, sw: st.sw, op: st.op };
+    const st = S.style.ink; const no = { id: uid(), t: 'ink', pts: [[pt.x, pt.y]], color: st.color, sw: st.sw, op: st.op, ...(st.dash ? { dash: st.dash } : {}) };
     p.objs.push(no); renderOverlay(p); drag = { mode: 'ink', o: no, p, pel }; return;
   }
   let no;
-  if (t === 'rect' || t === 'ellipse') { const st = S.style.shape; no = { id: uid(), t, x: pt.x, y: pt.y, w: 0, h: 0, stroke: st.stroke, fill: st.fill, sw: st.sw, op: st.op }; }
+  if (t === 'rect' || t === 'ellipse') { const st = S.style.shape; no = { id: uid(), t, x: pt.x, y: pt.y, w: 0, h: 0, stroke: st.stroke, fill: st.fill, sw: st.sw, op: st.op, ...(st.dash ? { dash: st.dash } : {}) }; }
   else if (t === 'hl') { const st = S.style.hl; no = { id: uid(), t: 'hl', x: pt.x, y: pt.y, w: 0, h: 0, color: st.color, op: st.op }; }
   else if (t === 'white') { no = { id: uid(), t: 'white', x: pt.x, y: pt.y, w: 0, h: 0, fill: S.style.white.fill, op: S.style.white.op ?? 1 }; }
   else if (t === 'redact') { no = { id: uid(), t: 'redact', x: pt.x, y: pt.y, w: 0, h: 0 }; }
-  else if (t === 'line' || t === 'arrow') { const st = S.style.line; no = { id: uid(), t, x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y, color: st.color, sw: st.sw, op: st.op }; }
+  else if (t === 'line' || t === 'arrow') { const st = S.style.line; no = { id: uid(), t, x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y, color: st.color, sw: st.sw, op: st.op, ...(st.dash ? { dash: st.dash } : {}) }; }
   if (!no) { S.undo.pop(); updUndo(); return; }
   p.objs.push(no); renderOverlay(p); drag = { mode: 'create', o: no, p, pel, start: pt };
 }
@@ -2192,9 +2275,20 @@ function onMove(e) {
     else if (o.t === 'ink') o.pts = g.pts.map(([x, y]) => [x + dx, y + dy]);
     else { o.x = g.x + dx; o.y = g.y + dy; }
     refreshObj(o, p); drawSel();
+  } else if (drag.mode === 'rotate') {
+    if (!drag.moved) { snap(); drag.moved = true; }
+    let a = Math.atan2(pt.y - drag.c.y, pt.x - drag.c.x) * 180 / Math.PI + 90;
+    if (e.shiftKey) a = Math.round(a / 15) * 15; else { const q = Math.round(a / 90) * 90; if (Math.abs(a - q) < 4) a = q; }
+    o.rot = Math.round(normDeg(a) * 10) / 10; if (o.rot === 0 || o.rot === -0) o.rot = 0;
+    refreshObj(o, p); drawSel(); syncRotInputs(o);
+    return;
   } else if (drag.mode === 'resize') {
     if (!drag.moved) { snap(); drag.moved = true; }
     const { h, orig, b0 } = drag;
+    if (rotatable(o) && o.rot && !(h === 'p1' || h === 'p2')) {
+      const cx = b0.x + b0.w / 2, cy = b0.y + b0.h / 2, sc = Math.max(4 / Math.min(b0.w, b0.h), Math.hypot(pt.x - cx, pt.y - cy) / Math.hypot(b0.w / 2, b0.h / 2));
+      o.w = b0.w * sc; o.h = b0.h * sc; o.x = cx - o.w / 2; o.y = cy - o.h / 2; refreshObj(o, p); drawSel(); return;
+    }
     if (h === 'p1' || h === 'p2') { const k = h[1]; let x = pt.x, y = pt.y; if (e.shiftKey) ({ x, y } = snap45(k === '1' ? o.x2 : o.x1, k === '1' ? o.y2 : o.y1, x, y)); o['x' + k] = x; o['y' + k] = y; }
     else {
       const ax = h.includes('w') ? b0.x + b0.w : b0.x, ay = h.includes('n') ? b0.y + b0.h : b0.y;
@@ -2236,7 +2330,8 @@ function onUp() {
   } else if (d.mode === 'ink') {
     if (o.pts.length === 1) o.pts.push([o.pts[0][0] + 0.3, o.pts[0][1] + 0.3]);
     o.pts = simplify(o.pts, 0.35 / Math.max(0.5, S.zoom)); refreshObj(o, p); updateStatus();
-  } else if (d.mode === 'move' || d.mode === 'resize') { if (d.moved && o.t === 'white' && o.auto) { const pel = pageEl(p.id); if (pel) { const c = makeCover(pel, o); o.fill = c.fill; o.patch = c.asset; refreshObj(o, p); } } if (d.moved) renderProps(); }
+  } else if (d.mode === 'rotate') { viewer.classList.remove('rotating'); if (d.moved) { renderProps(); setDirty(); } }
+  else if (d.mode === 'move' || d.mode === 'resize') { if (d.moved && o.t === 'white' && o.auto) { const pel = pageEl(p.id); if (pel) { const c = makeCover(pel, o); o.fill = c.fill; o.patch = c.asset; refreshObj(o, p); } } if (d.moved) renderProps(); }
 }
 function simplify(pts, eps) {
   if (pts.length < 4) return pts;
@@ -2648,10 +2743,13 @@ function styleControls(t, v) {
     h += ui.row('Outline', ui.sw('stroke', v.stroke, INKS, true));
     h += ui.row('Fill', ui.sw('fill', v.fill, ['#ffffff', '#fff6c2', '#e2e6ff', '#141821'], true));
     h += ui.row('Width', ui.rng('sw', v.sw, 0, 12, 0.5, ptf));
+    h += lineStyleRow(v);
     h += ui.row('Opacity', ui.rng('op', v.op ?? 1, 0.1, 1, 0.05, pct));
   } else if (t === 'line' || t === 'arrow' || t === 'ink') {
     h += ui.row('Colour', ui.sw('color', v.color, INKS));
     h += ui.row('Width', ui.rng('sw', v.sw, 0.5, 14, 0.5, ptf));
+    h += lineStyleRow(v);
+    if (S.sel && (t === 'line' || t === 'arrow')) h += arrowArrowRow(v);
     h += ui.row('Opacity', ui.rng('op', v.op ?? 1, 0.1, 1, 0.05, pct));
   } else if (t === 'hl') {
     h += ui.row('Colour', ui.sw('color', v.color, HLS));
@@ -2661,8 +2759,10 @@ function styleControls(t, v) {
   } else if (t === 'stamp') {
     h += ui.row('Text', `<input class="inp" id="p-stext" data-prop="text" value="${esc(v.text || '')}" maxlength="28">`);
     h += ui.row('Second line', `<input class="inp" id="p-ssub" data-prop="sub" value="${esc(v.sub || '')}" placeholder="e.g. date or initials" maxlength="40">`);
+    h += ui.row('Shape', `<div class="seg">${[['box', 'Box'], ['round', 'Rounded'], ['circle', 'Circle']].map(([k, l]) => `<button data-set="shape" data-val="${k}" class="${(v.shape || 'box') === k ? 'on' : ''}">${l}</button>`).join('')}</div>`);
     h += ui.row('Colour', ui.sw('color', v.color, ['#1c8656', '#2a3fd1', '#c3323d', '#141821', '#e07a12']));
     h += ui.row('Opacity', ui.rng('op', v.op ?? 0.9, 0.2, 1, 0.05, pct));
+    if (S.sel) h += rotateRow(v);
   } else if (t === 'white') {
     h += ui.row('Colour', ui.sw('fill', v.fill, ['#ffffff', '#f5f1e8', '#141821']));
     h += ui.row('Opacity', ui.rng('op', v.op ?? 1, 0, 1, 0.01, pct));
@@ -2672,6 +2772,7 @@ function styleControls(t, v) {
   } else if (t === 'image') {
     h += ui.row('Opacity', ui.rng('op', v.op ?? 1, 0.1, 1, 0.05, pct));
     h += borderControls(v, false);
+    if (S.sel) h += rotateRow(v);
     h += `<p class="hint">Drag a corner to resize. The aspect ratio is kept; hold Shift to stretch.</p>`;
   }
   return h;
@@ -2743,6 +2844,12 @@ function borderControls(v, isText) {
   }
   return h;
 }
+function rotateRow(v) {
+  const r = Math.round((v.rot || 0) * 10) / 10;
+  return ui.row('Rotate', `<div class="wrow"><input type="range" id="r-rot" data-prop="rot" min="-180" max="180" step="1" value="${r}"><input class="inp wnum" type="number" id="p-rotnum" data-prop="rot" min="-180" max="180" step="0.5" value="${r}" aria-label="Rotation in degrees"></div>`)
+    + `<div class="acts rotacts"><button class="btn" data-do="objRotL" title="Turn 90° left">↺ 90°</button><button class="btn" data-do="objRotR" title="Turn 90° right">↻ 90°</button><button class="btn" data-do="objRot0" title="Back to straight">Straighten</button></div><p class="hint" style="margin-top:6px">Or drag the round handle above it. Hold Shift to turn in 15° steps.</p>`;
+}
+function syncRotInputs(o) { const r = Math.round((o.rot || 0) * 10) / 10; for (const id of ['#r-rot', '#p-rotnum']) { const el = P.querySelector(id); if (el && document.activeElement !== el) el.value = r; } }
 function weightHint(o) {
   const ws = weightsFor(o) || [400, 700], w = Math.round(wOf(o)), r = realW(o);
   const nm = wName(w); const real = ws.length > 1 ? `This font has ${ws.length} weights (${ws.join(', ')}).` : `This font has one weight (${ws[0]}).`;
@@ -2826,7 +2933,7 @@ function applyProp(k, raw, live) {
   const s = getSel();
   const target = s ? s.o : S.style[toolGroup(S.tool)]; if (!target) return;
   let v = raw;
-  if (k === 'size' || k === 'sw' || k === 'op' || k === 'bgOp' || k === 'boost' || k === 'weight' || k === 'bw' || k === 'bpad' || k === 'brad') { v = parseFloat(raw); if (!isFinite(v)) return; if (k === 'size') v = clamp(v, 4, 200); if (k === 'weight') v = clamp(Math.round(v), 100, 900); }
+  if (k === 'size' || k === 'sw' || k === 'op' || k === 'bgOp' || k === 'boost' || k === 'weight' || k === 'bw' || k === 'bpad' || k === 'brad' || k === 'rot') { v = parseFloat(raw); if (!isFinite(v)) return; if (k === 'size') v = clamp(v, 4, 200); if (k === 'weight') v = clamp(Math.round(v), 100, 900); }
   if (s) snapCo(k + s.o.id);
   const baseBefore = s && s.o.t === 'text' && ['family', 'weight', 'bold', 'italic'].includes(k) ? s.o.y + baseK(s.o) * s.o.size : null;
   if (k === 'bold') { const now = wOf(target); target.weight = now >= 600 ? 400 : 700; target.bold = target.weight >= 600; }
@@ -2836,6 +2943,10 @@ function applyProp(k, raw, live) {
     else { const b = target.border = target.border || { style: 'solid', color: target.color || '#141821', w: 1, pad: target.t === 'image' ? 0 : 3, r: 0 }; if (k === 'bstyle') b.style = v; else if (k === 'bcolor') b.color = v; else b[{ bw: 'w', bpad: 'pad', brad: 'r' }[k]] = v; }
     if (S.style.text === target && target.border) target.border = { ...target.border };
   }
+  else if (k === 'dash') { if (v) target.dash = v; else delete target.dash; if (s) { const g2 = groupOf(s.o.t); if (g2 && S.style[g2] && 'dash' in S.style[g2]) S.style[g2].dash = v; } }
+  else if (k === 'heads') target.heads = v;
+  else if (k === 'rot') { target.rot = Math.round(normDeg(v) * 10) / 10; if (live && s) { refreshObj(s.o, s.p); drawSel(); syncRotInputs(s.o); return; } }
+  else if (k === 'shape' && target.t === 'stamp') { const was = target.shape || 'box'; target.shape = v; if ((v === 'circle') !== (was === 'circle')) { const cx = target.x + target.w / 2, cy = target.y + target.h / 2; if (v === 'circle') { target.h = Math.max(target.h * 1.7, 80); target.w = Math.max(target.w * 0.85, target.h); } else { target.h = Math.max(46, target.h / 1.7); target.w = Math.max(90, target.w / 0.85); } target.x = cx - target.w / 2; target.y = cy - target.h / 2; } }
   else if (k === 'underline') { if (target.underline) delete target.underline; else target.underline = true; }
   else if (k === 'weight') { target.weight = v; target.bold = v >= 600; }
   else if (k === 'family') { target.family = v; target.bold = wOf(target) >= 600; if (wfId(target) && !(FONTS[wfId(target)] || {}).it) target.italic = false; delete target.detected; fontPickOpen = false; }
@@ -2888,6 +2999,7 @@ P.addEventListener('input', e => {
   if (t.type === 'color') syncPicker(t.closest('.cpick'), t.value);
   if (t.dataset.cov === 'pad') { const sx = getSel(); if (sx && sx.o.cov) { snapCo('cov' + sx.o.id); sx.o.cov.pad = +t.value; const out = P.querySelector('[data-out="covPad"]'); if (out) out.textContent = (+t.value > 0 ? '+' : '') + r2(+t.value) + ' pt'; cancelAnimationFrame(covRaf); covRaf = requestAnimationFrame(() => rebuildCover(sx.o, sx.p)); } return; }
   if (t.id === 'p-wnum' && !(+t.value >= 100 && +t.value <= 900)) return;
+  if (t.id === 'p-rotnum' && !(t.value.trim() !== '' && isFinite(+t.value))) return;
   if (t.dataset.prop) applyProp(t.dataset.prop, t.value, true);
   if (t.dataset.prop === 'text' || t.dataset.prop === 'sub') return;
   if (t.dataset.doc) { S.doc[t.dataset.doc] = t.type === 'range' ? +t.value : t.value; setDirty(); if (['wmOp', 'tintOp', 'pbW', 'pbM', 'pbR'].includes(t.dataset.doc)) { const o = P.querySelector(`[data-out="${t.dataset.doc}"]`); if (o) o.textContent = /Op$/.test(t.dataset.doc) ? pct(+t.value) : ptf(+t.value); } S.pages.forEach(p => renderOverlay(p)); if (t.dataset.doc === 'tint' && !P.querySelector('#d-tintOp')) renderProps(); }
@@ -2915,6 +3027,7 @@ function doAction(a) {
     else if (a === 'back') { snap(); p.objs = [o].concat(p.objs.filter(x => x !== o)); renderOverlay(p); }
     else if (a === 'edit') startEdit(o, p, true);
     else if (a === 'match') matchText(o, p);
+    else if (a === 'objRotL' || a === 'objRotR' || a === 'objRot0') { snap(); o.rot = a === 'objRot0' ? 0 : normDeg((o.rot || 0) + (a === 'objRotR' ? 90 : -90)); refreshObj(o, p); drawSel(); renderProps(); }
     else if (a === 'checkEdits') checkEdits();
     else if (a === 'covOutline') { showCovers = !showCovers; if (!showCovers) S.flagged = null; S.pages.forEach(q => renderOverlay(q)); renderProps(); }
     else if (a === 'paper') { const pel = pageEl(p.id); if (pel) { snapCo('fill' + o.id); const c = makeCover(pel, o); o.fill = c.fill; o.patch = c.asset; o.auto = 1; refreshObj(o, p); drawSel(); renderProps(); setDirty(); toast('Matched the paper: ' + o.fill, false, 1800); } }
@@ -3191,14 +3304,16 @@ async function drawObj(out, page, o, W, H, F, imgs, safe) {
   } else if (o.t === 'image') {
     const a = S.assets[o.asset]; if (!a) return;
     let img = imgs[o.asset]; if (!img) { const bytes = dataURLtoBytes(a.data); img = imgs[o.asset] = a.type === 'jpg' ? await out.embedJpg(bytes) : await out.embedPng(bytes); }
+    const turned = rotOn(page, o, H);
     page.drawImage(img, { x: o.x, y: H - o.y - o.h, width: o.w, height: o.h, opacity: op });
     if (o.border) drawBorderBox(page, H, o.x, o.y, o.w, o.h, o.border, op);
+    if (turned) page.pushOperators(popGraphicsState());
   } else if (o.t === 'rect') {
     const sw = o.stroke ? o.sw : 0;
-    page.drawRectangle({ x: o.x + sw / 2, y: H - o.y - o.h + sw / 2, width: Math.max(0.1, o.w - sw), height: Math.max(0.1, o.h - sw), color: o.fill ? hexToRgb(o.fill) : undefined, opacity: o.fill ? op : undefined, borderColor: sw ? hexToRgb(o.stroke) : undefined, borderWidth: sw, borderOpacity: op });
+    page.drawRectangle({ x: o.x + sw / 2, y: H - o.y - o.h + sw / 2, width: Math.max(0.1, o.w - sw), height: Math.max(0.1, o.h - sw), color: o.fill ? hexToRgb(o.fill) : undefined, opacity: o.fill ? op : undefined, borderColor: sw ? hexToRgb(o.stroke) : undefined, borderWidth: sw, borderOpacity: op, borderDashArray: sw ? dashArr(o) || undefined : undefined, borderLineCap: dashArr(o) ? LineCapStyle.Round : undefined });
   } else if (o.t === 'ellipse') {
     const sw = o.stroke ? o.sw : 0;
-    page.drawEllipse({ x: o.x + o.w / 2, y: H - o.y - o.h / 2, xScale: Math.max(0.1, o.w / 2 - sw / 2), yScale: Math.max(0.1, o.h / 2 - sw / 2), color: o.fill ? hexToRgb(o.fill) : undefined, opacity: o.fill ? op : undefined, borderColor: sw ? hexToRgb(o.stroke) : undefined, borderWidth: sw, borderOpacity: op });
+    page.drawEllipse({ x: o.x + o.w / 2, y: H - o.y - o.h / 2, xScale: Math.max(0.1, o.w / 2 - sw / 2), yScale: Math.max(0.1, o.h / 2 - sw / 2), color: o.fill ? hexToRgb(o.fill) : undefined, opacity: o.fill ? op : undefined, borderColor: sw ? hexToRgb(o.stroke) : undefined, borderWidth: sw, borderOpacity: op , borderDashArray: sw ? dashArr(o) || undefined : undefined, borderLineCap: dashArr(o) ? LineCapStyle.Round : undefined });
   } else if (o.t === 'hl') {
     page.drawRectangle({ x: o.x, y: H - o.y - o.h, width: o.w, height: o.h, color: hexToRgb(o.color), opacity: o.op ?? 0.4, blendMode: BlendMode.Multiply });
   } else if (o.t === 'white') {
@@ -3206,14 +3321,13 @@ async function drawObj(out, page, o, W, H, F, imgs, safe) {
   } else if (o.t === 'redact') {
     page.drawRectangle({ x: o.x, y: H - o.y - o.h, width: o.w, height: o.h, color: rgb(0, 0, 0) });
   } else if (o.t === 'stamp') {
-    await drawStamp(page, o, H, F, safe);
+    const turned = rotOn(page, o, H); await drawStamp(page, o, H, F, safe); if (turned) page.pushOperators(popGraphicsState());
   } else if (o.t === 'ink') {
-    page.drawSvgPath(inkPath(o.pts), { x: 0, y: H, borderColor: hexToRgb(o.color), borderWidth: o.sw, borderOpacity: op, borderLineCap: LineCapStyle.Round });
+    page.drawSvgPath(inkPath(o.pts), { x: 0, y: H, borderColor: hexToRgb(o.color), borderWidth: o.sw, borderOpacity: op, borderLineCap: LineCapStyle.Round, borderDashArray: dashArr(o) || undefined });
   } else if (o.t === 'line' || o.t === 'arrow') {
-    let x2 = o.x2, y2 = o.y2;
-    if (o.t === 'arrow') { const a = Math.atan2(o.y2 - o.y1, o.x2 - o.x1), back = Math.max(9, o.sw * 4) * 0.7; x2 -= back * Math.cos(a); y2 -= back * Math.sin(a); }
-    page.drawLine({ start: { x: o.x1, y: H - o.y1 }, end: { x: x2, y: H - y2 }, thickness: o.sw, color: hexToRgb(o.color), opacity: op, lineCap: LineCapStyle.Round });
-    if (o.t === 'arrow') { const pts = arrowHead(o); page.drawSvgPath(`M${pts[0].join(' ')}L${pts[1].join(' ')}L${pts[2].join(' ')}Z`, { x: 0, y: H, color: hexToRgb(o.color), opacity: op }); }
+    const t2 = trimmedLine(o), en = ends(o);
+    page.drawLine({ start: { x: t2.x1, y: H - t2.y1 }, end: { x: t2.x2, y: H - t2.y2 }, thickness: o.sw, color: hexToRgb(o.color), opacity: op, lineCap: LineCapStyle.Round, dashArray: dashArr(o) || undefined });
+    for (const [on, st] of [[en.e, false], [en.s, true]]) if (on) { const pts = headAt(o, st); page.drawSvgPath(`M${pts[0].join(' ')}L${pts[1].join(' ')}L${pts[2].join(' ')}Z`, { x: 0, y: H, color: hexToRgb(o.color), opacity: op }); }
   }
 }
 /* A border path around a box (top-left page coordinates), matching the on-screen outline. */
@@ -3225,6 +3339,11 @@ function drawBorderBox(page, H, x, y, w, h, b, op = 1, inset = false) {
     : `M${X} ${Y} L${X + Wd} ${Y} L${X + Wd} ${Y + Hd} L${X} ${Y + Hd} Z`;
   const dash = b.style === 'dashed' ? [b.w * 3, b.w * 2] : b.style === 'dotted' ? [0.001, b.w * 2] : undefined;
   page.drawSvgPath(path, { x: 0, y: H, borderColor: hexToRgb(b.color || '#141821'), borderWidth: b.w, borderOpacity: op, borderDashArray: dash, borderLineCap: b.style === 'dotted' ? LineCapStyle.Round : LineCapStyle.Butt });
+}
+/* Turn the drawing around an item's centre (screen degrees are clockwise; PDF space is y-up). */
+function rotOn(page, o, H) {
+  if (!o.rot) return false; const a = -o.rot * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), cx = o.x + o.w / 2, cy = H - (o.y + o.h / 2);
+  page.pushOperators(pushGraphicsState(), concatTransformationMatrix(c, s, -s, c, cx - c * cx + s * cy, cy - s * cx - c * cy)); return true;
 }
 async function drawCover(out, page, c, H, imgs, op = 1) {
   const a = c.asset && S.assets[c.asset];
@@ -3671,6 +3790,7 @@ async function openAny() {
   const fs = await pickFiles('.pdf,application/pdf,.docx,image/*', true); if (fs.length) routeFiles(fs, false);
 }
 async function routeFiles(files, dropped) {
+  await sniffFiles(files);
   const pdfs = files.filter(isPdf), docx = files.filter(isDocx), imgs = files.filter(isImg);
   if (!pdfs.length && !docx.length && !imgs.length) return toast(files.some(f => /\.doc$/i.test(f.name)) ? 'Old .doc files are not supported. Save it as .docx in Word first.' : 'That file type is not supported. Use PDF, .docx, JPG or PNG.', true, 5000);
   if (pdfs.length) {
@@ -4088,20 +4208,44 @@ function applyFormValues(sd, src) {
 /* ================= stamps & templates ================= */
 const STAMPS = [['APPROVED', '#1c8656'], ['PAID', '#1c8656'], ['RECEIVED', '#2a3fd1'], ['VERIFIED', '#2a3fd1'], ['ORIGINAL', '#2a3fd1'], ['FOR REVIEW', '#e07a12'], ['COPY', '#141821'], ['DRAFT', '#141821'], ['CONFIDENTIAL', '#c3323d'], ['URGENT', '#c3323d'], ['VOID', '#c3323d'], ['REJECTED', '#c3323d']];
 function stampFontSize(o) {
-  const base = o.h * (o.sub ? 0.36 : 0.5);
+  const circ = o.shape === 'circle', base = o.h * (o.sub ? (circ ? 0.24 : 0.36) : (circ ? 0.3 : 0.5));
   mctx.font = '700 100px Helvetica, Arial, sans-serif'; const w100 = mctx.measureText(String(o.text || '').toUpperCase()).width * 1.06 || 1;
-  return Math.max(4, Math.min(base, (o.w * 0.84) / (w100 / 100)));
+  return Math.max(4, Math.min(base, (o.w * (circ ? 0.66 : 0.84)) / (w100 / 100)));
 }
 // One geometry for both the screen and the saved PDF, measured from the stamp's top edge.
 function stampGeom(o) {
   const bw = Math.max(1.2, o.h * 0.055), ins = bw * 2.2, ib = Math.max(0.6, bw * 0.4), fs = stampFontSize(o), sp = fs * 0.06, ss = fs * 0.42, gap = fs * 0.24;
   const block = fs * 0.72 + (o.sub ? gap + ss * 0.72 : 0), tBase = o.h / 2 - block / 2 + fs * 0.72;
-  return { bw, ins, ib, fs, sp, ss, tBase, sBase: tBase + gap + ss * 0.72 };
+  const r = o.shape === 'round' ? Math.min(o.h, o.w) * 0.24 : 0;
+  return { bw, ins, ib, fs, sp, ss, tBase, sBase: tBase + gap + ss * 0.72, r, ri: Math.max(0, r - ins + bw / 2) };
+}
+/* Rounded-rectangle path in top-left page coordinates (used with drawSvgPath at y = page height). */
+function rrPath(X, Y, Wd, Hd, r) {
+  r = Math.max(0, Math.min(r, Wd / 2, Hd / 2)); const k = 0.5523 * r;
+  if (!r) return `M${X} ${Y} L${X + Wd} ${Y} L${X + Wd} ${Y + Hd} L${X} ${Y + Hd} Z`;
+  return `M${X + r} ${Y} L${X + Wd - r} ${Y} C${X + Wd - r + k} ${Y} ${X + Wd} ${Y + r - k} ${X + Wd} ${Y + r} L${X + Wd} ${Y + Hd - r} C${X + Wd} ${Y + Hd - r + k} ${X + Wd - r + k} ${Y + Hd} ${X + Wd - r} ${Y + Hd} L${X + r} ${Y + Hd} C${X + r - k} ${Y + Hd} ${X} ${Y + Hd - r + k} ${X} ${Y + Hd - r} L${X} ${Y + r} C${X} ${Y + r - k} ${X + r - k} ${Y} ${X + r} ${Y} Z`;
+}
+function stampSvg(o) {
+  const g = stampGeom(o), c = esc(o.color || '#1c8656'), w = o.w, h = o.h;
+  const frame = o.shape === 'circle'
+    ? `<ellipse cx="${w / 2}" cy="${h / 2}" rx="${Math.max(1, w / 2 - g.bw / 2)}" ry="${Math.max(1, h / 2 - g.bw / 2)}" fill="none" stroke="${c}" stroke-width="${g.bw}"/><ellipse cx="${w / 2}" cy="${h / 2}" rx="${Math.max(1, w / 2 - g.ins)}" ry="${Math.max(1, h / 2 - g.ins)}" fill="none" stroke="${c}" stroke-width="${g.ib}"/>`
+    : `<rect x="${g.bw / 2}" y="${g.bw / 2}" width="${w - g.bw}" height="${h - g.bw}" rx="${g.r}" fill="none" stroke="${c}" stroke-width="${g.bw}"/><rect x="${g.ins}" y="${g.ins}" width="${Math.max(1, w - 2 * g.ins)}" height="${Math.max(1, h - 2 * g.ins)}" rx="${g.ri}" fill="none" stroke="${c}" stroke-width="${g.ib}"/>`;
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="100%" height="100%" style="display:block;overflow:visible" aria-hidden="true">${frame}`
+    + `<text x="${w / 2}" y="${g.tBase}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="${g.fs}" letter-spacing="${g.sp}" fill="${c}">${esc(String(o.text || '').toUpperCase())}</text>`
+    + (o.sub ? `<text x="${w / 2}" y="${g.sBase}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="${g.ss}" fill="${c}">${esc(String(o.sub).toUpperCase())}</text>` : '') + '</svg>';
 }
 async function drawStamp(page, o, H, F, safe) {
   const col = hexToRgb(o.color || '#1c8656'), op = o.op ?? 0.9, g = stampGeom(o), y0 = H - o.y - o.h;
-  page.drawRectangle({ x: o.x + g.bw / 2, y: y0 + g.bw / 2, width: o.w - g.bw, height: o.h - g.bw, borderColor: col, borderWidth: g.bw, borderOpacity: op });
-  page.drawRectangle({ x: o.x + g.ins, y: y0 + g.ins, width: Math.max(1, o.w - 2 * g.ins), height: Math.max(1, o.h - 2 * g.ins), borderColor: col, borderWidth: g.ib, borderOpacity: op });
+  if (o.shape === 'circle') {
+    page.drawEllipse({ x: o.x + o.w / 2, y: y0 + o.h / 2, xScale: Math.max(1, o.w / 2 - g.bw / 2), yScale: Math.max(1, o.h / 2 - g.bw / 2), borderColor: col, borderWidth: g.bw, borderOpacity: op });
+    page.drawEllipse({ x: o.x + o.w / 2, y: y0 + o.h / 2, xScale: Math.max(1, o.w / 2 - g.ins), yScale: Math.max(1, o.h / 2 - g.ins), borderColor: col, borderWidth: g.ib, borderOpacity: op });
+  } else if (o.shape === 'round') {
+    page.drawSvgPath(rrPath(o.x + g.bw / 2, o.y + g.bw / 2, o.w - g.bw, o.h - g.bw, g.r), { x: 0, y: H, borderColor: col, borderWidth: g.bw, borderOpacity: op });
+    page.drawSvgPath(rrPath(o.x + g.ins, o.y + g.ins, Math.max(1, o.w - 2 * g.ins), Math.max(1, o.h - 2 * g.ins), g.ri), { x: 0, y: H, borderColor: col, borderWidth: g.ib, borderOpacity: op });
+  } else {
+    page.drawRectangle({ x: o.x + g.bw / 2, y: y0 + g.bw / 2, width: o.w - g.bw, height: o.h - g.bw, borderColor: col, borderWidth: g.bw, borderOpacity: op });
+    page.drawRectangle({ x: o.x + g.ins, y: y0 + g.ins, width: Math.max(1, o.w - 2 * g.ins), height: Math.max(1, o.h - 2 * g.ins), borderColor: col, borderWidth: g.ib, borderOpacity: op });
+  }
   const f = await F('HelveticaBold'), f2 = await F('Helvetica');
   const t = safe(String(o.text || '').toUpperCase()), tw = f.widthOfTextAtSize(t, g.fs) + g.sp * Math.max(0, t.length - 1);
   page.pushOperators(PL.setCharacterSpacing(g.sp));
@@ -4112,11 +4256,66 @@ async function drawStamp(page, o, H, F, safe) {
 function openStamps() {
   if (!S.open) return; if (!requirePro('stamps')) return;
   $('#stampGrid').innerHTML = STAMPS.map(([t, c], i) => `<button data-st="${i}" title="Place ${t}"><span class="sp" style="color:${c};border-color:${c};outline-color:${c}">${t}</span></button>`).join('');
-  renderTemplates(); $('#dlgStamps').showModal();
+  renderTemplates(); renderStampMaker(); renderMyStamps(); $('#dlgStamps').showModal();
 }
-async function placeStamp(text, color) { const K = await needKit(); if (K) K.placeStamp(text, color); }
+async function placeStamp(text, color, opts) { const K = await needKit(); if (K) K.placeStamp(text, color, opts); }
 $('#stampGrid').addEventListener('click', e => { const b = e.target.closest('[data-st]'); if (b) { const [t, c] = STAMPS[+b.dataset.st]; placeStamp(t, c); } });
-$('#stCustomGo').onclick = () => { const t = $('#stCustom').value.trim().toUpperCase(); if (!t) return toast('Type the stamp text first.', true); placeStamp(t, '#2a3fd1'); };
+/* ---------- custom stamps ---------- */
+const LS_MYST = 'inkwell.mystamps';
+const ST_COLORS = ['#2a3fd1', '#1c8656', '#c3323d', '#141821', '#e07a12', '#7a3fd1'];
+const stMake = { color: '#2a3fd1', shape: 'box' };
+const todayStr = () => new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+function stDraft() {
+  const text = $('#stCustom').value.trim().toUpperCase(), sub = $('#stSub').value.trim();
+  return { text, sub: sub || ($('#stDate').checked ? todayStr() : ''), subRaw: sub, color: stMake.color, shape: stMake.shape };
+}
+function previewStamp(d) { const circ = d.shape === 'circle'; const o = { text: d.text || 'YOUR TEXT', sub: d.sub, color: d.color, shape: d.shape, h: circ ? 96 : (d.sub ? 56 : 46), w: 0 }; mctx.font = '700 100px Helvetica, Arial, sans-serif'; const fs = o.h * (circ ? (o.sub ? 0.24 : 0.3) : (o.sub ? 0.36 : 0.5)); o.w = Math.max(circ ? 96 : 90, mctx.measureText(o.text).width * 1.06 * fs / 100 / (circ ? 0.66 : 0.84) + 8); return stampSvg(o).replace('width="100%" height="100%"', `width="${o.w}" height="${o.h}"`); }
+function renderStampMaker() {
+  $('#stColors').innerHTML = ST_COLORS.map(c => `<button style="background:${c}" class="${stMake.color === c ? 'on' : ''}" data-stc="${c}" title="${c}"></button>`).join('') + `<input type="color" id="stColor" value="${stMake.color}" title="Custom colour">`;
+  $$('#stShapes [data-stshape]').forEach(b => b.classList.toggle('on', b.dataset.stshape === stMake.shape));
+  $('#stPrev').innerHTML = previewStamp(stDraft());
+}
+function renderMyStamps() {
+  const list = ls.get(LS_MYST, []);
+  $('#myStamps').innerHTML = list.map((m, i) => `<button class="mst" data-my="${i}" title="Place this stamp">${m.type === 'img' ? `<img src="${esc(m.data)}" alt="">` : previewStamp({ ...m, sub: m.subRaw || (m.date ? todayStr() : '') })}<span class="del" data-mydel="${i}" title="Remove from my stamps" role="button">×</span></button>`).join('');
+}
+$('#stColors').addEventListener('click', e => { const b = e.target.closest('[data-stc]'); if (b) { stMake.color = b.dataset.stc; renderStampMaker(); } });
+$('#stColors').addEventListener('input', e => { if (e.target.id === 'stColor') { stMake.color = e.target.value; $$('#stColors [data-stc]').forEach(b => b.classList.remove('on')); $('#stPrev').innerHTML = previewStamp(stDraft()); } });
+$('#stShapes').addEventListener('click', e => { const b = e.target.closest('[data-stshape]'); if (b) { stMake.shape = b.dataset.stshape; renderStampMaker(); } });
+['stCustom', 'stSub', 'stDate'].forEach(id => $('#' + id).addEventListener('input', () => { $('#stPrev').innerHTML = previewStamp(stDraft()); }));
+$('#stDate').addEventListener('change', () => { $('#stPrev').innerHTML = previewStamp(stDraft()); });
+$('#stCustomGo').onclick = () => { const d = stDraft(); if (!d.text) { $('#stCustom').focus(); return toast('Type the stamp text first.', true); } placeStamp(d.text, d.color, { sub: d.sub, shape: d.shape }); };
+$('#stSave').onclick = () => {
+  const d = stDraft(); if (!d.text) { $('#stCustom').focus(); return toast('Type the stamp text first.', true); }
+  const list = ls.get(LS_MYST, []); list.unshift({ type: 'text', text: d.text, subRaw: d.subRaw, date: !d.subRaw && $('#stDate').checked, color: d.color, shape: d.shape });
+  if (!ls.set(LS_MYST, list.slice(0, 40))) return toast('Could not save on this device (storage is full or blocked).', true);
+  renderMyStamps(); toast('Saved to My stamps on this device.');
+};
+$('#stUpload').onclick = async () => {
+  const [f] = await pickFiles('image/*'); if (!f) return;
+  try {
+    const img = await loadImg(await readDataURL(f)); const k = Math.min(1, 900 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+    const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0, c.width, c.height); knockOut(x, c.width, c.height, 55);
+    const t = trimAlpha(c); const data = t.toDataURL('image/png');
+    const list = ls.get(LS_MYST, []); list.unshift({ type: 'img', data, w: t.width, h: t.height }); if (!ls.set(LS_MYST, list.slice(0, 40))) toast('Placed, but it could not be saved for next time (storage is full).', true); else renderMyStamps();
+    $('#dlgStamps').close(); placeImage({ data, type: 'png', w: t.width, h: t.height }, { width: 140, kind: 'stamp' });
+  } catch (e) { toast('Could not read that image: ' + (e.message || e), true); }
+};
+$('#myStamps').addEventListener('click', e => {
+  const del = e.target.closest('[data-mydel]'); const list = ls.get(LS_MYST, []);
+  if (del) { e.stopPropagation(); list.splice(+del.dataset.mydel, 1); ls.set(LS_MYST, list); renderMyStamps(); return; }
+  const b = e.target.closest('[data-my]'); if (!b) return; const m = list[+b.dataset.my]; if (!m) return;
+  if (m.type === 'img') { $('#dlgStamps').close(); placeImage({ data: m.data, type: 'png', w: m.w, h: m.h }, { width: 140, kind: 'stamp' }); }
+  else placeStamp(m.text, m.color, { sub: m.subRaw || (m.date ? todayStr() : ''), shape: m.shape });
+});
+/* Crop an image to its visible (non-transparent) pixels. */
+function trimAlpha(c) {
+  const x = c.getContext('2d'); const d = x.getImageData(0, 0, c.width, c.height).data; let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) for (let i = 0; i < c.width; i++) if (d[(y * c.width + i) * 4 + 3] > 20) { if (i < x0) x0 = i; if (i > x1) x1 = i; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0) return c; const pad = 4; x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(c.width - 1, x1 + pad); y1 = Math.min(c.height - 1, y1 + pad);
+  const o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1; o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height); return o;
+}
 function renderTemplates() {
   const list = ls.get(LS_TPL, []);
   $('#tplList').innerHTML = list.length ? list.map((t, i) => `<div class="tpl"><span>${esc(t.name)}</span><button class="btn" data-tpl="${i}">Insert</button><button class="btn icon ghost" data-tpldel="${i}" title="Delete"><svg class="i"><use href="#i-trash"/></svg></button></div>`).join('') : '<p class="hint">Select anything on a page (text, a signature, an image, a stamp) and choose <b>Save as template</b> in the panel to reuse it in any document.</p>';
@@ -4133,7 +4332,7 @@ function openBatch() {
 function renderBatch() { $('#bList').innerHTML = batchFiles.map(f => `<div><span>${esc(f.name)}</span><small>${fmtSize(f.size)}</small></div>`).join(''); $('#bGo').textContent = batchFiles.length ? `Run on ${batchFiles.length} file${batchFiles.length > 1 ? 's' : ''}` : 'Run'; }
 function showBatchOpts() { const a = $('#bAct').value; $$('[data-bopt]').forEach(el => { el.hidden = el.dataset.bopt !== a; }); }
 $('#bAct').onchange = showBatchOpts;
-$('#bPick').onclick = async () => { const fs = await pickFiles('.pdf,application/pdf', true); batchFiles.push(...fs.filter(isPdf)); renderBatch(); };
+$('#bPick').onclick = async () => { const fs = await pickFiles('.pdf,application/pdf', true); batchFiles.push(...(await sniffFiles(fs)).filter(isPdf)); renderBatch(); };
 const bDrop = $('#bDrop');
 bDrop.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); bDrop.classList.add('over'); });
 bDrop.addEventListener('dragleave', () => bDrop.classList.remove('over'));
